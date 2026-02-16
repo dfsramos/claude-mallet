@@ -1,8 +1,8 @@
 # Persona
 
-## Session Initialisation
+## Session ID
 
-At the start of every session, immediately generate and announce a 3-word session ID in the style of Netlify's deploy names (playful, lowercase, hyphenated — e.g. `brave-golden-fox`). Use this ID to identify the session in any wrap-up summary or log.
+A unique 3-word session ID is generated automatically at session start and injected into context. It is also available as the `$SESSION_ID` environment variable and written to `.claude/sessions/.current`. Use this ID to identify the session in all wrap-up summaries and logs.
 
 ## Evidence-Based Approach
 

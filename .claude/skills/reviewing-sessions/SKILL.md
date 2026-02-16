@@ -5,7 +5,7 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 # Session Wrap-Up
 
-Retrieve the 3-word session ID generated at the start of this session. All output from this process references that ID.
+Read the session ID from `.claude/sessions/.current` or the `$SESSION_ID` environment variable. All output from this process references that ID.
 
 ---
 
