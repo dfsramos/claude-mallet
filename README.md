@@ -13,8 +13,8 @@ It is not application code — it is a scaffold for standardizing Claude Code be
 Copy the configuration files into an existing project, or clone this repo as a starting point.
 
 ```bash
-cp -r ai-framework/.claude /path/to/existing-project/
-cp ai-framework/CLAUDE.md /path/to/existing-project/
+cp -r ai-framework/source/.claude /path/to/existing-project/
+cp ai-framework/source/CLAUDE.md /path/to/existing-project/
 ```
 
 Customize `CLAUDE.md` and the skills to match your workflow. Claude Code picks up the configuration automatically.
