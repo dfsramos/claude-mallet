@@ -80,3 +80,9 @@ Date: YYYY-MM-DD HH:MM
 ```
 
 Do not append to a shared log. Each session gets its own file, retrievable by its ID.
+
+---
+
+## 6. End Session
+
+Clear the `.claude/sessions/.current` file to indicate the session has ended. Use Write with an empty string to clear it.
