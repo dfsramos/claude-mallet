@@ -29,7 +29,8 @@ A=${ADJECTIVES[$RANDOM % ${#ADJECTIVES[@]}]}
 N=${NOUNS[$RANDOM % ${#NOUNS[@]}]}
 V=${VERBS[$RANDOM % ${#VERBS[@]}]}
 
-SESSION_ID="${A}-${N}-${V}"
+TS=$(printf '%04d' $(( $(date +%s) % 10000 )))
+SESSION_ID="${A}-${N}-${V}-${TS}"
 
 # Persist as environment variable for this session and all subsequent Bash calls
 if [ -n "$CLAUDE_ENV_FILE" ]; then
