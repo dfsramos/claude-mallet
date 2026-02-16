@@ -102,7 +102,7 @@ Commit message format:
 ## Skill Backlog
 
 During every session, actively look for things that would benefit from being captured as reusable skills or improvements to existing ones. When something is identified:
-- Append it to `~/.claude/skill-backlog.md`
+- Append it to `.claude/skill-backlog.md`
 - Include: a short title, what triggered the observation, and a brief description of what the skill or improvement should cover
 - Do not interrupt the session to discuss it — just log it silently and continue
 
