@@ -7,14 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_DIR="${SCRIPT_DIR}/source"
 MIN_BASH_VERSION=4
 
-# Files to install, relative to source/
-FILES=(
-  "CLAUDE.md"
-  ".claude/settings.json"
-  ".claude/hooks/session-start.sh"
-  ".claude/skills/reviewing-sessions/SKILL.md"
-  ".claude/skill-backlog.md"
-)
+# No hardcoded file list — all files under source/ are discovered at runtime.
 
 # Directories to create at target (not present in source)
 RUNTIME_DIRS=(
@@ -299,11 +292,12 @@ main() {
     exit 1
   fi
 
-  # Install files
+  # Install files — enumerate source/ directory at runtime
   echo "  Installing files..."
-  for file in "${FILES[@]}"; do
-    install_file "$file"
-  done
+  while IFS= read -r -d '' src; do
+    relative="${src#"${SOURCE_DIR}/"}"
+    install_file "$relative"
+  done < <(find "$SOURCE_DIR" -type f -print0 | sort -z)
   echo ""
 
   # Runtime directories
