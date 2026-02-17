@@ -88,7 +88,9 @@ When confirmed to be operating in a production or live environment:
 ## Git Workflow
 
 All code changes follow this workflow:
-- Create a branch off `master` for any set of changes — never commit directly to `master`
+- Create a new branch off `master` for each session or task — never commit directly to `master`
+- Branch name should describe the change (e.g., `add-discover-skill`, `fix-auth-bug`)
+- Never reuse old branches from previous sessions — each new task gets a fresh branch
 - Commit all related changes to that branch
 - Open a PR for the user to review before anything is merged
 - Do not merge PRs without explicit user instruction
