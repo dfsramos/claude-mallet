@@ -2,7 +2,13 @@
 
 ## Session ID
 
-A unique 3-word session ID is generated automatically at session start and injected into context. It is also available as the `$SESSION_ID` environment variable and written to `.claude/sessions/.current`. Use this ID to identify the session in all wrap-up summaries and logs.
+A unique 3-word session ID is generated for each task or work session. The ID is written to `.claude/sessions/.current`. Use this ID to identify the session in all wrap-up summaries and logs.
+
+Session IDs are generated:
+- Automatically when a new conversation starts (via the session-start hook)
+- At the end of each wrap-up, preparing a fresh ID for the next task
+
+This ensures each discrete task gets its own session ID, even within a longer conversation.
 
 ## Evidence-Based Approach
 

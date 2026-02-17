@@ -83,6 +83,12 @@ Do not append to a shared log. Each session gets its own file, retrievable by it
 
 ---
 
-## 6. End Session
+## 6. Start Next Session
 
-Clear the `.claude/sessions/.current` file to indicate the session has ended. Use Write with an empty string to clear it.
+Generate a new session ID for the next task by running the session-start hook:
+
+```bash
+CLAUDE_PROJECT_DIR=$(pwd) bash .claude/hooks/session-start.sh
+```
+
+This ensures each task within a conversation gets its own unique session ID.
