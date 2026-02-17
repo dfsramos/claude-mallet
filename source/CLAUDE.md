@@ -2,7 +2,13 @@
 
 ## Session ID
 
-A unique 3-word session ID is generated automatically at session start and injected into context. It is also available as the `$SESSION_ID` environment variable and written to `.claude/sessions/.current`. Use this ID to identify the session in all wrap-up summaries and logs.
+A unique 3-word session ID is generated for each task or work session. The ID is written to `.claude/sessions/.current`. Use this ID to identify the session in all wrap-up summaries and logs.
+
+Session IDs are generated:
+- Automatically when a new conversation starts (via the session-start hook)
+- At the end of each wrap-up, preparing a fresh ID for the next task
+
+This ensures each discrete task gets its own session ID, even within a longer conversation.
 
 ## Evidence-Based Approach
 
@@ -88,7 +94,9 @@ When confirmed to be operating in a production or live environment:
 ## Git Workflow
 
 All code changes follow this workflow:
-- Create a branch off `master` for any set of changes — never commit directly to `master`
+- Create a new branch off `master` for each session or task — never commit directly to `master`
+- Branch name should describe the change (e.g., `add-discover-skill`, `fix-auth-bug`)
+- Never reuse old branches from previous sessions — each new task gets a fresh branch
 - Commit all related changes to that branch
 - Open a PR for the user to review before anything is merged
 - Do not merge PRs without explicit user instruction
@@ -107,6 +115,23 @@ During every session, actively look for things that would benefit from being cap
 - Do not interrupt the session to discuss it — just log it silently and continue
 
 The user will review `skill-backlog.md` at their own pace and decide what to promote into actual skill files.
+
+## Project Discovery
+
+When the user says "discover", "discover this project", "analyze the codebase", or runs `/discover`, perform structured project analysis using the `discover` skill.
+
+This is distinct from the skill backlog:
+- **Discovery**: structured, comprehensive analysis — run explicitly when starting on a new project or when workflow changes
+- **Skill backlog**: lightweight, session-driven observations — capture ideas as you work
+
+Discovery identifies:
+- External services and API integration opportunities
+- Common workflow patterns that could become skills
+- Connection data to document
+- Project-specific conventions for CLAUDE.md
+- Patterns that could be promoted to the framework base
+
+The discovery process is interactive — ask questions when important decisions or priorities need clarification.
 
 ## Session Closure
 

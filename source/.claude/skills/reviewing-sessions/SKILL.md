@@ -80,3 +80,15 @@ Date: YYYY-MM-DD HH:MM
 ```
 
 Do not append to a shared log. Each session gets its own file, retrievable by its ID.
+
+---
+
+## 6. Start Next Session
+
+Generate a new session ID for the next task by running the session-start hook:
+
+```bash
+CLAUDE_PROJECT_DIR=$(pwd) bash .claude/hooks/session-start.sh
+```
+
+This ensures each task within a conversation gets its own unique session ID.
