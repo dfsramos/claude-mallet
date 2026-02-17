@@ -108,6 +108,23 @@ During every session, actively look for things that would benefit from being cap
 
 The user will review `skill-backlog.md` at their own pace and decide what to promote into actual skill files.
 
+## Project Discovery
+
+When the user says "discover", "discover this project", "analyze the codebase", or runs `/discover`, perform structured project analysis using the `discover` skill.
+
+This is distinct from the skill backlog:
+- **Discovery**: structured, comprehensive analysis — run explicitly when starting on a new project or when workflow changes
+- **Skill backlog**: lightweight, session-driven observations — capture ideas as you work
+
+Discovery identifies:
+- External services and API integration opportunities
+- Common workflow patterns that could become skills
+- Connection data to document
+- Project-specific conventions for CLAUDE.md
+- Patterns that could be promoted to the framework base
+
+The discovery process is interactive — ask questions when important decisions or priorities need clarification.
+
 ## Session Closure
 
 When a task reaches a natural conclusion (problem solved, feature implemented, investigation complete), proactively offer a session wrap-up. Don't wait for the user to say "all done" — suggest it: "Want me to do a quick session wrap-up?"
