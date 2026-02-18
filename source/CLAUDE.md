@@ -133,6 +133,14 @@ Discovery identifies:
 
 The discovery process is interactive — ask questions when important decisions or priorities need clarification.
 
+## Project Context
+
+If `.claude/project/CLAUDE.md` exists in the current project, read it at the start of every session. It contains project-specific conventions, stack details, and service context that extend the directives in this file.
+
+If `.claude/project/skills/` exists, treat it as an additional skills directory alongside `.claude/skills/`. Project skills there are available for use just like framework skills, but are specific to this project and not promoted to the base framework.
+
+---
+
 ## Session Closure
 
 When a task reaches a natural conclusion (problem solved, feature implemented, investigation complete), proactively offer a session wrap-up. Don't wait for the user to say "all done" — suggest it: "Want me to do a quick session wrap-up?"

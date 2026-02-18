@@ -24,6 +24,7 @@ GITIGNORE_ENTRIES=(
 FORCE=false
 DRY_RUN=false
 TARGET=""
+CONFLICT_ALL=""
 INSTALLED=()
 SKIPPED=()
 BACKED_UP=()
@@ -82,14 +83,17 @@ check_claude_cli() {
 prompt_conflict() {
   local file="$1"
   while true; do
-    echo ""
-    echo "  File already exists: ${file}"
-    read -rp "  [o]verwrite / [b]ackup & overwrite / [s]kip? " choice
+    printf '\n  File already exists: %s\n' "$file" >/dev/tty
+    printf '  [o]verwrite / [O]verwrite all / [b]ackup+overwrite / [B]ackup all / [s]kip / [S]kip all\n' >/dev/tty
+    read -rp "  Choice: " choice </dev/tty
     case "${choice}" in
-      o|O) echo "overwrite"; return ;;
-      b|B) echo "backup"; return ;;
-      s|S) echo "skip"; return ;;
-      *)   echo "  Invalid choice. Enter o, b, or s." ;;
+      o)   echo "overwrite"; return ;;
+      O)   CONFLICT_ALL="overwrite"; echo "overwrite"; return ;;
+      b)   echo "backup"; return ;;
+      B)   CONFLICT_ALL="backup"; echo "backup"; return ;;
+      s)   echo "skip"; return ;;
+      S)   CONFLICT_ALL="skip"; echo "skip"; return ;;
+      *)   printf '  Invalid choice. Enter o/O/b/B/s/S.\n' >/dev/tty ;;
     esac
   done
 }
@@ -111,6 +115,8 @@ install_file() {
   if [[ -f "$dst" ]]; then
     if [[ "$FORCE" == true ]]; then
       action="overwrite"
+    elif [[ -n "$CONFLICT_ALL" ]]; then
+      action="$CONFLICT_ALL"
     else
       action="$(prompt_conflict "$dst")"
     fi
