@@ -8,21 +8,29 @@ This project is a reusable set of configuration files (`CLAUDE.md` and `.claude/
 
 It is not application code — it is a scaffold for standardizing Claude Code behavior.
 
-## Usage
+## Installation
 
-Copy the configuration files into an existing project, or clone this repo as a starting point.
+Use the installer to deploy the framework into an existing project:
+
+```bash
+bash ai-framework/install.sh /path/to/existing-project
+```
+
+The installer handles conflict detection, backup options, hook permissions, and `.gitignore` entries. Run with `--dry-run` to preview what would be changed without writing anything.
+
+Alternatively, copy the files manually:
 
 ```bash
 cp -r ai-framework/source/.claude /path/to/existing-project/
 cp ai-framework/source/CLAUDE.md /path/to/existing-project/
 ```
 
-Customize `CLAUDE.md` and the skills to match your workflow. Claude Code picks up the configuration automatically.
+After installation, customize `CLAUDE.md` and the skills to match your workflow. Claude Code picks up the configuration automatically.
 
 ## Requirements
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
-- Bash (for hooks)
+- Bash 4+ (for hooks and the installer)
 
 ## Documentation
 

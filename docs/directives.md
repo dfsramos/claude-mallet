@@ -13,6 +13,7 @@ The root `CLAUDE.md` defines behavioral rules that Claude Code follows for every
 | Destructive Operations | Never delete/overwrite without explicit confirmation |
 | Production Awareness | Stop and confirm before acting on live environments |
 | Git Workflow | Branch off `master`, open PRs, never commit directly |
+| Project Context | Read `.claude/project/CLAUDE.md` at session start if it exists |
 | Session Closure | Proactively offer a wrap-up when a task concludes |
 
 ## Details
@@ -44,6 +45,12 @@ Before executing any operation, Claude assesses whether the target is a producti
 ### Git Workflow
 
 All changes go through branches. Commits are never made directly to `master`. PRs are opened for review and not merged without explicit instruction.
+
+### Project Context
+
+If `.claude/project/CLAUDE.md` exists in the current project, Claude reads it at the start of every session. It contains project-specific conventions, stack details, and service context that extend the base directives without modifying them.
+
+If `.claude/project/skills/` exists, it is treated as an additional skills directory alongside `.claude/skills/`. Skills there are available for use but are project-specific and not part of the base framework.
 
 ### Session Closure
 
