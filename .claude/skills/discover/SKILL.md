@@ -102,7 +102,7 @@ Document services and systems that should have connection data templates:
 
 ## 7. Identify Project Conventions
 
-Look for project-specific patterns worth documenting in CLAUDE.md:
+Look for project-specific patterns worth documenting in `.claude/project/CLAUDE.md` (not the base `CLAUDE.md`):
 
 - Code organization patterns (where do new features go?)
 - Naming conventions (files, functions, branches, commits)
@@ -157,7 +157,7 @@ Project: <project-name>
   - Location: <where config should go>
   - Required fields: <what needs to be captured>
 
-## Project Conventions for CLAUDE.md
+## Project Conventions for .claude/project/CLAUDE.md
 - **[Area]**: <convention to document>
 
 ## Promotable to Framework
@@ -177,9 +177,9 @@ Save the report and present a summary to the user.
 
 Based on the findings, offer to immediately implement high-value, low-effort improvements:
 
-- Create stub skill files for top 2-3 recommended skills
+- Create stub skill files for top 2-3 recommended skills in `.claude/project/skills/`
 - Add connection data templates for critical services
-- Update CLAUDE.md with most important conventions
+- Write project conventions to `.claude/project/CLAUDE.md` (not the base `CLAUDE.md`)
 
 Ask: "Want me to implement any of these quick wins now?"
 
