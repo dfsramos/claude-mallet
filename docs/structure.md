@@ -68,3 +68,4 @@ When the framework is installed into a project, the target project may also cont
 | `install.sh` | Interactive installer that copies `source/` into an existing project |
 | `.claude/settings.json` | Registers hooks and other Claude Code settings |
 | `.claude/skill-backlog.md` | Running log of skill ideas captured during sessions |
+| `.claude/project/memory.md` | Persistent project-specific knowledge store, injected at session start |
