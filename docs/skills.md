@@ -29,8 +29,24 @@ A structured end-of-session retrospective that produces:
 2. **What went well** — efficient tasks, effective patterns, good tool use
 3. **What went poorly** — mistakes, user corrections, rule violations (with specific references)
 4. **Applied improvements** — updates to skills or directives based on session observations; skill backlog reviewed and actioned
+4a. **Memory audit** — review entries added to `.claude/project/memory.md` during the session; confirm accuracy, rewrite vague entries, remove stale ones
 5. **Session record** — saved to `.claude/sessions/<session-id>.md`
 6. **Next session ID** — generated via the session-start hook
+
+## Project Memory
+
+**File:** `.claude/project/memory.md` (installed from `source/`)
+
+A persistent fact store for project-specific knowledge that accumulates across sessions. Unlike skills (procedures) or CLAUDE.md (rules), memory holds facts: things worth knowing but not worth formalising.
+
+The file is structured into four categories:
+
+- **Commands & Access Patterns** — preferred commands, access methods, tool invocations
+- **Conventions** — naming, structure, and workflow patterns specific to this project
+- **Gotchas** — non-obvious behaviours, traps, or things that don't work as expected
+- **Preferences** — tool choices, flag preferences, approaches the user consistently favours
+
+Claude appends entries during sessions when it discovers something useful. At session wrap-up, entries are audited for accuracy. The full file is injected into Claude's context at session start by the [session-start hook](hooks.md#session-start-hook).
 
 ## Skill Backlog
 
