@@ -68,9 +68,11 @@ Never perform destructive operations unless explicitly instructed to do so.
 
 Destructive operations include:
 - Deleting or overwriting files
-- Database mutations: UPDATE, DELETE, DROP, TRUNCATE, or any schema-altering statement
+- Database mutations: INSERT, UPDATE, DELETE, DROP, TRUNCATE, or any schema-altering statement
 - Removing records, tables, indexes, or migrations
 - Any operation that cannot be trivially undone
+
+Read-only database operations (SELECT, SHOW, DESCRIBE, EXPLAIN) are pre-approved and do not require confirmation.
 
 When a destructive operation is required:
 1. State clearly what will be destroyed and why
