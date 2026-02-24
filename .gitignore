@@ -1,6 +1,7 @@
 ﻿*Zone.Identifier
 .claude/sessions/*
 source/.claude/project/*
+!source/.claude/project/memory.md
 source/.claude/sessions/*
 source/.claude/discovery*
 .claude/sessions/.current

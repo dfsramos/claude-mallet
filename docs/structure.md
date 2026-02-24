@@ -24,6 +24,8 @@
 │       ├── settings.json
 │       ├── hooks/
 │       │   └── session-start.sh
+│       ├── project/
+│       │   └── memory.md
 │       └── skills/
 │           ├── discover/SKILL.md
 │           └── reviewing-sessions/SKILL.md
@@ -42,6 +44,7 @@ When the framework is installed into a project, the target project may also cont
 └── .claude/
     ├── project/
     │   ├── CLAUDE.md                  # Project-specific conventions (optional, not from source)
+    │   ├── memory.md                  # Project-specific long-term memory (optional, installed from source)
     │   └── skills/                    # Project-specific skills (optional, not from source)
     ├── hooks/
     ├── skills/

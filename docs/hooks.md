@@ -15,6 +15,7 @@ Generates a unique session identifier in the format `adjective-noun-verb-timesta
 2. Exports it as the `SESSION_ID` environment variable
 3. Writes it to `.claude/sessions/.current`
 4. Injects a context message into Claude's conversation via stdout
+5. If `.claude/project/memory.md` exists, injects its contents into Claude's context so project memory is available from the first message
 
 ### Why it exists
 

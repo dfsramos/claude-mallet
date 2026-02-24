@@ -117,6 +117,26 @@ During every session, actively look for things that would benefit from being cap
 
 The user will review `skill-backlog.md` at their own pace and decide what to promote into actual skill files.
 
+## Project Memory
+
+`.claude/project/memory.md` stores project-specific knowledge that persists across sessions. Unlike skills (which are procedures) or CLAUDE.md (which holds rules), memory holds facts: things worth knowing but not worth formalising.
+
+**Add an entry when you discover:**
+- The preferred way to run a command or access a service
+- A gotcha or non-obvious behaviour in this project
+- A convention the user applies consistently
+- A tool or flag that works better than the obvious alternative
+
+**Do not add:**
+- Session events or outcomes (those go in session records)
+- Things that change per-run (ports, temporary tokens, environment state)
+- Anything already captured in CLAUDE.md or a skill
+
+**Format:** One line per entry, under the appropriate category heading. Start with the fact, not a preamble. Example:
+- `Run migrations with \`make db-migrate\`, not alembic directly — alembic skips pre/post hooks`
+
+The file is injected into context at session start by the `session-start` hook. Keep it lean — every entry costs tokens on every session.
+
 ## Project Discovery
 
 When the user says "discover", "discover this project", "analyze the codebase", or runs `/discover`, perform structured project analysis using the `discover` skill.

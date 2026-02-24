@@ -53,6 +53,17 @@ Then open `.claude/skill-backlog.md`. For each item logged during this session:
 
 ---
 
+## 4a. Review Memory Entries
+
+If `.claude/project/memory.md` exists, open it. For any entries added or modified during this session:
+- Confirm they are accurate based on what was actually observed
+- Rewrite any that are vague or poorly phrased
+- Remove any that turned out to be wrong or are already covered by CLAUDE.md or a skill
+
+Do not add new entries here unless something significant was missed during the session.
+
+---
+
 ## 5. Save Session Record
 
 Create a file at `.claude/sessions/<session-id>.md` inside the current project directory. If the `.claude/sessions/` directory does not exist, create it.
