@@ -99,6 +99,7 @@ All code changes follow this workflow:
 - Never reuse old branches from previous sessions — each new task gets a fresh branch
 - Commit all related changes to that branch
 - Open a PR for the user to review before anything is merged
+- After the PR is pushed, switch the working copy back to `master`
 - Do not merge PRs without explicit user instruction
 
 Commit message format:
