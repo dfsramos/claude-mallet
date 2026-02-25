@@ -4,6 +4,8 @@
 
 Each session has a unique ID written to `.claude/sessions/.current`. Use it to identify the session in all wrap-up summaries and logs.
 
+Do not read `.claude/sessions/` files at session start or proactively. Only access previous session records when the user explicitly asks for session history.
+
 ## Evidence-Based Approach
 
 Always back conclusions with evidence. Scale depth to task nature — forensic for debugging, lighter for routine development — but never skip evidence entirely.
