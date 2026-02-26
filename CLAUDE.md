@@ -60,7 +60,7 @@ In production:
 ## Git Workflow
 
 - Create a new branch off `master` per session/task — never commit to `master` directly
-- Branch name should describe the change (e.g., `add-discover-skill`, `fix-auth-bug`)
+- Branch naming: `b/<description>` for bug fixes, `f/<description>` for everything else (e.g., `b/fix-auth-bug`, `f/add-discover-skill`)
 - Never reuse branches from previous sessions
 - Commit changes to the branch, open a PR, then switch back to `master`
 - Do not merge PRs without explicit user instruction
