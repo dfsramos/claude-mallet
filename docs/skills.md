@@ -18,6 +18,19 @@ A structured analysis of a project's codebase to identify opportunities for impr
 7. **Discovery report** — saved to `.claude/discovery-YYYY-MM-DD.md`
 8. **Quick wins** — offer to immediately implement high-value stub skills or conventions
 
+## Feature Planning
+
+**Directory:** `.claude/skills/plan-feature/`
+**Triggered by:** Phrases like "plan a feature", "I want to build X", or "continue the Y feature"
+
+An intake-to-execution pipeline for planning and implementing features. Supports resuming across sessions. All planning files are committed directly to `master` via a temporary git worktree so plans remain visible regardless of the active branch.
+
+1. **Pre-check** — reads existing plans from master; surfaces overlaps before creating anything new
+2. **Intake** — broad questions (problem, users, success criteria, constraints, remote system involvement)
+3. **Decompose** — confirms a slug, writes `plan.md` (task list with dependencies and parallel flags) and per-task stub files under `.claude/features/<slug>/tasks/`
+4. **Execute** — runs tasks in dependency order; offers parallel execution where allowed; applies autonomy rules (local work proceeds freely; remote/production writes require confirmation); updates task and plan status on master after each task
+5. **Resume** — if a plan already exists, skips intake and picks up from the first incomplete task
+
 ## Session Wrap-Up
 
 **Directory:** `.claude/skills/reviewing-sessions/`
