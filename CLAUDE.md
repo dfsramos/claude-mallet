@@ -60,6 +60,7 @@ In production:
 ## Git Workflow
 
 - Create a new branch off `master` per session/task — never commit to `master` directly
+- **Exception:** `.claude/features/` is always committed directly to `master` via git worktree so feature plans are visible across all branches. See the `plan-feature` skill.
 - Branch naming: `b/<description>` for bug fixes, `f/<description>` for everything else (e.g., `b/fix-auth-bug`, `f/add-discover-skill`)
 - Never reuse branches from previous sessions
 - Commit changes to the branch, open a PR, then switch back to `master`
@@ -81,6 +82,10 @@ Do not add: session outcomes, per-run state, anything already in CLAUDE.md or a 
 ## Project Discovery
 
 When the user says "discover", "analyze the codebase", or runs `/discover`, use the `discover` skill.
+
+## Feature Planning
+
+When the user wants to plan a feature, build something new, or continue work on an existing feature, use the `plan-feature` skill.
 
 ## Project Context
 
