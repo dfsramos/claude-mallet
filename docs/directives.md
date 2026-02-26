@@ -14,6 +14,7 @@ The root `CLAUDE.md` defines behavioral rules that Claude Code follows for every
 | Production Awareness | Stop and confirm before acting on live environments |
 | Git Workflow | Branch off `master`, open PRs, never commit directly |
 | Project Context | Read `.claude/project/CLAUDE.md` at session start if it exists |
+| Project Memory | Accumulate project-specific facts in `.claude/project/memory.md` across sessions |
 | Session Closure | Proactively offer a wrap-up when a task concludes |
 
 ## Details
@@ -51,6 +52,12 @@ All changes go through branches. Commits are never made directly to `master`. PR
 If `.claude/project/CLAUDE.md` exists in the current project, Claude reads it at the start of every session. It contains project-specific conventions, stack details, and service context that extend the base directives without modifying them.
 
 If `.claude/project/skills/` exists, it is treated as an additional skills directory alongside `.claude/skills/`. Skills there are available for use but are project-specific and not part of the base framework.
+
+### Project Memory
+
+`.claude/project/memory.md` is a persistent fact store for project-specific knowledge that accumulates across sessions. It holds things worth knowing but not worth formalising as a skill — preferred commands, gotchas, conventions, and tool preferences discovered through use.
+
+Claude appends entries during sessions when it encounters something useful and audits them during the session wrap-up. The file is injected into context at session start by the session-start hook.
 
 ### Session Closure
 

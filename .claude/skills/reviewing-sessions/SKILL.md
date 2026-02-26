@@ -45,11 +45,24 @@ Based on what went poorly and what was learned:
 - **Create new skills**: if a knowledge gap came up repeatedly or a new reusable pattern emerged, create the skill file now at `.claude/skills/<skill-name>/SKILL.md`.
 - **Update CLAUDE.md**: if a behavioural rule was missing, ambiguous, or not followed correctly, fix it at `CLAUDE.md` at the project root directly.
 
+If any changes were made to framework files with corresponding docs (`docs/`), verify those docs are up to date before considering the work complete. Check that new features have dedicated sections, tables are updated, and examples reflect the current behaviour.
+
 Then open `.claude/skill-backlog.md`. For each item logged during this session:
 - Evaluate whether it is still relevant given what was actually done
 - If yes, action it: create the skill or apply the improvement
 - Remove actioned items from the backlog
 - Leave items that need more context or a future session
+
+---
+
+## 4a. Review Memory Entries
+
+If `.claude/project/memory.md` exists, open it. For any entries added or modified during this session:
+- Confirm they are accurate based on what was actually observed
+- Rewrite any that are vague or poorly phrased
+- Remove any that turned out to be wrong or are already covered by CLAUDE.md or a skill
+
+Do not add new entries here unless something significant was missed during the session.
 
 ---
 
@@ -85,7 +98,7 @@ Do not append to a shared log. Each session gets its own file, retrievable by it
 
 ## 6. Start Next Session
 
-Generate a new session ID for the next task by running the session-start hook:
+Generate a new session ID for the next task by running the session-start hook. **Do not run this hook at any other point during the session** — it overwrites `.claude/sessions/.current`, displacing the session ID in use.
 
 ```bash
 CLAUDE_PROJECT_DIR=$(pwd) bash .claude/hooks/session-start.sh

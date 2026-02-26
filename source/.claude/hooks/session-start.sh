@@ -44,6 +44,14 @@ echo "$SESSION_ID" > "$SESSION_FILE"
 
 # Inject into Claude's context via stdout (SessionStart hook behaviour)
 echo "Session ID: ${SESSION_ID}"
-echo "This ID should be used to identify this session in all wrap-up summaries and logs."
+
+# Inject project memory if it exists
+MEMORY_FILE="${CLAUDE_PROJECT_DIR}/.claude/project/memory.md"
+if [ -f "$MEMORY_FILE" ]; then
+  echo ""
+  echo "--- Project Memory ---"
+  cat "$MEMORY_FILE"
+  echo "--- End Project Memory ---"
+fi
 
 exit 0

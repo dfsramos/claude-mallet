@@ -2,142 +2,95 @@
 
 ## Session ID
 
-A unique 3-word session ID is generated for each task or work session. The ID is written to `.claude/sessions/.current`. Use this ID to identify the session in all wrap-up summaries and logs.
+Each session has a unique ID written to `.claude/sessions/.current`. Use it to identify the session in all wrap-up summaries and logs.
 
-Session IDs are generated:
-- Automatically when a new conversation starts (via the session-start hook)
-- At the end of each wrap-up, preparing a fresh ID for the next task
-
-This ensures each discrete task gets its own session ID, even within a longer conversation.
+Do not read `.claude/sessions/` files at session start or proactively. Only access previous session records when the user explicitly asks for session history.
 
 ## Evidence-Based Approach
 
-Always provide evidence or proof with every conclusion. Scale the depth of investigation to the nature of the task — forensic depth for debugging and incident investigation, lighter verification for routine development — but never skip evidence entirely.
+Always back conclusions with evidence. Scale depth to task nature — forensic for debugging, lighter for routine development — but never skip evidence entirely.
 
-When investigating issues:
-- Show specific commands and their output
-- Provide timestamps, task IDs, log excerpts
-- Reference specific metrics, files, or configuration values
-- Build a clear evidence chain from symptom to root cause
-
-For routine development tasks (writing features, refactoring, code review):
-- Still reference specific files, line numbers, and values rather than speaking in generalities
+- Show specific commands and output, timestamps, log excerpts, metrics
+- Reference specific files and line numbers rather than speaking in generalities
 - Confirm assumptions by reading relevant code before acting on them
 - Flag uncertainties explicitly rather than proceeding on a guess
-
-Never speculate:
-- Never label infrastructure as "legacy" without evidence
-- Never guess the purpose/role of a resource from its name alone — state the name, note the role is unverified
-- Never assume which model/service/protocol is being used — say "unknown without checking service code"
-- If a claim can't be backed by API output, config files, or code, don't make it
+- Never speculate: don't label infrastructure as "legacy", guess a resource's purpose from its name, or assume which model/service/protocol is in use without evidence
 
 ## Communication Style
 
-Maintain a calm, scientific approach in all communications:
-- Use calm, measured tone without excessive emphasis
-- Be concise and condensed — avoid unnecessary words
-- Never use ALL CAPS, multiple exclamation marks, or emoji for emphasis
-- State facts clearly with supporting evidence
-- Use tables and structured data for comparisons
-- Avoid subjective language like "insane", "crazy", "amazing"
-- Present findings objectively without dramatization
-- Always format output as Markdown — this applies to summaries, explanations, findings, and generated content alike
+- Calm, measured tone — no ALL CAPS, multiple exclamation marks, or emoji
+- Concise and condensed — avoid unnecessary words
+- State facts with supporting evidence; use tables for comparisons
+- No subjective language ("insane", "crazy", "amazing")
+- Always format output as Markdown
 
 ## Interaction Style
 
-- Be proactive with reads. Never ask "do you have X?" or "should I check Y?" — just read/ls and find out. Only ask the user when a decision genuinely requires their input.
-- Ask about naming preferences before creating files rather than guessing.
-- When the user rejects a tool call or corrects something, apply the fix without restating what went wrong. Just do it.
-- Run commands instead of suggesting them. Don't print a command and tell the user to run it — just run it.
+- Be proactive with reads — never ask "do you have X?" or "should I check Y?", just read and find out. Only ask when a decision genuinely requires user input.
+- Ask about naming preferences before creating files.
+- When the user rejects a tool call or corrects something, apply the fix without restating what went wrong.
+- Run commands instead of suggesting them.
 
 ## Tool Preferences
 
 Prefer specialised tools over Bash for all file operations:
-- Use Read, Edit, Write, Grep, and Glob for file interactions
-- This applies to dotfiles too — use Edit to modify `~/.zshrc`, `~/.gitconfig`, and similar files; never use `echo` or append via Bash
-- Never suppress stderr with `2>/dev/null` — always let errors surface so they are visible
-
-Do not use Python scripts for tasks that have a dedicated executable:
-- This includes database interaction, git operations, HTTP requests, file transformations, and similar tasks
-- Identify the appropriate dedicated tool for the job
-- If it is not installed, ask the user for permission to install it before proceeding
+- Use Read, Edit, Write, Grep, and Glob — including for dotfiles like `~/.zshrc`, `~/.gitconfig`
+- Never suppress stderr with `2>/dev/null`
+- Don't use Python scripts for tasks with a dedicated executable; identify the right tool, or ask permission to install it
 
 ## Destructive Operations
 
-Never perform destructive operations unless explicitly instructed to do so.
+Never perform destructive operations unless explicitly instructed. This includes: deleting or overwriting files, database mutations (UPDATE, DELETE, DROP, TRUNCATE, schema changes), and any operation that can't be trivially undone.
 
-Destructive operations include:
-- Deleting or overwriting files
-- Database mutations: INSERT, UPDATE, DELETE, DROP, TRUNCATE, or any schema-altering statement
-- Removing records, tables, indexes, or migrations
-- Any operation that cannot be trivially undone
-
-Read-only database operations (SELECT, SHOW, DESCRIBE, EXPLAIN) are pre-approved and do not require confirmation.
-
-When a destructive operation is required:
+When required:
 1. State clearly what will be destroyed and why
-2. Wait for an explicit confirmation from the user ("yes, do it" or equivalent)
+2. Wait for explicit confirmation ("yes, do it" or equivalent)
 3. Do not proceed on implied or contextual consent
 
 ## Production Awareness
 
-Before executing any operation, assess whether the target environment is production or live.
+Before any operation, assess whether the target is production. If ambiguous, ask — don't infer from container names, hostnames, or file paths.
 
-If there is any ambiguity about whether the environment is production:
-- Stop and ask the user to confirm before proceeding
-- Do not infer from context, container names, hostnames, or file paths alone — ask directly
-
-When confirmed to be operating in a production or live environment:
-- Flag any command with side effects before running it, even non-destructive ones
-- Prefer read-only investigation over direct intervention where possible
-- Never run a write, restart, or configuration-change operation without stating its impact first and waiting for confirmation
-- Apply the destructive operations rules above with heightened scrutiny
+In production:
+- Flag commands with side effects before running them, even non-destructive ones
+- Prefer read-only investigation over direct intervention
+- Never run write, restart, or config-change operations without stating impact first and waiting for confirmation
+- Apply destructive operations rules with heightened scrutiny
 
 ## Git Workflow
 
-All code changes follow this workflow:
-- Create a new branch off `master` for each session or task — never commit directly to `master`
+- Create a new branch off `master` per session/task — never commit to `master` directly
 - Branch name should describe the change (e.g., `add-discover-skill`, `fix-auth-bug`)
-- Never reuse old branches from previous sessions — each new task gets a fresh branch
-- Commit all related changes to that branch
-- Open a PR for the user to review before anything is merged
-- After the PR is pushed, switch the working copy back to `master`
+- Never reuse branches from previous sessions
+- Commit changes to the branch, open a PR, then switch back to `master`
 - Do not merge PRs without explicit user instruction
 
-Commit message format:
-- Short and specific — one line unless a body is genuinely needed
-- Start with a capital letter and an imperative verb (Add, Fix, Remove, Update, Refactor)
-- End with a period
-- Example: `Add password reset email template.`
+Commit format: one line, imperative verb, capital first letter, ends with period. Example: `Add password reset email template.`
 
 ## Skill Backlog
 
-During every session, actively look for things that would benefit from being captured as reusable skills or improvements to existing ones. When something is identified:
-- Append it to `.claude/skill-backlog.md`
-- Include: a short title, what triggered the observation, and a brief description of what the skill or improvement should cover
-- Do not interrupt the session to discuss it — just log it silently and continue
+Actively watch for patterns worth capturing as skills. When identified, silently append to `.claude/skill-backlog.md` with: title, what triggered it, brief description. Do not interrupt the session.
 
-The user will review `skill-backlog.md` at their own pace and decide what to promote into actual skill files.
+## Project Memory
+
+`.claude/project/memory.md` stores persistent project facts. Injected at session start — keep it lean.
+
+Add: preferred commands, non-obvious behaviours, consistent conventions, better-than-obvious tools.
+Do not add: session outcomes, per-run state, anything already in CLAUDE.md or a skill.
 
 ## Project Discovery
 
-When the user says "discover", "discover this project", "analyze the codebase", or runs `/discover`, perform structured project analysis using the `discover` skill.
+When the user says "discover", "analyze the codebase", or runs `/discover`, use the `discover` skill.
 
-This is distinct from the skill backlog:
-- **Discovery**: structured, comprehensive analysis — run explicitly when starting on a new project or when workflow changes
-- **Skill backlog**: lightweight, session-driven observations — capture ideas as you work
+## Project Context
 
-Discovery identifies:
-- External services and API integration opportunities
-- Common workflow patterns that could become skills
-- Connection data to document
-- Project-specific conventions for CLAUDE.md
-- Patterns that could be promoted to the framework base
+If `.claude/project/CLAUDE.md` exists, read it at session start.
+If `.claude/project/skills/` exists, treat it as an additional skills directory alongside `.claude/skills/`.
 
-The discovery process is interactive — ask questions when important decisions or priorities need clarification.
+---
 
 ## Session Closure
 
-When a task reaches a natural conclusion (problem solved, feature implemented, investigation complete), proactively offer a session wrap-up. Don't wait for the user to say "all done" — suggest it: "Want me to do a quick session wrap-up?"
+When a task reaches a natural conclusion, proactively offer a wrap-up: "Want me to do a quick session wrap-up?"
 
-If the user agrees, follow the `session-wrap-up` skill.
+If the user agrees, follow the `reviewing-sessions` skill.
