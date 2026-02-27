@@ -6,7 +6,16 @@ description: Plans and executes a feature from high-level description through im
 
 ## Setup
 
-Open a worktree on master to read and write planning files without disrupting the current branch:
+Open a worktree on master to read and write planning files without disrupting the current branch.
+
+First check if master is already the current branch:
+
+```bash
+git branch --show-current
+```
+
+- **If already on master**: skip worktree creation. Read and write plan files directly in the current directory. There is no worktree to clean up.
+- **If on another branch**: create the worktree:
 
 ```bash
 git worktree list | grep -q /tmp/feature-planning || git worktree add /tmp/feature-planning master
@@ -14,6 +23,8 @@ git -C /tmp/feature-planning pull --ff-only
 ```
 
 Cleanup on completion or error: `git worktree remove --force /tmp/feature-planning`
+
+In all subsequent steps, replace `/tmp/feature-planning` with the current directory (`.`) when already on master.
 
 ---
 
