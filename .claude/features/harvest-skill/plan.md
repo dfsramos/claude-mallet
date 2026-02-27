@@ -1,5 +1,5 @@
 # Feature: harvest-skill
-Status: in-progress
+Status: done
 Created: 2026-02-27
 Branch: f/harvest-skill
 
@@ -11,4 +11,4 @@ The current harvest.sh script copies project-specific skills from a target proje
 
 ## Tasks
 - [x] 01-author-skill — Create .claude/project/skills/harvest/SKILL.md [deps: —] [parallel: no]
-- [ ] 02-remove-script — Delete harvest.sh [deps: 01] [parallel: no]
+- [x] 02-remove-script — Delete harvest.sh [deps: 01] [parallel: no]

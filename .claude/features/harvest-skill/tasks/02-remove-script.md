@@ -1,5 +1,5 @@
 # Task: 02-remove-script
-Status: pending
+Status: done
 Deps: 01-author-skill
 
 ## Goal
