@@ -68,6 +68,28 @@ In production:
 
 Commit format: one line, imperative verb, capital first letter, ends with period. Example: `Add password reset email template.`
 
+## Self-Improvement Loop
+
+After any correction from the user, silently append to `.claude/project/lessons.md`:
+- What went wrong
+- The rule to prevent it from recurring
+
+Review `.claude/project/lessons.md` at session start if it exists. Apply those rules throughout the session.
+
+## Verification Before Done
+
+Never mark a task complete without proving it works:
+- Run the relevant test, command, or diff
+- Ask yourself: "Would a staff engineer approve this?"
+- If the answer is no, fix it before marking done
+
+## Elegance Check
+
+For non-trivial changes, pause before presenting and ask: "Is there a more elegant way?"
+- If the current approach feels hacky, implement the cleaner solution instead
+- Challenge your own work before surfacing it
+- Skip for simple, obvious fixes — don't over-engineer
+
 ## Skill Backlog
 
 Actively watch for patterns worth capturing as skills. When identified, silently append to `.claude/skill-backlog.md` with: title, what triggered it, brief description. Do not interrupt the session.
