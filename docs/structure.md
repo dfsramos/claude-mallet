@@ -12,8 +12,15 @@
 │   ├── skills/
 │   │   ├── discover/
 │   │   │   └── SKILL.md               # Structured project analysis and skill opportunity identification
+│   │   ├── plan-feature/
+│   │   │   └── SKILL.md               # Intake-to-execution feature planning pipeline
+│   │   ├── systematic-debugging/
+│   │   │   └── SKILL.md               # Four-phase root-cause-first debugging methodology
 │   │   └── reviewing-sessions/
 │   │       └── SKILL.md               # Structured end-of-session retrospective
+│   ├── templates/
+│   │   └── knowledge-skill/
+│   │       └── SKILL.md               # Template for domain knowledge skills
 │   ├── sessions/
 │   │   ├── .current                   # Active session ID (gitignored)
 │   │   └── <session-id>.md            # Per-session wrap-up records (gitignored)
@@ -26,9 +33,13 @@
 │       │   └── session-start.sh
 │       ├── project/
 │       │   └── memory.md
-│       └── skills/
-│           ├── discover/SKILL.md
-│           └── reviewing-sessions/SKILL.md
+│       ├── skills/
+│       │   ├── discover/SKILL.md
+│       │   ├── plan-feature/SKILL.md
+│       │   ├── systematic-debugging/SKILL.md
+│       │   └── reviewing-sessions/SKILL.md
+│       └── templates/
+│           └── knowledge-skill/SKILL.md
 └── docs/
     ├── structure.md                   # This file
     ├── directives.md                  # Behavioral rules defined in CLAUDE.md

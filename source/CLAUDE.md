@@ -15,6 +15,7 @@ Always back conclusions with evidence. Scale depth to task nature — forensic f
 - Confirm assumptions by reading relevant code before acting on them
 - Flag uncertainties explicitly rather than proceeding on a guess
 - Never speculate: don't label infrastructure as "legacy", guess a resource's purpose from its name, or assume which model/service/protocol is in use without evidence
+- Before claiming a task or fix is complete, identify the verification command, run it fresh, and confirm the output proves the claim — not just that the command succeeded
 
 ## Communication Style
 
@@ -67,6 +68,37 @@ In production:
 - Do not merge PRs without explicit user instruction
 
 Commit format: one line, imperative verb, capital first letter, ends with period. Example: `Add password reset email template.`
+
+## Self-Improvement Loop
+
+After any correction from the user, silently append to `.claude/project/lessons.md`:
+- What went wrong
+- The rule to prevent it from recurring
+
+Review `.claude/project/lessons.md` at session start if it exists. Apply those rules throughout the session.
+
+## Verification Before Done
+
+Never mark a task complete without proving it works:
+- Run the relevant test, command, or diff
+- Ask yourself: "Would a staff engineer approve this?"
+- If the answer is no, fix it before marking done
+
+## Elegance Check
+
+For non-trivial changes, pause before presenting and ask: "Is there a more elegant way?"
+- If the current approach feels hacky, implement the cleaner solution instead
+- Challenge your own work before surfacing it
+- Skip for simple, obvious fixes — don't over-engineer
+
+## Skill Authoring
+
+When creating or editing skills:
+
+- The `description` field must state **trigger conditions only** — when to invoke the skill, not what it does. Claude uses this field to decide whether to activate a skill; a workflow summary doesn't serve that purpose.
+- Good: `"Invoke when the user runs /discover, or says 'analyze the codebase'..."`
+- Bad: `"Performs structured project discovery and generates recommendations."`
+- The template for knowledge skills lives at `.claude/templates/knowledge-skill/SKILL.md`.
 
 ## Skill Backlog
 
