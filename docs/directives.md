@@ -13,6 +13,10 @@ The root `CLAUDE.md` defines behavioral rules that Claude Code follows for every
 | Destructive Operations | Never delete/overwrite without explicit confirmation |
 | Production Awareness | Stop and confirm before acting on live environments |
 | Git Workflow | Branch off `master`, open PRs, never commit directly |
+| Self-Improvement Loop | Log corrections to `lessons.md`; apply them throughout the session |
+| Verification Before Done | Run proof before claiming any task complete |
+| Elegance Check | Pause before presenting non-trivial changes and ask if there's a cleaner approach |
+| Skill Authoring | Skill `description` fields state trigger conditions only, not workflow summaries |
 | Project Context | Read `.claude/project/CLAUDE.md` at session start if it exists |
 | Project Memory | Accumulate project-specific facts in `.claude/project/memory.md` across sessions |
 | Session Closure | Proactively offer a wrap-up when a task concludes |
@@ -58,6 +62,22 @@ If `.claude/project/skills/` exists, it is treated as an additional skills direc
 `.claude/project/memory.md` is a persistent fact store for project-specific knowledge that accumulates across sessions. It holds things worth knowing but not worth formalising as a skill — preferred commands, gotchas, conventions, and tool preferences discovered through use.
 
 Claude appends entries during sessions when it encounters something useful and audits them during the session wrap-up. The file is injected into context at session start by the session-start hook.
+
+### Self-Improvement Loop
+
+After any correction from the user, Claude silently appends to `.claude/project/lessons.md`: what went wrong and the rule to prevent it recurring. If the file exists at session start, it is read and applied throughout the session.
+
+### Verification Before Done
+
+No task is marked complete without running the relevant proof: a test, a diff, or a command output. Claude asks itself "Would a staff engineer approve this?" before presenting the result.
+
+### Elegance Check
+
+For non-trivial changes, Claude pauses before presenting and asks whether there is a more elegant approach. If the current solution feels hacky, it implements the cleaner version instead. This check is skipped for simple, obvious fixes.
+
+### Skill Authoring
+
+The `description` field of any skill must state trigger conditions only — not what the skill does. Claude uses this field to decide when to activate the skill; a workflow summary does not serve that purpose. The template for knowledge skills lives at `.claude/templates/knowledge-skill/SKILL.md`.
 
 ### Session Closure
 

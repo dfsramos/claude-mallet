@@ -11,12 +11,13 @@ A structured analysis of a project's codebase to identify opportunities for impr
 
 1. **Initial scan** — languages, frameworks, build tools, project structure
 2. **External service detection** — API clients, SDKs, auth providers, data services
-3. **Skill opportunities** — repeatable patterns that could become skills (deployments, DB ops, testing)
-4. **Connection data** — services and systems that should have connection templates documented
-5. **Project conventions** — patterns worth capturing in `.claude/project/CLAUDE.md`
-6. **Promotable patterns** — generic enough to move into the base framework
-7. **Discovery report** — saved to `.claude/discovery-YYYY-MM-DD.md`
-8. **Quick wins** — offer to immediately implement high-value stub skills or conventions
+3. **MCP server opportunities** — assesses whether the project would benefit from live documentation servers (e.g., Context7 for projects with actively-developed third-party libraries); project-scoped, added to `.mcp.json` at the project root
+4. **Skill opportunities** — repeatable patterns that could become skills (deployments, DB ops, testing)
+5. **Connection data** — services and systems that should have connection templates documented
+6. **Project conventions** — patterns worth capturing in `.claude/project/CLAUDE.md`
+7. **Promotable patterns** — generic enough to move into the base framework
+8. **Discovery report** — saved to `.claude/discovery-YYYY-MM-DD.md`
+9. **Quick wins** — offer to immediately implement high-value stub skills, conventions, or MCP server configs
 
 ## Feature Planning
 
@@ -27,9 +28,10 @@ An intake-to-execution pipeline for planning and implementing features. Supports
 
 1. **Pre-check** — reads existing plans from master; surfaces overlaps before creating anything new
 2. **Intake** — broad questions (problem, users, success criteria, constraints, remote system involvement)
-3. **Decompose** — confirms a slug, writes `plan.md` (task list with dependencies and parallel flags) and per-task stub files under `.claude/features/<slug>/tasks/`
-4. **Execute** — runs tasks in dependency order; offers parallel execution where allowed; applies autonomy rules (local work proceeds freely; remote/production writes require confirmation); updates task and plan status on master after each task
-5. **Resume** — if a plan already exists, skips intake and picks up from the first incomplete task
+3. **Knowledge skill assessment** — checks whether the feature operates in a domain with strong conventions (API design, auth, data modelling, security, accessibility) and offers to scaffold a knowledge skill alongside the plan
+4. **Decompose** — confirms a slug; writes `plan.md` (task list with dependencies and parallel flags), `state.md` (running log of decisions and blockers), and per-task stub files under `.claude/features/<slug>/tasks/`; each task stub includes a TDD checklist by default
+5. **Execute (wave model)** — identifies all tasks whose dependencies are satisfied (a wave), presents parallel candidates, executes the wave, logs decisions and blockers to `state.md`, then reassesses for the next wave
+6. **Resume** — loads `plan.md` and `state.md` from master; reads state first to recover decisions and open blockers from prior sessions
 
 ## Session Wrap-Up
 
@@ -45,6 +47,29 @@ A structured end-of-session retrospective that produces:
 4a. **Memory audit** — review entries added to `.claude/project/memory.md` during the session; confirm accuracy, rewrite vague entries, remove stale ones
 5. **Session record** — saved to `.claude/sessions/<session-id>.md`
 6. **Next session ID** — generated via the session-start hook
+
+## Systematic Debugging
+
+**Directory:** `.claude/skills/systematic-debugging/`
+**Triggered by:** Debugging an error, investigating unexpected behaviour, or when a previous fix attempt has failed
+
+A four-phase methodology that enforces root cause investigation before any fix is attempted.
+
+1. **Root cause investigation** — reproduce the failure consistently; read the full error and stack trace; review recent changes; add diagnostic instrumentation at component boundaries
+2. **Pattern analysis** — locate the closest working analogue; compare implementations completely; list every difference; map all touched dependencies
+3. **Hypothesis and testing** — state a specific, falsifiable hypothesis; change one variable at a time; discard or refine based on evidence
+4. **Implementation** — write a failing test first; confirm it fails; apply a single targeted fix; confirm it passes; confirm no regressions
+
+Hard rule: no fix is applied before root cause is confirmed.
+
+## Knowledge Skill Template
+
+**File:** `.claude/templates/knowledge-skill/SKILL.md`
+**Used by:** `plan-feature` (step 2b) when a feature domain warrants encoding expertise
+
+A template for creating domain knowledge skills — skills that inject expertise (principles, decision rules, reference data, anti-patterns) rather than orchestrate a workflow. Structured with four sections: core principles, decision framework, reference table, and pre-delivery checklist.
+
+Copy to `.claude/project/skills/<domain>-knowledge/SKILL.md` and fill in domain-specific content.
 
 ## Project Memory
 
