@@ -62,6 +62,19 @@ A four-phase methodology that enforces root cause investigation before any fix i
 
 Hard rule: no fix is applied before root cause is confirmed.
 
+## Harvest
+
+**Directory:** `.claude/project/skills/harvest/` (framework-specific, not installed into target projects)
+**Triggered by:** "harvest", "run harvest", or "harvest `<project-path>`"
+
+Promotes project-specific skills from an installed project into the framework base, and reconciles framework drift in the target project. Runs in three phases:
+
+1. **Pull check** — fetches and fast-forwards the ai-framework repo to ensure comparisons are against the latest source
+2. **Drift detection** — diffs every file under `source/` against its counterpart in the target; presents a human-readable summary of changes and lets the user select which files to update
+3. **Skill promotion** — scans `TARGET/.claude/project/skills/`; lets the user select skills to copy into `source/.claude/skills/` and removes them from the target project
+
+After promotion, re-run the `install` skill on the target to propagate newly promoted base skills.
+
 ## Knowledge Skill Template
 
 **File:** `.claude/templates/knowledge-skill/SKILL.md`
