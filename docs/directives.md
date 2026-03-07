@@ -13,6 +13,9 @@ The root `CLAUDE.md` defines behavioral rules that Claude Code follows for every
 | Destructive Operations | Never delete/overwrite without explicit confirmation |
 | Production Awareness | Stop and confirm before acting on live environments |
 | Git Workflow | Branch off `master`, open PRs, never commit directly |
+| Self-Improvement Loop | Record lessons after corrections; review at session start |
+| Verification Before Done | Prove changes work before declaring completion |
+| Elegance Check | Challenge your own solution before surfacing it |
 | Project Context | Read `.claude/project/CLAUDE.md` at session start if it exists |
 | Project Memory | Accumulate project-specific facts in `.claude/project/memory.md` across sessions |
 | Session Closure | Proactively offer a wrap-up when a task concludes |
@@ -46,6 +49,18 @@ Before executing any operation, Claude assesses whether the target is a producti
 ### Git Workflow
 
 All changes go through branches. Commits are never made directly to `master`. PRs are opened for review and not merged without explicit instruction.
+
+### Self-Improvement Loop
+
+After any correction from the user, Claude silently appends an entry to `.claude/project/lessons.md` recording what went wrong and the rule to prevent recurrence. At the start of each session, if the file exists, Claude reviews its contents and applies those rules for the duration of the session.
+
+### Verification Before Done
+
+Claude never declares a task complete without proving it works. This means running the relevant test, command, or diff and asking internally: "Would a staff engineer approve this?" If the answer is no, the issue is fixed before surfacing the result.
+
+### Elegance Check
+
+For non-trivial changes, Claude pauses before presenting the result and asks: "Is there a more elegant way?" If the current approach feels hacky, the cleaner solution is implemented instead. This check is skipped for simple, obvious fixes to avoid over-engineering.
 
 ### Project Context
 

@@ -7,11 +7,22 @@
 ├── install.sh                         # Automated installer for deploying the framework to a project
 ├── .claude/
 │   ├── settings.json                  # Hook registrations
+│   ├── features/
+│   │   └── <slug>/                    # Feature plans committed directly to master
+│   │       ├── plan.md
+│   │       └── tasks/
 │   ├── hooks/
 │   │   └── session-start.sh           # Generates a unique session ID at startup
+│   ├── project/
+│   │   ├── lessons.md                 # Lessons recorded after user corrections
+│   │   └── skills/
+│   │       └── harvest/
+│   │           └── SKILL.md           # Drift detection and skill promotion for installed projects
 │   ├── skills/
 │   │   ├── discover/
 │   │   │   └── SKILL.md               # Structured project analysis and skill opportunity identification
+│   │   ├── plan-feature/
+│   │   │   └── SKILL.md               # Intake-to-execution pipeline for planning and building features
 │   │   └── reviewing-sessions/
 │   │       └── SKILL.md               # Structured end-of-session retrospective
 │   ├── sessions/
@@ -28,6 +39,7 @@
 │       │   └── memory.md
 │       └── skills/
 │           ├── discover/SKILL.md
+│           ├── plan-feature/SKILL.md
 │           └── reviewing-sessions/SKILL.md
 └── docs/
     ├── structure.md                   # This file
@@ -56,7 +68,9 @@ When the framework is installed into a project, the target project may also cont
 | Path | Purpose |
 |---|---|
 | `.claude/hooks/` | Scripts triggered automatically by Claude Code events |
+| `.claude/features/` | Feature plans committed directly to master; visible across all branches |
 | `.claude/skills/` | Reusable skill definitions (each in its own subdirectory) |
+| `.claude/project/skills/` | Framework-specific skills not installed into target projects |
 | `.claude/sessions/` | Runtime session data (gitignored) |
 | `source/` | Template files installed into target projects via `install.sh` |
 
