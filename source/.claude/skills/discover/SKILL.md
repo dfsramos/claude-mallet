@@ -1,7 +1,6 @@
 ---
 name: discover
-description: Performs structured project discovery to identify improvement opportunities for the .claude/ setup. Invokes when the user runs /discover or uses conversational phrases like "discover this project", "analyze the codebase", or "what could we improve here". Scans for external services, common patterns, and generates actionable recommendations.
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, AskUserQuestion
+description: Invoke when the user runs /discover, or says "discover this project", "analyze the codebase", "what could we improve here", or similar. Also when entering a new project and asking what .claude setup improvements are possible.
 ---
 # Project Discovery
 
@@ -36,6 +35,21 @@ For each significant external service found, note:
 - Service name and purpose
 - How it's being used (client library, direct HTTP calls, CLI)
 - Configuration locations (env vars, config files)
+
+---
+
+## 2b. Assess MCP Server Opportunities
+
+After scanning dependencies, check whether the project would benefit from live documentation via MCP servers. These are project-scoped additions — recommend them for the individual project, not the global Claude setup.
+
+**Context7** (`npx -y @upstash/context7-mcp@latest`):
+Pulls current, version-specific library docs into the context window at query time. Reduces hallucination risk for projects using actively-developed third-party libraries.
+
+Recommend when:
+- The project has 3+ non-trivial third-party library dependencies, **or**
+- Dependencies include known fast-moving libraries (e.g., Next.js, React 18+, Prisma, Drizzle, tRPC, LangChain, Tailwind v4, Astro)
+
+Note the detected libraries that triggered the recommendation — these will be listed in the report.
 
 ---
 
@@ -142,6 +156,13 @@ Project: <project-name>
 |---------|---------|------------------|---------------------|
 | ... | ... | ... | ... |
 
+## Recommended MCP Servers
+| Server | Purpose | Install | Detected Libraries |
+|--------|---------|---------|-------------------|
+| Context7 | Live library docs | `npx -y @upstash/context7-mcp@latest` | <list> |
+
+_(Omit this section if no MCP servers were recommended.)_
+
 ## Recommended Skills
 ### High Priority
 - **[skill-name]**: <description> — <why it's valuable>
@@ -180,6 +201,7 @@ Based on the findings, offer to immediately implement high-value, low-effort imp
 - Create stub skill files for top 2-3 recommended skills in `.claude/project/skills/`
 - Add connection data templates for critical services
 - Write project conventions to `.claude/project/CLAUDE.md` (not the base `CLAUDE.md`)
+- Add recommended MCP servers to `.mcp.json` at the project root (Claude Code reads this automatically; do not place it inside `.claude/`)
 
 Ask: "Want me to implement any of these quick wins now?"
 

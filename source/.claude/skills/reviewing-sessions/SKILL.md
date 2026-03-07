@@ -1,7 +1,6 @@
 ---
 name: reviewing-sessions
-description: Performs a structured end-of-session retrospective. Invokes when the user agrees to a session wrap-up, or uses phrases like "wrap up", "all done", or "end session". Produces a retrospective report, applies skill and directive improvements, processes the skill backlog, and saves a session record keyed to the session ID.
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob
+description: Invoke when the user agrees to a session wrap-up, or says "wrap up", "all done", "end session", or similar. Also when the user proactively asks for a session summary or retrospective.
 ---
 # Session Wrap-Up
 

@@ -4,7 +4,6 @@
 .
 ├── CLAUDE.md                          # Core directives (persona, rules, workflow)
 ├── README.md                          # Project overview and installation instructions
-├── install.sh                         # Automated installer for deploying the framework to a project
 ├── .claude/
 │   ├── settings.json                  # Hook registrations
 │   ├── features/
@@ -21,10 +20,17 @@
 │   ├── skills/
 │   │   ├── discover/
 │   │   │   └── SKILL.md               # Structured project analysis and skill opportunity identification
+│   │   ├── install/
+│   │   │   └── SKILL.md               # Install the framework into a target project
 │   │   ├── plan-feature/
-│   │   │   └── SKILL.md               # Intake-to-execution pipeline for planning and building features
+│   │   │   └── SKILL.md               # Intake-to-execution feature planning pipeline
+│   │   ├── systematic-debugging/
+│   │   │   └── SKILL.md               # Four-phase root-cause-first debugging methodology
 │   │   └── reviewing-sessions/
 │   │       └── SKILL.md               # Structured end-of-session retrospective
+│   ├── templates/
+│   │   └── knowledge-skill/
+│   │       └── SKILL.md               # Template for domain knowledge skills
 │   ├── sessions/
 │   │   ├── .current                   # Active session ID (gitignored)
 │   │   └── <session-id>.md            # Per-session wrap-up records (gitignored)
@@ -37,10 +43,13 @@
 │       │   └── session-start.sh
 │       ├── project/
 │       │   └── memory.md
-│       └── skills/
-│           ├── discover/SKILL.md
-│           ├── plan-feature/SKILL.md
-│           └── reviewing-sessions/SKILL.md
+│       ├── skills/
+│       │   ├── discover/SKILL.md
+│       │   ├── plan-feature/SKILL.md
+│       │   ├── systematic-debugging/SKILL.md
+│       │   └── reviewing-sessions/SKILL.md
+│       └── templates/
+│           └── knowledge-skill/SKILL.md
 └── docs/
     ├── structure.md                   # This file
     ├── directives.md                  # Behavioral rules defined in CLAUDE.md
@@ -72,14 +81,14 @@ When the framework is installed into a project, the target project may also cont
 | `.claude/skills/` | Reusable skill definitions (each in its own subdirectory) |
 | `.claude/project/skills/` | Framework-specific skills not installed into target projects |
 | `.claude/sessions/` | Runtime session data (gitignored) |
-| `source/` | Template files installed into target projects via `install.sh` |
+| `source/` | Template files installed into target projects via the `install` skill |
 
 ## Key Files
 
 | File | Purpose |
 |---|---|
 | `CLAUDE.md` | Root directives file — defines persona, rules, and workflow |
-| `install.sh` | Interactive installer that copies `source/` into an existing project |
+| `.claude/skills/install/SKILL.md` | Installs the framework into an existing project |
 | `.claude/settings.json` | Registers hooks and other Claude Code settings |
 | `.claude/skill-backlog.md` | Running log of skill ideas captured during sessions |
 | `.claude/project/memory.md` | Persistent project-specific knowledge store, injected at session start |

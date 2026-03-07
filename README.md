@@ -10,13 +10,13 @@ It is not application code — it is a scaffold for standardizing Claude Code be
 
 ## Installation
 
-Use the installer to deploy the framework into an existing project:
+Open this repo in Claude Code and ask it to install the framework into a target project:
 
-```bash
-bash ai-framework/install.sh /path/to/existing-project
+```
+install the framework into /path/to/existing-project
 ```
 
-The installer handles conflict detection, backup options, hook permissions, and `.gitignore` entries. Run with `--dry-run` to preview what would be changed without writing anything.
+Claude will inspect the target for existing `.claude/` setup, detect any local customisations that would be overwritten, ask how to handle conflicts, copy the framework files, set hook permissions, and provide context-aware next steps based on the project's stack.
 
 Alternatively, copy the files manually:
 
@@ -30,7 +30,7 @@ After installation, customize `CLAUDE.md` and the skills to match your workflow.
 ## Requirements
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
-- Bash 4+ (for hooks and the installer)
+- Bash 4+ (for hooks)
 
 ## Documentation
 
