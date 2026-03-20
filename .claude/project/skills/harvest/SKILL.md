@@ -134,11 +134,11 @@ Print a final summary:
   Skills promoted:  <list or "none">
   Skills skipped:   <list or "none">
 
-  Reminder: re-run install.sh on the target to propagate
-  any newly promoted base skills:
+  Reminder: re-run the install skill on the target to propagate
+  any newly promoted base skills. Open this repo in Claude Code and say:
 
-    ./install.sh <TARGET>
+    install the framework into <TARGET>
 ─────────────────────────────────────────────────────────
 ```
 
-Only show the install.sh reminder if at least one skill was promoted.
+Only show the install reminder if at least one skill was promoted.
