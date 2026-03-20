@@ -4,7 +4,7 @@ description: Invoke when the user agrees to a session wrap-up, or says "wrap up"
 ---
 # Session Wrap-Up
 
-Read the session ID from `.claude/sessions/.current` or the `$SESSION_ID` environment variable. All output from this process references that ID.
+The session ID is available as the `$SESSION_ID` environment variable (injected at session start). Reference it in the wrap-up output.
 
 ---
 
@@ -65,42 +65,3 @@ Do not add new entries here unless something significant was missed during the s
 
 ---
 
-## 5. Save Session Record
-
-Create a file at `.claude/sessions/<session-id>.md` inside the current project directory. If the `.claude/sessions/` directory does not exist, create it.
-
-The file should contain:
-
-```markdown
-# Session: <session-id>
-Date: YYYY-MM-DD HH:MM
-
-## Summary
-<one to three sentences>
-
-## What Went Well
-<bullet points>
-
-## What Went Poorly
-<bullet points>
-
-## Changes Made
-- Skills created: <list or "none">
-- Skills updated: <list or "none">
-- CLAUDE.md changes: <description or "none">
-- Skill backlog items actioned: <list or "none">
-```
-
-Do not append to a shared log. Each session gets its own file, retrievable by its ID.
-
----
-
-## 6. Start Next Session
-
-Generate a new session ID for the next task by running the session-start hook. **Do not run this hook at any other point during the session** — it overwrites `.claude/sessions/.current`, displacing the session ID in use.
-
-```bash
-CLAUDE_PROJECT_DIR=$(pwd) bash .claude/hooks/session-start.sh
-```
-
-This ensures each task within a conversation gets its own unique session ID.

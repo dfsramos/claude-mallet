@@ -7,16 +7,15 @@ Hooks are shell scripts that run automatically in response to Claude Code events
 **File:** `.claude/hooks/session-start.sh`
 **Trigger:** Claude Code session startup
 
-Generates a unique session identifier in the format `adjective-noun-verb-timestamp` (e.g., `tall-pine-lifts-7488`).
+Reads the session ID provided by Claude Code via the hook's stdin JSON and injects it into Claude's context.
 
 ### What it does
 
-1. Builds a random 3-word ID from built-in word lists, appended with a 4-digit timestamp
-2. Exports it as the `SESSION_ID` environment variable
-3. Writes it to `.claude/sessions/.current`
-4. Injects a context message into Claude's conversation via stdout
-5. If `.claude/project/memory.md` exists, injects its contents into Claude's context so project memory is available from the first message
-6. If `.claude/framework.json` exists and `gh` + `jq` are available, checks the remote repository for a newer commit. If one is found, injects an update notice into Claude's context:
+1. Reads `session_id` from the hook input JSON on stdin
+2. Exports it as the `SESSION_ID` environment variable via `$CLAUDE_ENV_FILE`
+3. Injects a context message into Claude's conversation via stdout
+4. If `.claude/project/memory.md` exists, injects its contents into Claude's context so project memory is available from the first message
+5. If `.claude/framework.json` exists and `gh` + `jq` are available, checks the remote repository for a newer commit. If one is found, injects an update notice into Claude's context:
    ```
    --- Framework Update Available ---
    Installed: abc1234 | Latest: def5678 (2026-03-21)
@@ -27,7 +26,7 @@ Generates a unique session identifier in the format `adjective-noun-verb-timesta
 
 ### Why it exists
 
-The session ID provides a stable reference for tracking work across a session. It is used by the [session wrap-up skill](skills.md#session-wrap-up) to name session records and link retrospective output to a specific session.
+The session ID provides a stable reference for the current conversation. It is the actual Claude Code session ID, passed via stdin by the hook runtime. It is used by the [session wrap-up skill](skills.md#session-wrap-up) to identify the session in retrospective output.
 
 The version check ensures users are passively informed of framework updates without having to check manually.
 

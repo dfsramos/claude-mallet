@@ -83,15 +83,13 @@ An intake-to-execution pipeline for planning and implementing features. Supports
 **Directory:** `.claude/skills/reviewing-sessions/`
 **Triggered by:** Phrases like "wrap up", "all done", or "end session"
 
-A structured end-of-session retrospective that produces:
+A structured end-of-session retrospective covering:
 
 1. **Session summary** — goal, approach, outcome
 2. **What went well** — efficient tasks, effective patterns, good tool use
 3. **What went poorly** — mistakes, user corrections, rule violations (with specific references)
 4. **Applied improvements** — updates to skills or directives based on session observations; skill backlog reviewed and actioned
 4a. **Memory audit** — review entries added to `.claude/project/memory.md` during the session; confirm accuracy, rewrite vague entries, remove stale ones
-5. **Session record** — saved to `.claude/sessions/<session-id>.md`
-6. **Next session ID** — generated via the session-start hook
 
 ## Systematic Debugging
 

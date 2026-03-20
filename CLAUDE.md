@@ -2,9 +2,7 @@
 
 ## Session ID
 
-Each session has a unique ID written to `.claude/sessions/.current`. Use it to identify the session in all wrap-up summaries and logs.
-
-Do not read `.claude/sessions/` files at session start or proactively. Only access previous session records when the user explicitly asks for session history.
+Each session has a unique ID injected into context at startup as `Session ID: <id>`. Use it to identify the session in wrap-up output.
 
 ## Evidence-Based Approach
 
