@@ -2,6 +2,51 @@
 
 Skills are reusable capabilities defined as `SKILL.md` files inside `.claude/skills/`. Each skill lives in its own subdirectory and is automatically available to Claude Code when the project is opened.
 
+## Install
+
+**File:** `install.md` (repo root — public-facing bootstrap)
+**Triggered by:** A new user pointing Claude at the repo URL
+
+Installs the AI framework into the user's current working directory from a remote GitHub repository. Requires no local checkout of the framework repo — the user only needs Claude and `git` available.
+
+Flow:
+1. Derives `owner/repo` from the provided GitHub URL
+2. Clones the repo to a temporary directory via `git clone --depth=1` (auth handled by the user's existing `git` credentials)
+3. Inspects the target for existing installations and local customisations
+4. Reports a pre-flight summary and resolves any conflicts before writing files
+5. Copies all files from `source/` to the current directory using Read + Write (no shell copies)
+6. Writes `.claude/framework.json` with the repo slug, commit hash, and install date
+7. Sets hook permissions and updates `.gitignore`
+8. Cleans up the temporary directory
+9. Prints a summary including the installed version hash
+
+**`framework.json`** is written on every install and update. It is consumed by the session-start hook to perform version checks. Format:
+```json
+{
+  "repo": "owner/repo",
+  "version": "<full commit hash>",
+  "installed_at": "YYYY-MM-DD"
+}
+```
+
+## Update
+
+**Directory:** `.claude/skills/update/` (installed into target projects via `source/`)
+**Triggered by:** Phrases like "update the framework", "update from `<url>`"
+
+Upgrades the framework in the current project to the latest version from the remote repository. Requires `.claude/framework.json` to exist (set during install).
+
+Flow:
+1. Reads `framework.json` to confirm the installed repo and hash
+2. Clones the latest version to a temporary directory and captures the new commit hash
+3. Short-circuits immediately if already up to date
+4. Diffs each source file against the installed version — files identical to upstream auto-update; files that differ are flagged as conflicts for user review
+5. Copies updated files using Read + Write
+6. Overwrites `framework.json` with the new hash and date
+7. Cleans up and prints a summary showing the version transition
+
+---
+
 ## Project Discovery
 
 **Directory:** `.claude/skills/discover/`
@@ -115,5 +160,5 @@ Projects can define skills specific to their own workflows in this directory. Th
 
 1. Create a subdirectory under `.claude/skills/` with a descriptive name
 2. Add a `SKILL.md` file defining the skill's purpose, trigger conditions, steps, and allowed tools
-3. Mirror the file to `source/.claude/skills/` so it is included in future `install.sh` runs
+3. Mirror the file to `source/.claude/skills/` so it is included in future installs and updates
 4. Claude Code will pick up the skill automatically
