@@ -54,4 +54,27 @@ if [ -f "$MEMORY_FILE" ]; then
   echo "--- End Project Memory ---"
 fi
 
+# Check for framework updates
+FRAMEWORK_JSON="${CLAUDE_PROJECT_DIR}/.claude/framework.json"
+if [ -f "$FRAMEWORK_JSON" ] && command -v gh &> /dev/null && command -v jq &> /dev/null; then
+  REPO=$(jq -r '.repo' "$FRAMEWORK_JSON" 2>/dev/null)
+  LOCAL_HASH=$(jq -r '.version' "$FRAMEWORK_JSON" 2>/dev/null)
+  if [ -n "$REPO" ] && [ -n "$LOCAL_HASH" ] && [ "$REPO" != "null" ] && [ "$LOCAL_HASH" != "null" ]; then
+    LATEST_INFO=$(gh api "repos/${REPO}/commits/HEAD" --jq '{sha: .sha, date: .commit.committer.date}' 2>/dev/null)
+    if [ -n "$LATEST_INFO" ]; then
+      LATEST_HASH=$(echo "$LATEST_INFO" | jq -r '.sha' 2>/dev/null)
+      LATEST_DATE=$(echo "$LATEST_INFO" | jq -r '.date' 2>/dev/null | cut -c1-10)
+      if [ -n "$LATEST_HASH" ] && [ "$LOCAL_HASH" != "$LATEST_HASH" ]; then
+        LOCAL_SHORT=$(echo "$LOCAL_HASH" | cut -c1-7)
+        LATEST_SHORT=$(echo "$LATEST_HASH" | cut -c1-7)
+        echo ""
+        echo "--- Framework Update Available ---"
+        echo "Installed: ${LOCAL_SHORT} | Latest: ${LATEST_SHORT} (${LATEST_DATE})"
+        echo "To update, say: \"update the framework from https://github.com/${REPO}\""
+        echo "--- End Framework Update ---"
+      fi
+    fi
+  fi
+fi
+
 exit 0

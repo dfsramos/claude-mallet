@@ -1,6 +1,6 @@
 ---
 name: install
-description: Invoke when the user says "install", "install the framework", "install into [target]", or asks to set up the ai-framework in another project. Only valid when running inside the ai-framework repo.
+description: Invoke when the user says "install", "install the framework", "install into [target]", or asks to set up the ai-framework in another project. Only valid when running inside the ai-framework repo. For remote installs (user provides a GitHub URL), follow install.md from the repo root instead.
 ---
 # Framework Installation
 
@@ -89,7 +89,29 @@ Use the Write tool to write each file (Read it from `source/` first, then Write 
 
 ---
 
-## 6. Create Runtime Directories
+## 6. Write Framework Metadata
+
+Write `.claude/framework.json` in the target directory:
+
+```json
+{
+  "repo": "{owner}/{repo}",
+  "version": "<output of: git -C source rev-parse HEAD>",
+  "installed_at": "<today's date as YYYY-MM-DD>"
+}
+```
+
+Get the commit hash by running:
+
+```bash
+git rev-parse HEAD
+```
+
+from the root of this repo.
+
+---
+
+## 7. Create Runtime Directories
 
 Ensure these directories exist at the target (create if missing):
 
@@ -97,13 +119,13 @@ Ensure these directories exist at the target (create if missing):
 
 ---
 
-## 7. Set Hook Permissions
+## 8. Set Hook Permissions
 
 For every `.sh` file under `.claude/hooks/` in the target, run `chmod +x` via Bash.
 
 ---
 
-## 8. Update .gitignore
+## 9. Update .gitignore
 
 If the target is a git repo, ensure `.gitignore` contains:
 
@@ -115,7 +137,7 @@ Read the existing `.gitignore` first. Append only entries that are not already p
 
 ---
 
-## 9. Detect Project Type and Suggest Skills
+## 10. Detect Project Type and Suggest Skills
 
 Based on what you found in step 2, provide tailored recommendations:
 
@@ -129,7 +151,7 @@ List at most 3 high-value suggestions. Keep them concrete and brief.
 
 ---
 
-## 10. Summary
+## 11. Summary
 
 Print a final summary:
 
@@ -137,13 +159,14 @@ Print a final summary:
 ── Installation complete ────────────────────────────────────
 
   Target:    /path/to/project
+  Version:   <short hash (first 7 chars)>
   Installed: N file(s)
   Skipped:   N file(s) (conflicts preserved)
 
   Next steps:
     1. Open .claude/CLAUDE.md and customise it for this project
     2. Run 'claude' in the target directory to start a session
-    3. [Context-specific suggestion from step 9, if any]
+    3. [Context-specific suggestion from step 10, if any]
 
 ────────────────────────────────────────────────────────────
 ```
