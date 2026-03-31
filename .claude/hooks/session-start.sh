@@ -38,15 +38,17 @@ if [ -f "$FRAMEWORK_JSON" ] && command -v jq &> /dev/null; then
       fi
     fi
 
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  AI Framework"
-    echo "  Version:   ${SHORT_HASH}  ·  installed ${INSTALLED_AT}"
-    echo "  Repo:      https://github.com/${REPO}"
-    if [ -n "$UPDATE_LINE" ]; then
-      echo "$UPDATE_LINE"
-    fi
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo ""
+    {
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      echo "  AI Framework"
+      echo "  Version:   ${SHORT_HASH}  ·  installed ${INSTALLED_AT}"
+      echo "  Repo:      https://github.com/${REPO}"
+      if [ -n "$UPDATE_LINE" ]; then
+        echo "$UPDATE_LINE"
+      fi
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      echo ""
+    } > /dev/tty
   fi
 fi
 

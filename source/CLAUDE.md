@@ -37,6 +37,10 @@ Prefer specialised tools over Bash for all file operations:
 - Never suppress stderr with `2>/dev/null`
 - Don't use Python scripts for tasks with a dedicated executable; identify the right tool, or ask permission to install it
 
+## Scope of Changes
+
+When diagnosing an issue that spans multiple projects or directories, only write to the project being worked in unless explicitly asked to fix others. Propose the fix for other locations; let the user apply it (or confirm before doing so).
+
 ## Destructive Operations
 
 Never perform destructive operations unless explicitly instructed. This includes: deleting or overwriting files, database mutations (UPDATE, DELETE, DROP, TRUNCATE, schema changes), and any operation that can't be trivially undone.
