@@ -65,3 +65,82 @@ Do not add new entries here unless something significant was missed during the s
 
 ---
 
+## 4b. Mission State
+
+Assess whether work from this session is part of a larger mission that will continue in a future session.
+
+**If the mission is complete** (all tasks done, goal achieved):
+- If `.claude/missions/active.md` exists, read it, write the contents to `.claude/missions/archive/<session-id>.md`, then delete the original.
+
+**If work is ongoing** (3+ steps total, or clearly unfinished):
+- Write or update `.claude/missions/active.md` using the format below.
+- If the file already exists, overwrite it with the current state — do not append.
+
+```markdown
+# Mission: <name>
+session: <current-session-id>
+started: YYYY-MM-DD
+project: <project or repo name>
+
+## Goal
+<1-2 sentences — what are we building and why>
+
+## Completed
+- [x] <task> _(session: <id>)_
+
+## Pending
+- [ ] <task>
+
+## Blocked
+<describe blockers, or remove this section if none>
+
+## Decisions
+- **<decision>** — <rationale> `[firm]`
+- **<decision>** — <rationale> `[tentative]`
+```
+
+Keep entries terse. The next session reads this cold — each pending task must be self-contained enough to act on without re-reading code.
+
+**If work was single-session with no continuation expected**: skip this step entirely.
+
+---
+
+## 5. Save Session Record
+
+Create a file at `.claude/sessions/<session-id>.md` inside the current project directory. If the `.claude/sessions/` directory does not exist, create it.
+
+The file should contain:
+
+```markdown
+# Session: <session-id>
+Date: YYYY-MM-DD HH:MM
+
+## Summary
+<one to three sentences>
+
+## What Went Well
+<bullet points>
+
+## What Went Poorly
+<bullet points>
+
+## Changes Made
+- Skills created: <list or "none">
+- Skills updated: <list or "none">
+- CLAUDE.md changes: <description or "none">
+- Skill backlog items actioned: <list or "none">
+```
+
+Do not append to a shared log. Each session gets its own file, retrievable by its ID.
+
+---
+
+## 6. Start Next Session
+
+Generate a new session ID for the next task by running the session-start hook. **Do not run this hook at any other point during the session** — it overwrites `.claude/sessions/.current`, displacing the session ID in use.
+
+```bash
+CLAUDE_PROJECT_DIR=$(pwd) bash .claude/hooks/session-start.sh
+```
+
+This ensures each task within a conversation gets its own unique session ID.
