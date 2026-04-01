@@ -2,7 +2,9 @@
 
 ## Session ID
 
-Each session has a unique ID injected into context at startup as `Session ID: <id>`. Use it to identify the session in wrap-up output.
+Each session has a unique ID injected into context at startup as `$SESSION_ID`. Use it to identify the session in wrap-up output.
+
+Do not read `.claude/sessions/` files at session start or proactively. Only access previous session records when the user explicitly asks for session history.
 
 ## Evidence-Based Approach
 
@@ -115,6 +117,16 @@ Actively watch for patterns worth capturing as skills. When identified, silently
 
 Add: preferred commands, non-obvious behaviours, consistent conventions, better-than-obvious tools.
 Do not add: session outcomes, per-run state, anything already in CLAUDE.md or a skill.
+
+Mark significant decisions inline with confidence: `[tentative]` for unvalidated choices, `[firm]` once confirmed by outcome or user.
+
+Before adding a new entry, grep existing memory for related content. Update rather than duplicate.
+
+## Mission Continuity
+
+If `.claude/missions/active.md` exists at session start, read it before responding to the user. Surface the pending tasks and ask whether to resume or start fresh.
+
+For work spanning 3+ tasks or likely to continue across sessions, write a mission file (handled by the `reviewing-sessions` skill). Do not create missions for contained, single-session work.
 
 ## Long-Horizon Task Notes
 
