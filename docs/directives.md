@@ -10,6 +10,7 @@ The root `CLAUDE.md` defines behavioral rules that Claude Code follows for every
 | Communication Style | Calm, concise, Markdown-formatted, no hype |
 | Interaction Style | Proactive reads, run commands instead of suggesting them |
 | Tool Preferences | Prefer dedicated tools over Bash for file operations |
+| Scope of Changes | Only write to the project being worked in unless explicitly asked |
 | Destructive Operations | Never delete/overwrite without explicit confirmation |
 | Production Awareness | Stop and confirm before acting on live environments |
 | Git Workflow | Branch off `master`, open PRs, never commit directly |
@@ -17,8 +18,12 @@ The root `CLAUDE.md` defines behavioral rules that Claude Code follows for every
 | Verification Before Done | Run proof before claiming any task complete |
 | Elegance Check | Pause before presenting non-trivial changes and ask if there's a cleaner approach |
 | Skill Authoring | Skill `description` fields state trigger conditions only, not workflow summaries |
+| Skill Backlog | Watch for reusable patterns and log them to `.claude/skill-backlog.md` |
 | Project Context | Read `.claude/project/CLAUDE.md` at session start if it exists |
 | Project Memory | Accumulate project-specific facts in `.claude/project/memory.md` across sessions |
+| Long-Horizon Task Notes | Write intermediate findings to `task-notes.md` for multi-turn tasks |
+| Subagent Context Isolation | Use subagents to contain large intermediate output, not just for parallelism |
+| Context Cache Design | Inject dynamic content via hooks; never edit the system prompt mid-session |
 | Session Closure | Proactively offer a wrap-up when a task concludes |
 
 ## Details
@@ -37,7 +42,11 @@ Claude reads files and runs commands proactively instead of asking whether it sh
 
 ### Tool Preferences
 
-Dedicated tools (Read, Edit, Write, Grep, Glob) are preferred over Bash for file operations. Python scripts are not used when a dedicated executable exists for the task.
+Dedicated tools (Read, Edit, Write, Grep, Glob) are preferred over Bash for file operations. Python scripts are not used when a dedicated executable exists for the task. When a command returns large output and only a subset is needed, it is piped through `jq`, `grep`, `head`, or a similar filter in the same Bash call — raw bulk output is never passed into the context window.
+
+### Scope of Changes
+
+When diagnosing an issue that spans multiple projects or directories, Claude writes only to the project being actively worked in. Fixes for other locations are proposed and described, then left for the user to apply or to explicitly approve first.
 
 ### Destructive Operations
 
@@ -78,6 +87,24 @@ For non-trivial changes, Claude pauses before presenting and asks whether there 
 ### Skill Authoring
 
 The `description` field of any skill must state trigger conditions only — not what the skill does. Claude uses this field to decide when to activate the skill; a workflow summary does not serve that purpose. The template for knowledge skills lives at `.claude/templates/knowledge-skill/SKILL.md`.
+
+### Skill Backlog
+
+Claude watches for recurring patterns, recurring knowledge gaps, or reusable workflows that don't yet have a skill. When one is identified, it is silently appended to `.claude/skill-backlog.md` — title, what triggered it, brief description — without interrupting the session.
+
+### Long-Horizon Task Notes
+
+For tasks that span many turns — research, multi-file refactors, investigations — Claude writes intermediate findings and state to `.claude/project/task-notes.md` rather than relying on the context window alone. It acts as a scratchpad: key decisions, discovered constraints, and the current sub-goal. The file is cleared or archived at task completion.
+
+This prevents context loss mid-task and avoids re-deriving information already established earlier in the session.
+
+### Subagent Context Isolation
+
+Subagents are used not only for parallelism but to contain sub-tasks whose intermediate state would otherwise pollute the main context. When a sub-task produces large intermediate output (raw search results, log analysis, code review) and only the synthesised conclusion is needed downstream, it is delegated to a subagent. Only the result surfaces in the main conversation.
+
+### Context Cache Design
+
+Prompt caches are per-model and invalidate when the system prompt changes. To preserve cache hits, dynamic content (session ID, memory, reminders) is injected via hook stdout into the message stream — not by editing the system prompt mid-session. `<system-reminder>` tags are used for message injections. Models are not switched mid-session, as caches do not transfer across models.
 
 ### Session Closure
 

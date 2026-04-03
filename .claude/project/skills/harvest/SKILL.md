@@ -1,7 +1,6 @@
 ---
 name: harvest
 description: Harvests project-specific skills from a target project into the ai-framework base, and checks for framework drift. Invokes when the user says "harvest", "run harvest", or "harvest <project-path>".
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 ---
 # Harvest
 
