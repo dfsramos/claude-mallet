@@ -2,6 +2,7 @@
 .claude/sessions/*
 source/.claude/project/*
 !source/.claude/project/memory.md
+!source/.claude/project/task-notes.md
 source/.claude/sessions/*
 source/.claude/discovery*
 .claude/sessions/.current
