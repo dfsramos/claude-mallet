@@ -36,6 +36,7 @@ Prefer specialised tools over Bash for all file operations:
 - Use Read, Edit, Write, Grep, and Glob — including for dotfiles like `~/.zshrc`, `~/.gitconfig`
 - Never suppress stderr with `2>/dev/null`
 - Don't use Python scripts for tasks with a dedicated executable; identify the right tool, or ask permission to install it
+- When a command returns large output and only a subset is needed, pipe it through `jq`, `grep`, `head`, or similar filters in the same Bash call — do not let raw bulk output enter the context window unnecessarily
 
 ## Scope of Changes
 
@@ -79,6 +80,8 @@ After any correction from the user, silently append to `.claude/project/lessons.
 
 Review `.claude/project/lessons.md` at session start if it exists. Apply those rules throughout the session.
 
+When a constraint or workaround in place for a previous model limitation appears no longer necessary, note it in `lessons.md` with the label `[re-evaluate]` so it can be reviewed for removal. Do not remove it unilaterally.
+
 ## Verification Before Done
 
 Never mark a task complete without proving it works:
@@ -113,6 +116,18 @@ Actively watch for patterns worth capturing as skills. When identified, silently
 Add: preferred commands, non-obvious behaviours, consistent conventions, better-than-obvious tools.
 Do not add: session outcomes, per-run state, anything already in CLAUDE.md or a skill.
 
+## Long-Horizon Task Notes
+
+For tasks that span many turns (research, multi-file refactors, investigations), write intermediate findings and state to `.claude/project/task-notes.md` rather than relying on context window alone. Use it as a scratchpad: capture key decisions, discovered constraints, and current sub-goal. Clear or archive it at task completion.
+
+This prevents context loss mid-task and avoids the need to re-derive information already established earlier in the session.
+
+## Subagent Context Isolation
+
+Spawn subagents not only for parallelism but to contain sub-tasks whose intermediate state would otherwise pollute the main context. When a sub-task produces large intermediate output (e.g., raw search results, log analysis, code review) and only the synthesised conclusion is needed downstream, run it in a subagent and surface only the result.
+
+This keeps the main context window focused on the current decision rather than accumulated intermediate noise.
+
 ## Project Discovery
 
 When the user says "discover", "analyze the codebase", or runs `/discover`, use the `discover` skill.
@@ -127,6 +142,15 @@ If `.claude/project/CLAUDE.md` exists, read it at session start.
 If `.claude/project/skills/` exists, treat it as an additional skills directory alongside `.claude/skills/`.
 
 ---
+
+## Context Cache Design
+
+Prompt caches are per-model and invalidate when the system prompt changes. To preserve cache hits:
+- Inject dynamic content (session ID, memory, reminders) via hook stdout into the message stream — not by editing the system prompt mid-session
+- Use `<system-reminder>` tags in message injections rather than modifying the static system prompt
+- Avoid switching models mid-session; caches do not transfer across models
+
+This principle applies to hooks and any tooling that augments context at runtime.
 
 ## Session Closure
 
