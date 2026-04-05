@@ -1,5 +1,5 @@
 #!/bin/bash
-# Statusline: shows AI Framework version and available update.
+# Statusline: shows AI Framework version, available update, git branch, and usage.
 # Receives Claude Code session JSON via stdin.
 
 input=$(cat)
@@ -49,3 +49,60 @@ if command -v gh &>/dev/null && [ -n "$REPO" ]; then
 fi
 
 echo "AI Framework ${SHORT_HASH} · ${INSTALLED_AT}${update_info}"
+
+# ── Second line: git branch + usage ─────────────────────────────────────────
+
+# Helper: format seconds as "Xd Yh", "Xh Ym", or "Xm"
+format_remaining() {
+  local secs=$1
+  local days=$(( secs / 86400 ))
+  local hours=$(( (secs % 86400) / 3600 ))
+  local mins=$(( (secs % 3600) / 60 ))
+  if   [ $days -gt 0 ];  then echo "${days}d ${hours}h"
+  elif [ $hours -gt 0 ]; then echo "${hours}h ${mins}m"
+  else                        echo "${mins}m"
+  fi
+}
+
+parts=()
+now=$(date +%s)
+
+# Git branch (from project dir)
+if [ -n "$PROJECT_DIR" ] && command -v git &>/dev/null; then
+  branch=$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null)
+  [ -n "$branch" ] && parts+=("branch: ${branch}")
+fi
+
+# Session usage — context window percentage
+session_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty' 2>/dev/null)
+[ -n "$session_pct" ] && parts+=("session: $(printf '%.0f' "$session_pct")%")
+
+# 7-day rate limit + time to reset
+seven_day=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty' 2>/dev/null)
+if [ -n "$seven_day" ]; then
+  seven_day_str="7d: $(printf '%.0f' "$seven_day")%"
+  resets_at=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty' 2>/dev/null)
+  if [ -n "$resets_at" ] && [ "$resets_at" -gt "$now" ]; then
+    seven_day_str+=" ($(format_remaining $(( resets_at - now ))))"
+  fi
+  parts+=("$seven_day_str")
+fi
+
+# 5-hour rate limit + time to reset
+five_hour=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty' 2>/dev/null)
+if [ -n "$five_hour" ]; then
+  five_hour_str="5h: $(printf '%.0f' "$five_hour")%"
+  resets_at=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty' 2>/dev/null)
+  if [ -n "$resets_at" ] && [ "$resets_at" -gt "$now" ]; then
+    five_hour_str+=" ($(format_remaining $(( resets_at - now ))))"
+  fi
+  parts+=("$five_hour_str")
+fi
+
+if [ ${#parts[@]} -gt 0 ]; then
+  result="${parts[0]}"
+  for part in "${parts[@]:1}"; do
+    result+=" · $part"
+  done
+  echo "$result"
+fi

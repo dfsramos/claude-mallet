@@ -14,6 +14,8 @@ The user provided a GitHub URL. Extract `owner` and `repo` from it.
 
 Pattern: `https://github.com/{owner}/{repo}`
 
+If no URL was provided, read `.claude/framework.json` and use the `repo` field directly.
+
 ---
 
 ## 2. Check Current Installation
@@ -24,11 +26,7 @@ Read `.claude/framework.json`. If it does not exist, stop and tell the user:
 
 Extract `repo` and `version` (the installed commit hash) from the file.
 
-If the `repo` field does not match the repo derived from the URL, warn the user before continuing:
-
-> "The installed framework repo ({installed_repo}) does not match the URL you provided ({url_repo}). Confirm you want to continue."
-
-Wait for confirmation before proceeding.
+If a URL was provided and the `repo` field does not match it, warn the user and wait for confirmation before continuing.
 
 ---
 
@@ -65,54 +63,72 @@ find "$TMPDIR/source" -type f
 
 For each file, derive its relative path (strip `$TMPDIR/source/` prefix) and compare it against the currently installed version:
 
-- **No local file exists** — will be added (new file in this update)
-- **Files are identical** — auto-update (safe, no user customisation)
-- **Files differ** — flag as a conflict (user may have customised it)
+- **No local file exists** → `NEW`: will be added
+- **Files are identical** → `SAME`: safe to update
+- **Files differ** → run the diff and classify (see step 5)
 
 ---
 
-## 5. Report and Confirm
+## 5. Classify Conflicts and Resolve Autonomously
 
-Present a pre-flight summary:
+For each differing file, read both versions and apply the following decision logic. **Do not pause to ask the user** unless the conflict meets the escalation criteria below.
+
+### Auto-merge (proceed without asking)
+
+Apply these resolutions silently:
+
+- **Local is a superset** — local has everything upstream has, plus additional content (new sections, extra entries, appended lines). Keep local additions; apply any upstream changes to shared content.
+- **Upstream-only addition** — upstream adds new content that local does not have; local has not removed or changed the surrounding context. Apply the upstream addition.
+- **Minor wording/phrasing** — the only difference is cosmetic (punctuation, capitalisation, a rephrased sentence with the same meaning). Take the upstream version.
+- **Whitespace/line-endings only** — content is semantically identical. Take the upstream version.
+
+### Escalate to user (pause and ask)
+
+Only stop for:
+
+- **Local removed upstream content** — local is missing steps, sections, or instructions that exist upstream, suggesting deliberate removal of functionality.
+- **Structural divergence** — the file has been substantially reorganised locally such that a clean merge is not obvious.
+- **Conflicting intent** — both sides changed the same passage in incompatible ways that would result in contradictory instructions if naively merged.
+
+When escalating, show the relevant diff excerpt and ask specifically:
+
+> "Local `{file}` is missing upstream content. Keep local version, take upstream, or merge? Show me the diff if unsure."
+
+---
+
+## 6. Show Pre-flight Summary and Proceed
+
+Present a brief summary, then immediately proceed without waiting for confirmation:
 
 ```
 Current version:  {installed_short_hash}
 Latest version:   {new_short_hash} ({date of new commit})
 
-Files to update:  N (identical or new)
-Conflicts:        N (local changes detected)
-
-Conflicts:
-  - CLAUDE.md — local content differs from upstream
-  - [other files...]
+Plan:
+  Updated (identical/whitespace):  N file(s)
+  Auto-merged (additive):          N file(s)
+  Added (new files):               N file(s)
+  Escalated (requires input):      N file(s)  ← only shown if > 0
 ```
 
-If there are conflicts, ask:
-
-> "These files differ from the upstream version — they may contain local customisations. How should I handle them?"
-
-Options:
-1. **Overwrite all** — replace with upstream versions (local changes lost)
-2. **Skip conflicts** — update everything except conflicting files
-3. **Review each** — decide file by file (show a diff for each)
-
-If there are no conflicts, proceed without asking.
+If there are escalated files, resolve them before proceeding to installation.
 
 ---
 
-## 6. Install Updated Files
+## 7. Install Updated Files
 
-For each file to update (respecting the skip list from step 5):
+For each file (respecting the resolutions from step 5):
 
 - Read from `$TMPDIR/source/<relative-path>` using the Read tool
 - Write to `<current-directory>/<relative-path>` using the Write tool
-- Log: `Updated:` for changed files, `Added:` for new files, `Skipped:` for conflicts preserved
+- For auto-merged files: construct the merged content and write it directly
+- Log: `Updated:`, `Merged:`, `Added:`, or `Skipped:` per file
 
 Do not use Bash for file copying — use Read + Write per file.
 
 ---
 
-## 7. Update Framework Metadata
+## 8. Update Framework Metadata
 
 Overwrite `.claude/framework.json`:
 
@@ -126,7 +142,7 @@ Overwrite `.claude/framework.json`:
 
 ---
 
-## 8. Set Hook Permissions
+## 9. Set Hook Permissions
 
 For every `.sh` file under `.claude/hooks/`, run:
 
@@ -136,7 +152,7 @@ chmod +x <file>
 
 ---
 
-## 9. Remove Temporary Directory
+## 10. Remove Temporary Directory
 
 ```bash
 rm -rf "$TMPDIR"
@@ -144,15 +160,16 @@ rm -rf "$TMPDIR"
 
 ---
 
-## 10. Summary
+## 11. Summary
 
 ```
 ── Update complete ──────────────────────────────────────────
 
   Version:  {installed_short_hash} → {new_short_hash} ({date})
   Updated:  N file(s)
+  Merged:   N file(s)
   Added:    N file(s)
-  Skipped:  N file(s) (conflicts preserved)
+  Skipped:  N file(s)
 
 ────────────────────────────────────────────────────────────
 ```
