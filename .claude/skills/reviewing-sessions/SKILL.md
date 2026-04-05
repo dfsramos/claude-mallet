@@ -4,7 +4,7 @@ description: Invoke when the user agrees to a session wrap-up, or says "wrap up"
 ---
 # Session Wrap-Up
 
-The session ID is available as the `$SESSION_ID` environment variable. Reference it in all wrap-up output.
+The session ID is available as the `$SESSION_ID` environment variable (injected at session start). Reference it in the wrap-up output.
 
 ---
 
