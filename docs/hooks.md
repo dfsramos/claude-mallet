@@ -34,6 +34,29 @@ The session ID provides a stable reference for the current conversation. It is t
 
 The version check ensures users are passively informed of framework updates without having to check manually.
 
+## UserPromptSubmit Hook
+
+**File:** `.claude/hooks/user-prompt-submit.sh`
+**Trigger:** Every user message submitted to Claude
+
+Scores the incoming prompt for task complexity and injects a calibration hint when warranted. Designed to be silent for routine work and only speak up for genuinely complex tasks.
+
+### What it does
+
+1. Reads `prompt` from the hook input JSON on stdin
+2. Scores the prompt on two signals:
+   - **Architectural/design keywords** (`architect`, `redesign`, `rethink`, `overhaul`, `refactor`, `strategy`, `tradeoff`, `migrate`, `evaluate`, `pros and cons`, `which approach`, `from scratch`, etc.) — +2 points
+   - **Planning/scope keywords** (`should I/we`, `plan the/a`, `design the/a`, `how should we structure`, `cross-cutting`, `system-wide`, etc.) — +2 points
+   - **Long prompt** (> 80 words) — +1 point
+3. If `score >= 3`: injects a one-line flag instructing Claude to invoke the `task-calibrate` skill before proceeding
+4. Otherwise: exits silently — no output, no interruption
+
+### Why it exists
+
+The hook provides passive complexity detection without burdening every prompt. It acts as a lightweight tripwire: when the threshold is met, it surfaces the `task-calibrate` skill so Claude can assess whether Opus would be a better fit. For routine and complex tasks, it stays silent.
+
+The scoring threshold (≥ 3) is deliberately conservative. Two strong signals, or one signal plus a long prompt, must coincide before anything is injected.
+
 ## Adding New Hooks
 
 1. Create a script in `.claude/hooks/`

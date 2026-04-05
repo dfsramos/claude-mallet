@@ -91,6 +91,21 @@ A structured end-of-session retrospective covering:
 4. **Applied improvements** — updates to skills or directives based on session observations; skill backlog reviewed and actioned
 4a. **Memory audit** — review entries added to `.claude/project/memory.md` during the session; confirm accuracy, rewrite vague entries, remove stale ones
 
+## Task Calibration
+
+**Directory:** `.claude/skills/task-calibrate/`
+**Triggered by:** The `UserPromptSubmit` hook flagging high complexity, or explicit invocation via "check model for this" or "/task-calibrate"
+
+Assesses the current task and surfaces a model and effort recommendation before work begins.
+
+1. **Classify** — assigns the task to one of three tiers: Architectural, Complex, or Routine
+2. **Apply the model matrix** — maps tier to recommended model:
+   - Architectural → Opus (fewer first-attempt errors on complex design; net cost often lower than multiple Sonnet correction rounds)
+   - Complex → Sonnet
+   - Routine → Sonnet (Haiku session-switch overhead exceeds savings)
+3. **Subagent guidance** — separately covers which model to use when spawning agents: Haiku for file reads and lookups, Sonnet for standard dev, Sonnet/Opus for deep analysis
+4. **Surface the recommendation** — states tier, model, and one-sentence reason; only pauses for confirmation when recommending an Opus upgrade; skips the prompt entirely for Sonnet-tier tasks
+
 ## Systematic Debugging
 
 **Directory:** `.claude/skills/systematic-debugging/`
