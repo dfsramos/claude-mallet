@@ -53,6 +53,21 @@ Note the detected libraries that triggered the recommendation — these will be 
 
 ---
 
+## 2c. Assess Third-Party Skill Packs
+
+Check whether the project would benefit from third-party skill packs. These install alongside the framework and add domain-specific commands.
+
+**Impeccable** (`npx skills add pbakaus/impeccable`):
+Injects professional design vocabulary and UI polish commands (`/polish`, `/audit`, `/typeset`, `/overdrive`). Includes anti-pattern guidance for typography, color, layout, and motion.
+
+Recommend when:
+- The project has a frontend component (React, Vue, Svelte, Next.js, Astro, etc.), **and**
+- UI quality or design polish is likely to matter (consumer-facing, design system, or portfolio work)
+
+Do not recommend for purely backend, CLI, or infrastructure projects.
+
+---
+
 ## 3. Interactive Questions
 
 As you discover significant findings, ask the user for guidance using AskUserQuestion:
@@ -162,6 +177,13 @@ Project: <project-name>
 | Context7 | Live library docs | `npx -y @upstash/context7-mcp@latest` | <list> |
 
 _(Omit this section if no MCP servers were recommended.)_
+
+## Recommended Skill Packs
+| Pack | Purpose | Install | Trigger |
+|------|---------|---------|---------|
+| Impeccable | UI design vocabulary & polish commands | `npx skills add pbakaus/impeccable` | <detected frontend frameworks> |
+
+_(Omit this section if no skill packs were recommended.)_
 
 ## Recommended Skills
 ### High Priority
