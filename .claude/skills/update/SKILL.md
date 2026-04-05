@@ -32,9 +32,11 @@ If a URL was provided and the `repo` field does not match it, warn the user and 
 
 ## 3. Clone to a Temporary Directory
 
+The clone directory is always `/tmp/ai-framework-update`. Remove any leftover from a prior run first, then clone:
+
 ```bash
-TMPDIR="/tmp/ai-framework-update-$(date +%s)"
-git clone --depth=1 "https://github.com/{owner}/{repo}.git" "$TMPDIR"
+rm -rf /tmp/ai-framework-update
+git clone --depth=1 "https://github.com/{owner}/{repo}.git" /tmp/ai-framework-update
 ```
 
 If the clone fails, report the error and stop.
@@ -42,36 +44,47 @@ If the clone fails, report the error and stop.
 Capture the new commit hash:
 
 ```bash
-cd "$TMPDIR" && git rev-parse HEAD
+git -C /tmp/ai-framework-update rev-parse HEAD
 ```
 
 If the new hash matches the installed hash, stop and tell the user:
 
 > "Already up to date (version: {short_hash}). No changes were made."
 
-Clean up `$TMPDIR` and exit.
+Clean up and exit:
+
+```bash
+rm -rf /tmp/ai-framework-update
+```
 
 ---
 
 ## 4. Assess Changes
 
-List all files under `$TMPDIR/source/`:
+From the project root, run a single recursive diff to identify which files differ:
 
 ```bash
-find "$TMPDIR/source" -type f
+diff -rq /tmp/ai-framework-update/source .
 ```
 
-For each file, derive its relative path (strip `$TMPDIR/source/` prefix) and compare it against the currently installed version:
+This reports:
+- `Only in /tmp/ai-framework-update/source/...` → `NEW`: will be added
+- `Files ... and ... differ` → needs classification (see step 5)
+- Files not mentioned → `SAME`: no action needed
 
-- **No local file exists** → `NEW`: will be added
-- **Files are identical** → `SAME`: safe to update
-- **Files differ** → run the diff and classify (see step 5)
+**Important:** Do not use any Bash commands that assign shell variables (e.g. `VAR=...`, `arr=(...)`). Use only direct commands with literal paths.
 
 ---
 
 ## 5. Classify Conflicts and Resolve Autonomously
 
-For each differing file, read both versions and apply the following decision logic. **Do not pause to ask the user** unless the conflict meets the escalation criteria below.
+For each file flagged as differing, run:
+
+```bash
+diff /tmp/ai-framework-update/source/<relative-path> ./<relative-path>
+```
+
+Then apply the following decision logic. **Do not pause to ask the user** unless the conflict meets the escalation criteria below.
 
 ### Auto-merge (proceed without asking)
 
@@ -119,7 +132,7 @@ If there are escalated files, resolve them before proceeding to installation.
 
 For each file (respecting the resolutions from step 5):
 
-- Read from `$TMPDIR/source/<relative-path>` using the Read tool
+- Read from `/tmp/ai-framework-update/source/<relative-path>` using the Read tool
 - Write to `<current-directory>/<relative-path>` using the Write tool
 - For auto-merged files: construct the merged content and write it directly
 - Log: `Updated:`, `Merged:`, `Added:`, or `Skipped:` per file
@@ -155,7 +168,7 @@ chmod +x <file>
 ## 10. Remove Temporary Directory
 
 ```bash
-rm -rf "$TMPDIR"
+rm -rf /tmp/ai-framework-update
 ```
 
 ---
