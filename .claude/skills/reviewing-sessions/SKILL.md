@@ -64,10 +64,3 @@ If `.claude/project/memory.md` exists, open it. For any entries added or modifie
 Do not add new entries here unless something significant was missed during the session.
 
 ---
-
-## 5. Close Out
-
-Present the full wrap-up (sections 1–4a) to the user as a single formatted response. Then:
-
-- If `.claude/project/task-notes.md` exists and was used during this session, clear its contents — the session is complete and the scratchpad is no longer needed.
-- Confirm you are back on the correct working branch (not a feature branch left over from this session).
