@@ -17,16 +17,18 @@ Read the user's prompt and classify it against the matrix below. When in doubt, 
 | **Architectural** | System design, major tradeoffs, cross-cutting decisions, evaluating approaches, new framework primitives, migrations, "from scratch" features, decisions with lasting consequences |
 | **Complex** | Multi-file refactors, debugging across files, feature implementation (3–10 files), writing skills with multiple interacting concerns |
 | **Routine** | Single-file edits, config changes, skill/hook tweaks, simple refactors, answering factual questions about the codebase |
+| **Large Context** | Tasks where volume of input is the constraint: large codebase discovery, debugging with extensive logs, comparing many files, long document analysis |
 
 ---
 
 ## 2. Apply the Model Matrix
 
-| Tier | Main Session | Why |
-|------|-------------|-----|
-| Architectural | **Opus** | Fewer first-attempt reasoning errors on complex design → fewer correction rounds; net cost often lower than 3–4 Sonnet turns |
-| Complex | **Sonnet** | Capable; Opus overhead not justified |
-| Routine | **Sonnet** | Overkill for Opus; session switch cost exceeds Haiku savings |
+| Tier | Recommended Model | Why |
+|------|------------------|-----|
+| Architectural | **`opusplan`** | Opus reasons through the plan, Sonnet executes — best of both; use `/model opus` if you want Opus throughout |
+| Complex | **`sonnet`** | Capable; Opus overhead not justified |
+| Routine | **`sonnet`** | Overkill for Opus; session switch cost exceeds Haiku savings |
+| Large Context | **`sonnet[1m]`** | Context size is the constraint, not reasoning power; 1M window avoids truncation |
 
 ### Subagent model selection
 
@@ -46,25 +48,27 @@ State the classification and recommendation clearly, then ask whether to proceed
 
 Format:
 ```
-Task tier: [Architectural / Complex / Routine]
-Recommended model: [Opus / Sonnet]
+Task tier: [Architectural / Complex / Routine / Large Context]
+Recommended model: [opusplan / sonnet / sonnet[1m]]
 Reason: [one sentence]
 
-Proceed on Sonnet, or start a new session with Opus first?
+Proceed on current model, or switch first?
 ```
 
 If the task is Routine or Complex (Sonnet is already active), skip the question and proceed immediately — no need to interrupt.
 
-Only pause for confirmation when recommending an upgrade to Opus.
+Only pause for confirmation when recommending a model switch.
 
 ---
 
-## 4. When Opus Is Recommended
+## 4. When a Switch Is Recommended
 
 Give the user the switch command and wait for their response before starting work:
 
-```
-To switch: restart the session with `claude --model claude-opus-4-6`
-```
+| Recommendation | Switch command |
+|----------------|---------------|
+| `opusplan` | `/model opusplan` |
+| `opus` (full session) | `/model opus` |
+| `sonnet[1m]` | `/model sonnet[1m]` |
 
-Do not proceed with the task until the user either confirms they want to switch or explicitly says to continue on Sonnet.
+Do not proceed with the task until the user either switches or explicitly says to continue on the current model.

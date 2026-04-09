@@ -67,15 +67,20 @@ format_remaining() {
 parts=()
 now=$(date +%s)
 
-# Git branch (from project dir)
+# Repo/branch (from project dir)
 if [ -n "$PROJECT_DIR" ] && command -v git &>/dev/null; then
   branch=$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null)
-  [ -n "$branch" ] && parts+=("branch: ${branch}")
+  repo_name=$(basename "$(git -C "$PROJECT_DIR" rev-parse --show-toplevel 2>/dev/null)")
+  [ -n "$branch" ] && parts+=("⎇ ${repo_name}/${branch}")
 fi
+
+# Session cost
+cost=$(echo "$input" | jq -r '.cost.total_cost_usd // empty' 2>/dev/null)
+[ -n "$cost" ] && parts+=("\$$(printf '%.4f' "$cost")")
 
 # Session usage — context window percentage
 session_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty' 2>/dev/null)
-[ -n "$session_pct" ] && parts+=("session: $(printf '%.0f' "$session_pct")%")
+[ -n "$session_pct" ] && parts+=("◷ $(printf '%.0f' "$session_pct")%")
 
 # 7-day rate limit + time to reset
 seven_day=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty' 2>/dev/null)
