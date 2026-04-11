@@ -14,7 +14,7 @@ Flow:
 2. Clones the repo to a temporary directory via `git clone --depth=1` (auth handled by the user's existing `git` credentials)
 3. Inspects the target for existing installations and local customisations
 4. Reports a pre-flight summary and resolves any conflicts before writing files
-5. Copies all files from `source/` to the current directory using Read + Write (no shell copies)
+5. Copies all files from `source/` to the current directory using Read + Write for new files, Read + Edit for existing files being overwritten (no shell copies)
 6. Writes `.claude/framework.json` with the repo slug, commit hash, and install date
 7. Sets hook permissions and updates `.gitignore`
 8. Cleans up the temporary directory
@@ -41,7 +41,7 @@ Flow:
 2. Clones the latest version to a temporary directory and captures the new commit hash
 3. Short-circuits immediately if already up to date
 4. Diffs each source file against the installed version — files identical to upstream auto-update; files that differ are flagged as conflicts for user review
-5. Copies updated files using Read + Write
+5. Applies updated files: Write for new files (Added), Edit for existing files (Updated/Merged)
 6. Overwrites `framework.json` with the new hash and date
 7. Cleans up and prints a summary showing the version transition
 

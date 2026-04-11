@@ -133,11 +133,12 @@ If there are escalated files, resolve them before proceeding to installation.
 For each file (respecting the resolutions from step 5):
 
 - Read from `/tmp/ai-framework-update/source/<relative-path>` using the Read tool
-- Write to `<current-directory>/<relative-path>` using the Write tool
-- For auto-merged files: construct the merged content and write it directly
+- **New files (Added):** Write to `<current-directory>/<relative-path>` using the Write tool
+- **Existing files (Updated/Merged):** Use Edit to apply only the changed content — do not rewrite the entire file with Write
+- For auto-merged files: apply each upstream addition or change as a targeted Edit
 - Log: `Updated:`, `Merged:`, `Added:`, or `Skipped:` per file
 
-Do not use Bash for file copying — use Read + Write per file.
+Do not use Bash for file copying — use Read + Write/Edit per file.
 
 ---
 

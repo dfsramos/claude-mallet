@@ -103,10 +103,11 @@ For each file:
 - Derive the relative path by stripping the `$TMPDIR/source/` prefix
 - If it is in the skip list, skip it
 - Read it from `$TMPDIR/source/<relative-path>` using the Read tool
-- Write it to `<current-directory>/<relative-path>` using the Write tool
+- **New files:** Write to `<current-directory>/<relative-path>` using the Write tool
+- **Existing files being overwritten:** Prefer Edit over Write whenever possible — only use Write if replacing the entire file content wholesale
 - Log: `Installed:` for new files, `Overwritten:` for replaced files
 
-Do not use Bash for file copying — use Read + Write per file so each change is visible and reviewable.
+Do not use Bash for file copying — use Read + Write/Edit per file so each change is visible and reviewable.
 
 ---
 
