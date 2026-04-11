@@ -27,7 +27,7 @@ Read the user's prompt and classify it against the matrix below. When in doubt, 
 |------|------------------|-----|
 | Architectural | **`opusplan`** | Opus reasons through the plan, Sonnet executes — best of both; use `/model opus` if you want Opus throughout |
 | Complex | **`sonnet`** | Capable; Opus overhead not justified |
-| Routine | **`sonnet`** | Overkill for Opus; session switch cost exceeds Haiku savings |
+| Routine | **`haiku`** (new session, T ≤ 2) or **`sonnet`** (current session) | For pure boilerplate — config edits, single-file changes, repetitive code generation — Haiku produces identical results at a fraction of the output cost. Suggest a new session only when T ≤ 2 on the statusline; otherwise session-switch overhead exceeds savings. |
 | Large Context | **`sonnet[1m]`** | Context size is the constraint, not reasoning power; 1M window avoids truncation |
 
 ### Subagent model selection
@@ -49,13 +49,15 @@ State the classification and recommendation clearly, then ask whether to proceed
 Format:
 ```
 Task tier: [Architectural / Complex / Routine / Large Context]
-Recommended model: [opusplan / sonnet / sonnet[1m]]
+Recommended model: [opusplan / sonnet / haiku / sonnet[1m]]
 Reason: [one sentence]
 
 Proceed on current model, or switch first?
 ```
 
-If the task is Routine or Complex (Sonnet is already active), skip the question and proceed immediately — no need to interrupt.
+If the task is Complex (Sonnet is already active), skip the question and proceed immediately — no need to interrupt.
+
+For Routine tasks: if T ≤ 2 (visible on the statusline), offer the Haiku option before proceeding. Otherwise proceed on Sonnet.
 
 Only pause for confirmation when recommending a model switch.
 
@@ -69,6 +71,7 @@ Give the user the switch command and wait for their response before starting wor
 |----------------|---------------|
 | `opusplan` | `/model opusplan` |
 | `opus` (full session) | `/model opus` |
+| `haiku` | `/model haiku` |
 | `sonnet[1m]` | `/model sonnet[1m]` |
 
 Do not proceed with the task until the user either switches or explicitly says to continue on the current model.

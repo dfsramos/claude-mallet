@@ -36,6 +36,21 @@ Be specific. Reference the actual exchange, not a generalisation.
 
 ---
 
+## 3a. Token Efficiency
+
+Check the session turn count: read `${CLAUDE_PROJECT_DIR}/.claude/sessions/.current-id` to get the session ID, then read `/tmp/ai-framework-turns-<id>`.
+
+Note any patterns that drove unnecessary token use this session:
+
+- Sessions over 50 prompts without a `/compact` — flag this in "What Went Poorly"
+- Write used on an existing file (should have been Edit) — adds ~2× the output tokens per operation
+- Verbose response written after a routine Bash command (summarising output, writing unsolicited plans)
+- Subagent calls that used Sonnet when Haiku would have sufficed (file reads, grep, lookups)
+
+If any of these occurred and there is no CLAUDE.md directive already covering it, add one now.
+
+---
+
 ## 4. Skill and Directive Improvements
 
 Based on what went poorly and what was learned:

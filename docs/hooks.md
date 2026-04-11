@@ -39,23 +39,35 @@ The version check ensures users are passively informed of framework updates with
 **File:** `.claude/hooks/user-prompt-submit.sh`
 **Trigger:** Every user message submitted to Claude
 
-Scores the incoming prompt for task complexity and injects a calibration hint when warranted. Designed to be silent for routine work and only speak up for genuinely complex tasks.
+Runs two independent checks on every prompt: a session turn counter and a complexity scorer. Designed to be silent for routine work and only speak up when session length or task complexity warrants it.
 
 ### What it does
 
-1. Reads `prompt` from the hook input JSON on stdin
-2. Scores the prompt on two signals:
+Reads the full hook input JSON on stdin, then:
+
+**Turn counter:**
+1. Reads `session_id` from the hook input
+2. Increments a per-session counter stored at `/tmp/ai-framework-turns-<session_id>`
+3. Writes the `session_id` to `${CLAUDE_PROJECT_DIR}/.claude/sessions/.current-id` (consumed by the statusline)
+4. At 50 prompts: injects a soft compaction reminder
+5. At 80 prompts and every 20 after: injects a strong compaction warning
+
+**Complexity scorer:**
+1. Reads `prompt` from the hook input
+2. Scores the prompt on three signals:
    - **Architectural/design keywords** (`architect`, `redesign`, `rethink`, `overhaul`, `refactor`, `strategy`, `tradeoff`, `migrate`, `evaluate`, `pros and cons`, `which approach`, `from scratch`, etc.) — +2 points
    - **Planning/scope keywords** (`should I/we`, `plan the/a`, `design the/a`, `how should we structure`, `cross-cutting`, `system-wide`, etc.) — +2 points
    - **Long prompt** (> 80 words) — +1 point
 3. If `score >= 3`: injects a one-line flag instructing Claude to invoke the `task-calibrate` skill before proceeding
-4. Otherwise: exits silently — no output, no interruption
+4. Otherwise: exits silently
 
 ### Why it exists
 
-The hook provides passive complexity detection without burdening every prompt. It acts as a lightweight tripwire: when the threshold is met, it surfaces the `task-calibrate` skill so Claude can assess whether Opus would be a better fit. For routine and complex tasks, it stays silent.
+The hook runs two passive guardrails per prompt without burdening every interaction.
 
-The scoring threshold (≥ 3) is deliberately conservative. Two strong signals, or one signal plus a long prompt, must coincide before anything is injected.
+The turn counter catches runaway sessions — the primary driver of token costs. Long sessions account for ~87% of output tokens. The 50-prompt soft reminder and 80-prompt hard warning give Claude the signal to suggest `/compact` before the session becomes expensive.
+
+The complexity scorer acts as a lightweight tripwire: when architectural signals coincide, it surfaces `task-calibrate` so Claude can assess whether Opus would be a better fit. The threshold (≥ 3) is deliberately conservative — two strong signals, or one signal plus a long prompt, must coincide before anything is injected.
 
 ## Adding New Hooks
 

@@ -1,8 +1,33 @@
 #!/bin/bash
-# UserPromptSubmit hook: scores prompt complexity and flags high-complexity tasks.
-# Injects a system-reminder instructing Claude to invoke task-calibrate when warranted.
+# UserPromptSubmit hook: scores prompt complexity and tracks session turn count.
+# - Injects a task-calibrate reminder when high-complexity signals are detected.
+# - Injects a compaction reminder when the session exceeds turn thresholds.
 
-PROMPT=$(jq -r '.prompt // empty' 2>/dev/null)
+INPUT=$(cat)
+PROMPT=$(echo "$INPUT" | jq -r '.prompt // empty' 2>/dev/null)
+SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null)
+
+# --- Turn counter ---
+if [ -n "$SESSION_ID" ]; then
+  TURN_FILE="/tmp/ai-framework-turns-${SESSION_ID}"
+  TURN_COUNT=1
+  if [ -f "$TURN_FILE" ]; then
+    TURN_COUNT=$(( $(cat "$TURN_FILE") + 1 ))
+  fi
+  echo "$TURN_COUNT" > "$TURN_FILE"
+
+  # Write session pointer for statusline
+  if [ -n "$CLAUDE_PROJECT_DIR" ]; then
+    echo "$SESSION_ID" > "${CLAUDE_PROJECT_DIR}/.claude/sessions/.current-id"
+  fi
+
+  # Warn at thresholds
+  if [ "$TURN_COUNT" -eq 50 ]; then
+    echo "[session-watch] 50 prompts — consider running /compact before continuing. Long sessions are the primary driver of token costs."
+  elif [ "$TURN_COUNT" -ge 80 ] && [ $(( (TURN_COUNT - 80) % 20 )) -eq 0 ]; then
+    echo "[session-watch] ${TURN_COUNT} prompts — high-cost zone. Run /compact now to reduce output tokens for the remainder of this session."
+  fi
+fi
 
 if [ -z "$PROMPT" ]; then
   exit 0

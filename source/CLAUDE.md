@@ -39,6 +39,8 @@ Prefer specialised tools over Bash for all file operations:
 - Never suppress stderr with `2>/dev/null`
 - Don't use Python scripts for tasks with a dedicated executable; identify the right tool, or ask permission to install it
 - When a command returns large output and only a subset is needed, pipe it through `jq`, `grep`, `head`, or similar filters in the same Bash call — do not let raw bulk output enter the context window unnecessarily
+- Never use Write to modify an existing file. Write is for creating new files only — use Edit for all existing file modifications.
+- After a Bash command executes, do not summarise or restate the output. If the result is self-evident, proceed directly to the next step without commentary.
 
 ## Scope of Changes
 

@@ -104,6 +104,19 @@ if [ -n "$five_hour" ]; then
   parts+=("$five_hour_str")
 fi
 
+# Session turn count from counter file (written by UserPromptSubmit hook)
+if [ -n "$PROJECT_DIR" ]; then
+  SESSION_ID_FILE="${PROJECT_DIR}/.claude/sessions/.current-id"
+  if [ -f "$SESSION_ID_FILE" ]; then
+    SID=$(cat "$SESSION_ID_FILE")
+    TURN_FILE="/tmp/ai-framework-turns-${SID}"
+    if [ -f "$TURN_FILE" ]; then
+      TURNS=$(cat "$TURN_FILE")
+      parts+=("T:${TURNS}")
+    fi
+  fi
+fi
+
 if [ ${#parts[@]} -gt 0 ]; then
   result="${parts[0]}"
   for part in "${parts[@]:1}"; do

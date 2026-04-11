@@ -88,6 +88,7 @@ A structured end-of-session retrospective covering:
 1. **Session summary** — goal, approach, outcome
 2. **What went well** — efficient tasks, effective patterns, good tool use
 3. **What went poorly** — mistakes, user corrections, rule violations (with specific references)
+3a. **Token efficiency** — reads the session turn count from `/tmp/ai-framework-turns-<id>`; flags patterns that drove unnecessary costs (runaway sessions without compaction, Write on existing files, verbose post-Bash responses, Sonnet subagents that could have been Haiku); adds CLAUDE.md directives for any gaps found
 4. **Applied improvements** — updates to skills or directives based on session observations; skill backlog reviewed and actioned
 4a. **Memory audit** — review entries added to `.claude/project/memory.md` during the session; confirm accuracy, rewrite vague entries, remove stale ones
 
@@ -102,9 +103,9 @@ Assesses the current task and surfaces a model and effort recommendation before 
 2. **Apply the model matrix** — maps tier to recommended model:
    - Architectural → Opus (fewer first-attempt errors on complex design; net cost often lower than multiple Sonnet correction rounds)
    - Complex → Sonnet
-   - Routine → Sonnet (Haiku session-switch overhead exceeds savings)
+   - Routine → Haiku (new session, T ≤ 2) or Sonnet (current session) — pure boilerplate tasks produce identical results on Haiku at significantly lower output cost; session-switch is only suggested when the turn count is low enough that the overhead is worth it
 3. **Subagent guidance** — separately covers which model to use when spawning agents: Haiku for file reads and lookups, Sonnet for standard dev, Sonnet/Opus for deep analysis
-4. **Surface the recommendation** — states tier, model, and one-sentence reason; only pauses for confirmation when recommending an Opus upgrade; skips the prompt entirely for Sonnet-tier tasks
+4. **Surface the recommendation** — states tier, model, and one-sentence reason; pauses for confirmation when recommending Opus or Haiku (new session); skips the prompt entirely for Sonnet-tier tasks
 
 ## Systematic Debugging
 

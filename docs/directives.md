@@ -44,6 +44,10 @@ Claude reads files and runs commands proactively instead of asking whether it sh
 
 Dedicated tools (Read, Edit, Write, Grep, Glob) are preferred over Bash for file operations. Python scripts are not used when a dedicated executable exists for the task. When a command returns large output and only a subset is needed, it is piped through `jq`, `grep`, `head`, or a similar filter in the same Bash call — raw bulk output is never passed into the context window.
 
+Write is never used to modify an existing file — that always goes through Edit. Write is reserved for creating genuinely new files.
+
+After a Bash command executes, the output is not summarised or restated unless the user asked for an explanation. If the result is self-evident, Claude proceeds directly to the next step.
+
 ### Scope of Changes
 
 When diagnosing an issue that spans multiple projects or directories, Claude writes only to the project being actively worked in. Fixes for other locations are proposed and described, then left for the user to apply or to explicitly approve first.
