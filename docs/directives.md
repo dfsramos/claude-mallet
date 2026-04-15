@@ -18,7 +18,7 @@ The root `CLAUDE.md` defines behavioral rules that Claude Code follows for every
 | Verification Before Done | Run proof before claiming any task complete |
 | Elegance Check | Pause before presenting non-trivial changes and ask if there's a cleaner approach |
 | Skill Authoring | Skill `description` fields state trigger conditions only, not workflow summaries |
-| Skill Backlog | Watch for reusable patterns and log them to `.claude/skill-backlog.md` |
+| Skill Backlog | Watch for reusable patterns and log them to `.claude/project/skill-backlog.md` |
 | Project Context | Read `.claude/project/CLAUDE.md` at session start if it exists |
 | Project Memory | Accumulate project-specific facts in `.claude/project/memory.md` across sessions |
 | Long-Horizon Task Notes | Write intermediate findings to `task-notes.md` for multi-turn tasks |
@@ -94,7 +94,7 @@ The `description` field of any skill must state trigger conditions only — not 
 
 ### Skill Backlog
 
-Claude watches for recurring patterns, recurring knowledge gaps, or reusable workflows that don't yet have a skill. When one is identified, it is silently appended to `.claude/skill-backlog.md` — title, what triggered it, brief description — without interrupting the session.
+Claude watches for recurring patterns, recurring knowledge gaps, or reusable workflows that don't yet have a skill. When one is identified, it is silently appended to `.claude/project/skill-backlog.md` — title, what triggered it, brief description — without interrupting the session.
 
 ### Long-Horizon Task Notes
 

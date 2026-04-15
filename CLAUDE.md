@@ -111,7 +111,7 @@ When creating or editing skills:
 
 ## Skill Backlog
 
-Actively watch for patterns worth capturing as skills. When identified, silently append to `.claude/skill-backlog.md` with: title, what triggered it, brief description. Do not interrupt the session.
+Actively watch for patterns worth capturing as skills. When identified, silently append to `.claude/project/skill-backlog.md` with: title, what triggered it, brief description. Do not interrupt the session.
 
 ## Project Memory
 

@@ -61,7 +61,7 @@ Based on what went poorly and what was learned:
 
 If any changes were made to framework files with corresponding docs (`docs/`), verify those docs are up to date before considering the work complete. Check that new features have dedicated sections, tables are updated, and examples reflect the current behaviour.
 
-Then open `.claude/skill-backlog.md`. For each item logged during this session:
+Then open `.claude/project/skill-backlog.md`. For each item logged during this session:
 - Evaluate whether it is still relevant given what was actually done
 - If yes, action it: create the skill or apply the improvement
 - Remove actioned items from the backlog

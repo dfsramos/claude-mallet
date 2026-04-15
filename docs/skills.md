@@ -160,7 +160,7 @@ Claude appends entries during sessions when it discovers something useful. At se
 
 ## Skill Backlog
 
-**File:** `.claude/skill-backlog.md` (created on demand)
+**File:** `.claude/project/skill-backlog.md` (created on demand)
 
 During any session, Claude silently logs observations about potential new skills or improvements to existing ones. Items are appended to this file without interrupting the workflow. The user reviews and promotes entries at their own pace.
 
