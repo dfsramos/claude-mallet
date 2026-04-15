@@ -156,7 +156,7 @@ These are candidates for promoting to the base framework rather than keeping pro
 
 ## 9. Generate Report
 
-Create a comprehensive report at `.claude/discovery-YYYY-MM-DD.md` with:
+Create a comprehensive report at `.claude/project/discovery-YYYY-MM-DD.md` with:
 
 ```markdown
 # Project Discovery Report

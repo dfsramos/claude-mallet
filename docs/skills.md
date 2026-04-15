@@ -61,7 +61,7 @@ A structured analysis of a project's codebase to identify opportunities for impr
 5. **Connection data** — services and systems that should have connection templates documented
 6. **Project conventions** — patterns worth capturing in `.claude/project/CLAUDE.md`
 7. **Promotable patterns** — generic enough to move into the base framework
-8. **Discovery report** — saved to `.claude/discovery-YYYY-MM-DD.md`
+8. **Discovery report** — saved to `.claude/project/discovery-YYYY-MM-DD.md`
 9. **Quick wins** — offer to immediately implement high-value stub skills, conventions, or MCP server configs
 
 ## Feature Planning
