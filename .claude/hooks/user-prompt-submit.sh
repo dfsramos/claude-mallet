@@ -5,28 +5,20 @@
 
 INPUT=$(cat)
 PROMPT=$(echo "$INPUT" | jq -r '.prompt // empty' 2>/dev/null)
-SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null)
+TRANSCRIPT_PATH=$(echo "$INPUT" | jq -r '.transcript_path // empty' 2>/dev/null)
 
-# --- Turn counter ---
-if [ -n "$SESSION_ID" ]; then
-  TURN_FILE="/tmp/ai-framework-turns-${SESSION_ID}"
-  TURN_COUNT=1
-  if [ -f "$TURN_FILE" ]; then
-    TURN_COUNT=$(( $(cat "$TURN_FILE") + 1 ))
-  fi
-  echo "$TURN_COUNT" > "$TURN_FILE"
+# --- Turn counter (derived from transcript) ---
+TURN_COUNT=0
+if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
+  PREV=$(jq -rs '[.[] | select(.isSidechain != true and .isApiErrorMessage != true and ((.message.role // .role) == "user"))] | length' "$TRANSCRIPT_PATH" 2>/dev/null)
+  TURN_COUNT=$(( ${PREV:-0} + 1 ))
+fi
 
-  # Write session pointer for statusline
-  if [ -n "$CLAUDE_PROJECT_DIR" ]; then
-    echo "$SESSION_ID" > "${CLAUDE_PROJECT_DIR}/.claude/sessions/.current-id"
-  fi
-
-  # Warn at thresholds
-  if [ "$TURN_COUNT" -eq 50 ]; then
-    echo "[session-watch] 50 prompts — consider running /compact before continuing. Long sessions are the primary driver of token costs."
-  elif [ "$TURN_COUNT" -ge 80 ] && [ $(( (TURN_COUNT - 80) % 20 )) -eq 0 ]; then
-    echo "[session-watch] ${TURN_COUNT} prompts — high-cost zone. Run /compact now to reduce output tokens for the remainder of this session."
-  fi
+# Warn at thresholds
+if [ "$TURN_COUNT" -eq 50 ]; then
+  echo "[session-watch] 50 prompts — consider running /compact before continuing. Long sessions are the primary driver of token costs."
+elif [ "$TURN_COUNT" -ge 80 ] && [ $(( (TURN_COUNT - 80) % 20 )) -eq 0 ]; then
+  echo "[session-watch] ${TURN_COUNT} prompts — high-cost zone. Run /compact now to reduce output tokens for the remainder of this session."
 fi
 
 if [ -z "$PROMPT" ]; then

@@ -104,17 +104,11 @@ if [ -n "$five_hour" ]; then
   parts+=("$five_hour_str")
 fi
 
-# Session turn count from counter file (written by UserPromptSubmit hook)
-if [ -n "$PROJECT_DIR" ]; then
-  SESSION_ID_FILE="${PROJECT_DIR}/.claude/sessions/.current-id"
-  if [ -f "$SESSION_ID_FILE" ]; then
-    SID=$(cat "$SESSION_ID_FILE")
-    TURN_FILE="/tmp/ai-framework-turns-${SID}"
-    if [ -f "$TURN_FILE" ]; then
-      TURNS=$(cat "$TURN_FILE")
-      parts+=("T:${TURNS}")
-    fi
-  fi
+# Session turn count from transcript
+transcript_path=$(echo "$input" | jq -r '.transcript_path // empty' 2>/dev/null)
+if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
+  TURNS=$(jq -rs '[.[] | select(.isSidechain != true and .isApiErrorMessage != true and ((.message.role // .role) == "user"))] | length' "$transcript_path" 2>/dev/null)
+  [ -n "$TURNS" ] && [ "$TURNS" -gt 0 ] && parts+=("T:${TURNS}")
 fi
 
 if [ ${#parts[@]} -gt 0 ]; then
