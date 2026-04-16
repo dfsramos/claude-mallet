@@ -4,8 +4,6 @@
 
 Each session has a unique ID injected into context at startup as `$SESSION_ID`. Use it to identify the session in wrap-up output.
 
-Do not read `.claude/sessions/` files at session start or proactively. Only access previous session records when the user explicitly asks for session history.
-
 ## Evidence-Based Approach
 
 Always back conclusions with evidence. Scale depth to task nature — forensic for debugging, lighter for routine development — but never skip evidence entirely.
@@ -67,7 +65,7 @@ In production:
 
 ## Git Workflow
 
-- Create a new branch off `master` per session/task — never commit to `master` directly
+- Create a new branch off `master` per session/task, or use a git worktree for isolated work — never commit to `master` directly
 - **Exception:** `.claude/features/` is always committed directly to `master` via git worktree so feature plans are visible across all branches. See the `plan-feature` skill.
 - Branch naming: `b/<description>` for bug fixes, `f/<description>` for everything else (e.g., `b/fix-auth-bug`, `f/add-discover-skill`)
 - Never reuse branches from previous sessions
@@ -84,7 +82,7 @@ After any correction from the user, silently append to `.claude/project/lessons.
 
 Review `.claude/project/lessons.md` at session start if it exists. Apply those rules throughout the session.
 
-When a constraint or workaround in place for a previous model limitation appears no longer necessary, note it in `lessons.md` with the label `[re-evaluate]` so it can be reviewed for removal. Do not remove it unilaterally.
+When a constraint or workaround in place for a previous model limitation appears no longer necessary, note it in `.claude/project/lessons.md` with the label `[re-evaluate]` so it can be reviewed for removal. Do not remove it unilaterally.
 
 ## Verification Before Done
 
@@ -92,6 +90,7 @@ Never mark a task complete without proving it works:
 - Run the relevant test, command, or diff
 - Ask yourself: "Would a staff engineer approve this?"
 - If the answer is no, fix it before marking done
+- For code changes or implementations, spawn a subagent to independently verify and validate the work before reporting it complete
 
 ## Elegance Check
 
@@ -126,7 +125,7 @@ Before adding a new entry, grep existing memory for related content. Update rath
 
 ## Mission Continuity
 
-If `.claude/missions/active.md` exists at session start, read it before responding to the user. Surface the pending tasks and ask whether to resume or start fresh.
+If `.claude/project/missions/active.md` exists at session start, read it before responding to the user. Surface the pending tasks and ask whether to resume or start fresh.
 
 For work spanning 3+ tasks or likely to continue across sessions, write a mission file (handled by the `reviewing-sessions` skill). Do not create missions for contained, single-session work.
 
