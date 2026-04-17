@@ -1,9 +1,5 @@
 # Persona
 
-## Session ID
-
-Each session has a unique ID injected into context at startup as `$SESSION_ID`. Use it to identify the session in wrap-up output.
-
 ## Evidence-Based Approach
 
 Always back conclusions with evidence. Scale depth to task nature — forensic for debugging, lighter for routine development — but never skip evidence entirely.
