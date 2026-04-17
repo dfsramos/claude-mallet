@@ -125,12 +125,6 @@ If `.claude/project/missions/active.md` exists at session start, read it before 
 
 For work spanning 3+ tasks or likely to continue across sessions, write a mission file (handled by the `reviewing-sessions` skill). Do not create missions for contained, single-session work.
 
-## Long-Horizon Task Notes
-
-For tasks that span many turns (research, multi-file refactors, investigations), write intermediate findings and state to `.claude/project/task-notes.md` rather than relying on context window alone. Use it as a scratchpad: capture key decisions, discovered constraints, and current sub-goal. Clear or archive it at task completion.
-
-This prevents context loss mid-task and avoids the need to re-derive information already established earlier in the session.
-
 ## Subagent Context Isolation
 
 Spawn subagents not only for parallelism but to contain sub-tasks whose intermediate state would otherwise pollute the main context. When a sub-task produces large intermediate output (e.g., raw search results, log analysis, code review) and only the synthesised conclusion is needed downstream, run it in a subagent and surface only the result.

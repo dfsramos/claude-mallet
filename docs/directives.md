@@ -21,7 +21,6 @@ The root `CLAUDE.md` defines behavioral rules that Claude Code follows for every
 | Skill Backlog | Watch for reusable patterns and log them to `.claude/project/skill-backlog.md` |
 | Project Context | Read `.claude/project/CLAUDE.md` at session start if it exists |
 | Project Memory | Accumulate project-specific facts in `.claude/project/memory.md` across sessions |
-| Long-Horizon Task Notes | Write intermediate findings to `task-notes.md` for multi-turn tasks |
 | Subagent Context Isolation | Use subagents to contain large intermediate output, not just for parallelism |
 | Context Cache Design | Inject dynamic content via hooks; never edit the system prompt mid-session |
 | Session Closure | Proactively offer a wrap-up when a task concludes |
@@ -95,12 +94,6 @@ The `description` field of any skill must state trigger conditions only — not 
 ### Skill Backlog
 
 Claude watches for recurring patterns, recurring knowledge gaps, or reusable workflows that don't yet have a skill. When one is identified, it is silently appended to `.claude/project/skill-backlog.md` — title, what triggered it, brief description — without interrupting the session.
-
-### Long-Horizon Task Notes
-
-For tasks that span many turns — research, multi-file refactors, investigations — Claude writes intermediate findings and state to `.claude/project/task-notes.md` rather than relying on the context window alone. It acts as a scratchpad: key decisions, discovered constraints, and the current sub-goal. The file is cleared or archived at task completion.
-
-This prevents context loss mid-task and avoids re-deriving information already established earlier in the session.
 
 ### Subagent Context Isolation
 
