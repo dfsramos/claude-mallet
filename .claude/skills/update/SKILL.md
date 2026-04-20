@@ -51,7 +51,7 @@ curl -sfL "https://github.com/{owner}/{repo}/archive/${NEW_SHA}.tar.gz" -o "$WOR
 tar -xzf "$WORK/tarball.tar.gz" -C "$WORK" --strip-components=1
 ```
 
-After extraction, `$WORK/source/` contains the new framework tree. If the directory is missing, stop and report the download failure.
+After extraction, `$WORK/.claude/` and `$WORK/CLAUDE.md` contain the new framework payload. If either is missing, stop and report the download failure.
 
 ---
 
@@ -62,9 +62,9 @@ From the project root:
 ```bash
 rm -rf .claude/hooks .claude/skills .claude/templates .claude/statusline.sh .claude/settings.json CLAUDE.md
 
-cp -r "$WORK/source/.claude/hooks" "$WORK/source/.claude/skills" "$WORK/source/.claude/templates" .claude/
-cp "$WORK/source/.claude/statusline.sh" "$WORK/source/.claude/settings.json" .claude/
-cp "$WORK/source/CLAUDE.md" ./CLAUDE.md
+cp -r "$WORK/.claude/hooks" "$WORK/.claude/skills" "$WORK/.claude/templates" .claude/
+cp "$WORK/.claude/statusline.sh" "$WORK/.claude/settings.json" .claude/
+cp "$WORK/CLAUDE.md" ./CLAUDE.md
 ```
 
 `.claude/project/**`, `.claude/settings.local.json`, and `.claude/framework.json` are untouched.

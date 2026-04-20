@@ -1,9 +1,4 @@
 ﻿*Zone.Identifier
-.claude/sessions/*
-source/.claude/project/*
-source/.claude/sessions/*
-source/.claude/discovery*
-.claude/sessions/.current
 .claude/settings.local.json
 .claude/framework.json
 .claude/project/memory.md

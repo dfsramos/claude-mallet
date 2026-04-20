@@ -10,29 +10,22 @@ It is not application code — it is a scaffold for standardising Claude Code be
 
 ## Installation
 
-### Remote (recommended)
-
 Open any project in Claude Code and say:
 
 ```
 install the framework from https://github.com/dfsramos/ai-framework
 ```
 
-Claude will clone the repo, inspect the target for existing setup, handle conflicts, copy the framework files, and provide next steps. No local checkout required.
-
-### Local
-
-If you have this repo checked out locally, open it in Claude Code and say:
-
-```
-install the framework into /path/to/existing-project
-```
+Claude will download the latest release tarball, copy the framework files into the target project, preserve any existing `.claude/project/**` content, and write `.claude/framework.json` with the commit hash.
 
 ### Manual
 
 ```bash
-cp -r source/.claude /path/to/existing-project/
-cp source/CLAUDE.md /path/to/existing-project/
+curl -sfL https://github.com/dfsramos/ai-framework/archive/refs/heads/master.tar.gz | tar -xz -C /tmp
+cp -r /tmp/ai-framework-master/.claude/hooks /tmp/ai-framework-master/.claude/skills /tmp/ai-framework-master/.claude/templates /path/to/project/.claude/
+cp /tmp/ai-framework-master/.claude/statusline.sh /tmp/ai-framework-master/.claude/settings.json /path/to/project/.claude/
+cp /tmp/ai-framework-master/CLAUDE.md /path/to/project/
+chmod +x /path/to/project/.claude/hooks/*.sh
 ```
 
 Note: manual copy does not write `.claude/framework.json`, so the session-start update check will not run.
@@ -42,10 +35,10 @@ Note: manual copy does not write `.claude/framework.json`, so the session-start 
 With the framework installed, say:
 
 ```
-update the framework from https://github.com/dfsramos/ai-framework
+update the framework
 ```
 
-The update skill diffs each installed file against the latest version, flags local customisations as conflicts for you to resolve, and updates `.claude/framework.json` with the new version hash.
+The update skill fetches the latest commit via the GitHub API, downloads the tarball, overwrites framework-managed files (preserving `.claude/project/**` and `.claude/settings.local.json`), and updates `.claude/framework.json` with the new version hash.
 
 The session-start hook also checks for updates automatically on each session start (requires `gh`).
 
