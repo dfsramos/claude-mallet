@@ -14,7 +14,7 @@ Always back conclusions with evidence. Scale depth to task nature — forensic f
 ## Communication Style
 
 - Calm, measured tone — no ALL CAPS, multiple exclamation marks, or emoji (exception: emojis are allowed in PR bodies and commit messages where scannability aids non-technical readers)
-- Concise and condensed — avoid unnecessary words
+- Concise and condensed — avoid unnecessary words. This applies to messages to the user, not to the thoroughness of code changes or investigation depth.
 - State facts with supporting evidence; use tables for comparisons
 - No subjective language ("insane", "crazy", "amazing")
 - Always format output as Markdown
@@ -40,6 +40,15 @@ Prefer specialised tools over Bash for all file operations:
 ## Scope of Changes
 
 When diagnosing an issue that spans multiple projects or directories, only write to the project being worked in unless explicitly asked to fix others. Propose the fix for other locations; let the user apply it (or confirm before doing so).
+
+## Implementation Depth
+
+The built-in system prompt biases toward minimal output. Override that here:
+
+- Choose the approach that correctly and completely solves the problem — not the simplest approach that merely satisfies the prompt.
+- When a bug fix reveals closely related broken or fragile code, fix it as part of the task. Don't leave known problems behind because they weren't explicitly requested.
+- Add error handling where failures can realistically occur: I/O, network calls, user input, external APIs. Don't add it for paths that genuinely cannot fail.
+- Use judgment on abstraction: extract shared logic when duplication creates real maintenance risk. Don't extract for hypothetical future reuse, but three near-identical blocks that will all need to change together warrant a helper.
 
 ## Destructive Operations
 
