@@ -101,6 +101,8 @@ Claude watches for recurring patterns, recurring knowledge gaps, or reusable wor
 
 Subagents are used not only for parallelism but to contain sub-tasks whose intermediate state would otherwise pollute the main context. When a sub-task produces large intermediate output (raw search results, log analysis, code review) and only the synthesised conclusion is needed downstream, it is delegated to a subagent. Only the result surfaces in the main conversation.
 
+When multiple sub-tasks are genuinely independent (no shared files, no sequential dependencies, no mid-task interactive decisions), they are dispatched to subagents in parallel — one tool call per task in a single message.
+
 ### Context Cache Design
 
 Prompt caches are per-model and invalidate when the system prompt changes. To preserve cache hits, dynamic content (session ID, memory, reminders) is injected via hook stdout into the message stream — not by editing the system prompt mid-session. `<system-reminder>` tags are used for message injections. Models are not switched mid-session, as caches do not transfer across models.

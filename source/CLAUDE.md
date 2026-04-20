@@ -129,6 +129,8 @@ For work spanning 3+ tasks or likely to continue across sessions, write a missio
 
 Spawn subagents not only for parallelism but to contain sub-tasks whose intermediate state would otherwise pollute the main context. When a sub-task produces large intermediate output (e.g., raw search results, log analysis, code review) and only the synthesised conclusion is needed downstream, run it in a subagent and surface only the result.
 
+When multiple sub-tasks are genuinely independent (no shared files, no sequential dependencies, no mid-task interactive decisions), dispatch them to subagents in parallel — one tool call per task in a single message.
+
 This keeps the main context window focused on the current decision rather than accumulated intermediate noise.
 
 ## Project Discovery

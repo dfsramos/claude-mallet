@@ -6,25 +6,19 @@ description: Invoke when the user wants to plan a new feature, build something n
 
 ## Setup
 
-Open a worktree on master to read and write planning files without disrupting the current branch.
+Feature plans live in `.claude/features/` on master so they're visible across branches.
 
-First check if master is already the current branch:
-
-```bash
-git branch --show-current
-```
-
-- **If already on master**: skip worktree creation. Read and write plan files directly in the current directory. There is no worktree to clean up.
-- **If on another branch**: create the worktree:
+- **If already on master**: work in the current directory. No worktree needed.
+- **Otherwise**: open a master worktree:
 
 ```bash
 git worktree list | grep -q /tmp/feature-planning || git worktree add /tmp/feature-planning master
 git -C /tmp/feature-planning pull --ff-only
 ```
 
-Cleanup on completion or error: `git worktree remove --force /tmp/feature-planning`
+Cleanup on completion: `git worktree remove --force /tmp/feature-planning`.
 
-In all subsequent steps, replace `/tmp/feature-planning` with the current directory (`.`) when already on master.
+Below, paths prefixed `/tmp/feature-planning/` apply to the worktree case — drop the prefix when working directly on master, and use plain `git` instead of `git -C /tmp/feature-planning`.
 
 ---
 
@@ -51,14 +45,7 @@ Follow up with targeted questions where the picture is still incomplete. Stop wh
 
 After intake, check whether the feature operates in a domain with strong, stable conventions where encoding expertise as a knowledge skill would improve implementation quality.
 
-Signals — the feature involves one or more of:
-- API design (REST, GraphQL, RPC contracts)
-- Authentication or authorisation flows
-- Data modelling or schema design
-- Security-sensitive logic (payments, PII, compliance)
-- Accessibility requirements
-- Performance-critical paths
-- Domain-specific business rules (healthcare, legal, finance)
+Signals — the feature touches API design, auth flows, data modelling, security-sensitive logic (payments/PII/compliance), accessibility, performance-critical paths, or domain-specific rules (healthcare, legal, finance).
 
 If any signals are present, ask: "This feature touches [domain] — would a knowledge skill help guide implementation? I can scaffold one alongside the plan."
 
@@ -143,10 +130,11 @@ For each wave:
 
 1. **Identify the wave:** collect all tasks whose dependencies are all marked `done`
 2. **Present the wave:** if it contains multiple tasks flagged `[parallel: yes]`, ask: run in parallel or sequentially?
-3. **Execute the wave:** for each task, read its task file, ask any remaining narrow questions, then execute
-4. **Autonomy rules:**
-   - Local / git-tracked work: proceed freely
-   - Remote servers or production databases: confirm writes and deletes before executing; reads are free
+3. **Execute the wave:**
+   - *Sequential:* for each task, read its task file, ask any remaining narrow questions, then execute.
+   - *Parallel:* dispatch each task to its own subagent (one tool call per task, all in a single message). Each subagent reads its task file and executes autonomously; only results surface to the main context.
+   - Parallel only when tasks are genuinely independent — no shared files, no sequential dependencies, no mid-task interactive decisions. Otherwise run sequentially.
+4. **Autonomy:** follow base `CLAUDE.md` — Destructive Operations and Production Awareness apply.
 5. **After each task completes:** mark `done` in the task file and in `plan.md`, commit both via the master worktree; log any decisions made or blockers encountered to `state.md`
 6. **After the wave completes:** reassess — identify the next wave and repeat
 
