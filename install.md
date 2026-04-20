@@ -37,7 +37,9 @@ After extraction, `$WORK/.claude/` and `$WORK/CLAUDE.md` contain the framework p
 
 ## 4. Install Framework Files
 
-From the target project root, remove any existing framework-managed paths, then copy the new versions in. The framework ships `.claude/project/` and `.claude/features/` with its own content — exclude both so they don't overwrite the target's project-specific state.
+**Before proceeding, confirm the target directory.** Run `pwd` and ask the user to confirm the absolute path is the project they want to install into. The next commands delete and replace files in that directory — if the user is in the wrong place, stop and do not run anything below.
+
+The `cp` commands below copy only framework-managed subtrees. `.claude/project/` and `.claude/features/` are not in the list, so any existing content at those paths — or their absence — remains untouched.
 
 ```bash
 mkdir -p .claude
@@ -106,7 +108,7 @@ Keep suggestions brief. Do not create them automatically.
 
   Next steps:
     1. Customise .claude/project/CLAUDE.md for this project (create if needed)
-    2. Run 'claude' in this directory to start a session
+    2. Run /discover to scan the project for .claude/ setup opportunities
     3. [Context-specific suggestion from step 8, if any]
 
 ────────────────────────────────────────────────────────────
