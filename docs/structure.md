@@ -77,5 +77,5 @@ When the framework is installed into a project, the target gains:
 | `install.md` | Remote-install instructions followed by Claude on first install |
 | `.claude/settings.json` | Registers hooks and other Claude Code settings |
 | `.claude/project/CLAUDE.md` | Project-specific conventions layered on top of the root `CLAUDE.md` |
-| `.claude/project/memory.md` | Persistent project-specific knowledge, injected at session start |
-| `.claude/project/skill-backlog.md` | Running log of skill ideas captured during sessions |
+
+On-demand files (`memory.md`, `lessons.md`, `skill-backlog.md`, overrides, missions, discovery reports) are documented in the directives and skills that own them — see [`directives.md`](directives.md) and [`skills.md`](skills.md).
