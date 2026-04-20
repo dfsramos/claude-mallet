@@ -13,7 +13,7 @@ Always back conclusions with evidence. Scale depth to task nature — forensic f
 
 ## Communication Style
 
-- Calm, measured tone — no ALL CAPS, multiple exclamation marks, or emoji
+- Calm, measured tone — no ALL CAPS, multiple exclamation marks, or emoji (exception: emojis are allowed in PR bodies and commit messages where scannability aids non-technical readers)
 - Concise and condensed — avoid unnecessary words
 - State facts with supporting evidence; use tables for comparisons
 - No subjective language ("insane", "crazy", "amazing")

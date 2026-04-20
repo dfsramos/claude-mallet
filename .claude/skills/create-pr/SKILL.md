@@ -6,14 +6,15 @@ description: Invoke when the user says "create PR", "open a PR", "make a pull re
 
 ## 1. Gather the Patch
 
-Run the following to understand the full scope of changes being submitted:
+Detect the default branch from the remote, then diff against it:
 
 ```bash
-git diff main...HEAD
-git log main...HEAD --oneline
+BASE=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+git diff "$BASE"...HEAD
+git log "$BASE"...HEAD --oneline
 ```
 
-If the branch has not diverged from `main`, fall back to `git diff HEAD~1` or `git diff --cached` depending on what is staged.
+If the branch has not diverged from the base, fall back to `git diff HEAD~1` or `git diff --cached` depending on what is staged.
 
 ---
 
@@ -76,7 +77,22 @@ End the summary with the exact line:
 
 ---
 
-## 4. Open the PR
+## 4. Push the Branch
+
+Check whether the branch is on origin:
+
+```bash
+git rev-parse --abbrev-ref '@{u}'
+```
+
+- If the command fails (no upstream), ask the user: "Branch is not on origin. Push with `git push -u origin HEAD`?" Wait for explicit confirmation before pushing.
+- If it succeeds, run `git status -sb` to check for unpushed commits. If the branch is ahead of upstream, ask before pushing.
+
+Never push without confirmation.
+
+---
+
+## 5. Open the PR
 
 After presenting the summary for review, create the PR using `gh pr create`, passing the generated summary as the body:
 
