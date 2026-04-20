@@ -121,7 +121,7 @@ Generates a structured, non-technical PR summary (What Changed / Why / Customer 
 **Directory:** `.claude/project/skills/harvest/`
 **Triggered by:** "harvest", "run harvest", or "harvest `<project-path>`"
 
-Reviews a target project for improvements worth pulling back into the framework base. Runs in the ai-framework repo only.
+Reviews a target project for improvements worth pulling back into the framework base. Runs in the claude-mallet repo only.
 
 1. **Pull check** — ensures the framework repo is up to date before comparing anything
 2. **Project skills** — scans `TARGET/.claude/project/skills/`; offers to promote selected skills into `.claude/skills/`

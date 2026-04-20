@@ -44,7 +44,7 @@ Compare `NEW_SHA` against `framework.json.version`. If they match, stop:
 ## 3. Download and Extract
 
 ```bash
-WORK=/tmp/ai-framework-update
+WORK=/tmp/claude-mallet-update
 rm -rf "$WORK"
 mkdir -p "$WORK"
 curl -sfL "https://github.com/{owner}/{repo}/archive/${NEW_SHA}.tar.gz" -o "$WORK/tarball.tar.gz"

@@ -1,4 +1,11 @@
-# ai-framework
+# ClaudeMallet
+
+<p align="center">
+  <img src="assets/claude-mallet.jpg" alt="ClaudeMallet" width="400" />
+</p>
+
+> A mallet is the heavy, precise hammer a blacksmith uses to shape raw metal on the anvil — delivering controlled force to forge something strong and purposeful.
+> ClaudeMallet is that tool for Claude Code: hammer in directives, hooks, skills, and a consistent persona, transforming raw Claude into a reliable, opinionated, and highly effective coding partner across every project.
 
 A portable configuration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that customises agent behavior through directives, hooks, and skills.
 
@@ -18,7 +25,7 @@ Two workflows anchor the framework and return the most value per session:
 Open any project in Claude Code and say:
 
 ```
-install the framework from https://github.com/dfsramos/ai-framework
+install the framework from https://github.com/dfsramos/claude-mallet
 ```
 
 Claude will download the latest release tarball, copy the framework files into the target project, preserve any existing `.claude/project/**` content, and write `.claude/framework.json` with the commit hash.
@@ -26,10 +33,10 @@ Claude will download the latest release tarball, copy the framework files into t
 ### Manual
 
 ```bash
-curl -sfL https://github.com/dfsramos/ai-framework/archive/refs/heads/master.tar.gz | tar -xz -C /tmp
-cp -r /tmp/ai-framework-master/.claude/hooks /tmp/ai-framework-master/.claude/skills /tmp/ai-framework-master/.claude/templates /path/to/project/.claude/
-cp /tmp/ai-framework-master/.claude/statusline.sh /tmp/ai-framework-master/.claude/settings.json /path/to/project/.claude/
-cp /tmp/ai-framework-master/CLAUDE.md /path/to/project/
+curl -sfL https://github.com/dfsramos/claude-mallet/archive/refs/heads/master.tar.gz | tar -xz -C /tmp
+cp -r /tmp/claude-mallet-master/.claude/hooks /tmp/claude-mallet-master/.claude/skills /tmp/claude-mallet-master/.claude/templates /path/to/project/.claude/
+cp /tmp/claude-mallet-master/.claude/statusline.sh /tmp/claude-mallet-master/.claude/settings.json /path/to/project/.claude/
+cp /tmp/claude-mallet-master/CLAUDE.md /path/to/project/
 chmod +x /path/to/project/.claude/hooks/*.sh
 ```
 

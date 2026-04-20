@@ -24,7 +24,7 @@ NEW_SHA=$(curl -sf "https://api.github.com/repos/{owner}/{repo}/commits/${BRANCH
 ## 3. Download and Extract
 
 ```bash
-WORK=/tmp/ai-framework-install
+WORK=/tmp/claude-mallet-install
 rm -rf "$WORK"
 mkdir -p "$WORK"
 curl -sfL "https://github.com/{owner}/{repo}/archive/${NEW_SHA}.tar.gz" -o "$WORK/tarball.tar.gz"
@@ -79,7 +79,7 @@ Write `.claude/framework.json`:
 ## 7. Cleanup
 
 ```bash
-rm -rf /tmp/ai-framework-install
+rm -rf /tmp/claude-mallet-install
 ```
 
 ---

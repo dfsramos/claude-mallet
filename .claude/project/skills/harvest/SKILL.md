@@ -1,10 +1,10 @@
 ---
 name: harvest
-description: Invoke when the user says "harvest", "run harvest", or "harvest <project-path>" inside the ai-framework repo. Promotes project-specific skills from a target project into the framework base and surfaces skill overrides for review.
+description: Invoke when the user says "harvest", "run harvest", or "harvest <project-path>" inside the claude-mallet repo. Promotes project-specific skills from a target project into the framework base and surfaces skill overrides for review.
 ---
 # Harvest
 
-Review a target project for improvements worth pulling back into the framework base. Runs inside the ai-framework repo only.
+Review a target project for improvements worth pulling back into the framework base. Runs inside the claude-mallet repo only.
 
 Two phases:
 
