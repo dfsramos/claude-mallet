@@ -23,12 +23,12 @@ Read the user's prompt and classify it against the matrix below. When in doubt, 
 
 ## 2. Apply the Model Matrix
 
-| Tier | Recommended Model | Why |
-|------|------------------|-----|
-| Architectural | **`opusplan`** | Opus reasons through the plan, Sonnet executes — best of both; use `/model opus` if you want Opus throughout |
-| Complex | **`sonnet`** | Capable; Opus overhead not justified |
-| Routine | **`haiku`** (new session, T ≤ 2) or **`sonnet`** (current session) | For pure boilerplate — config edits, single-file changes, repetitive code generation — Haiku produces identical results at a fraction of the output cost. Suggest a new session only when T ≤ 2 on the statusline; otherwise session-switch overhead exceeds savings. |
-| Large Context | **`sonnet[1m]`** | Context size is the constraint, not reasoning power; 1M window avoids truncation |
+| Tier | Recommended | Switch | Why |
+|------|------------|--------|-----|
+| Architectural | `opusplan` | `/model opusplan` | Opus plans, Sonnet executes; use `/model opus` for Opus throughout |
+| Complex | `sonnet` | `/model sonnet` | Capable for multi-file work; Opus overhead not justified |
+| Routine | `haiku` (new session, T ≤ 2) or `sonnet` (current session) | `/model haiku` | Haiku produces identical results on boilerplate at a fraction of the cost. Suggest a new session only when T ≤ 2; session-switch overhead exceeds savings otherwise |
+| Large Context | `sonnet[1m]` | `/model sonnet[1m]` | Volume is the constraint, not reasoning; 1M window avoids truncation |
 
 ### Subagent model selection
 
@@ -44,34 +44,19 @@ When spawning agents via the Agent tool, choose the model by what the subagent n
 
 ## 3. Surface the Recommendation
 
-State the classification and recommendation clearly, then ask whether to proceed or switch first. Keep it to 3–4 lines — no extended reasoning.
+Compare the recommendation against the active model (visible on the statusline) and act:
 
-Format:
+- **Already on the recommended model** → proceed silently, no interruption.
+- **Switch recommended** → state the recommendation in the format below and wait for the user to switch or explicitly continue on the current model.
+- **Routine + T ≤ 2** → offer the Haiku-in-new-session option alongside the current-session option.
+
+Format (only when a switch is warranted):
+
 ```
 Task tier: [Architectural / Complex / Routine / Large Context]
 Recommended model: [opusplan / sonnet / haiku / sonnet[1m]]
+Switch: /model <name>
 Reason: [one sentence]
-
-Proceed on current model, or switch first?
 ```
 
-If the task is Complex (Sonnet is already active), skip the question and proceed immediately — no need to interrupt.
-
-For Routine tasks: if T ≤ 2 (visible on the statusline), offer the Haiku option before proceeding. Otherwise proceed on Sonnet.
-
-Only pause for confirmation when recommending a model switch.
-
----
-
-## 4. When a Switch Is Recommended
-
-Give the user the switch command and wait for their response before starting work:
-
-| Recommendation | Switch command |
-|----------------|---------------|
-| `opusplan` | `/model opusplan` |
-| `opus` (full session) | `/model opus` |
-| `haiku` | `/model haiku` |
-| `sonnet[1m]` | `/model sonnet[1m]` |
-
-Do not proceed with the task until the user either switches or explicitly says to continue on the current model.
+Keep it to 3–4 lines — no extended reasoning. Do not proceed until the user responds.

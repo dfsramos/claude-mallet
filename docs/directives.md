@@ -23,6 +23,7 @@ The root `CLAUDE.md` defines behavioral rules that Claude Code follows for every
 | Project Memory | Accumulate project-specific facts in `.claude/project/memory.md` across sessions |
 | Subagent Context Isolation | Use subagents to contain large intermediate output, not just for parallelism |
 | Context Cache Design | Inject dynamic content via hooks; never edit the system prompt mid-session |
+| Task Calibration | Mandatory invocation of `task-calibrate` on UserPromptSubmit complexity reminder |
 | Session Closure | Proactively offer a wrap-up when a task concludes |
 
 ## Details
@@ -106,6 +107,10 @@ When multiple sub-tasks are genuinely independent (no shared files, no sequentia
 ### Context Cache Design
 
 Prompt caches are per-model and invalidate when the system prompt changes. To preserve cache hits, dynamic content (session ID, memory, reminders) is injected via hook stdout into the message stream — not by editing the system prompt mid-session. `<system-reminder>` tags are used for message injections. Models are not switched mid-session, as caches do not transfer across models.
+
+### Task Calibration
+
+When the UserPromptSubmit hook emits a `[task-calibrate]` reminder (complexity score ≥ 3), Claude must invoke the `task-calibrate` skill before responding. The reminder only fires on high-complexity prompts where model choice materially affects cost or quality, so invocation is mandatory rather than a soft nudge.
 
 ### Session Closure
 

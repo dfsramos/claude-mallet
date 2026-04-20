@@ -50,7 +50,7 @@ fi
 # --- Output ---
 
 if [ "$SCORE" -ge 3 ]; then
-  echo "[task-calibrate] High-complexity task detected (score=${SCORE}). Invoke the task-calibrate skill to assess whether Opus would serve this task better before proceeding."
+  echo "[task-calibrate] High-complexity task detected (score=${SCORE}). Invoke the task-calibrate skill now, before responding, to check whether a different model would better fit this task."
 fi
 
 exit 0

@@ -133,6 +133,10 @@ When multiple sub-tasks are genuinely independent (no shared files, no sequentia
 
 This keeps the main context window focused on the current decision rather than accumulated intermediate noise.
 
+## Task Calibration
+
+When the UserPromptSubmit hook emits a `[task-calibrate]` reminder, invoke the `task-calibrate` skill before responding. This is mandatory, not a suggestion — the reminder only fires on high-complexity prompts where model choice materially affects cost or quality.
+
 ## Project Discovery
 
 When the user says "discover", "analyze the codebase", or runs `/discover`, use the `discover` skill.
