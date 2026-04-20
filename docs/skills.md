@@ -151,6 +151,14 @@ Silent log of potential new skills or improvements captured during sessions. Rev
 
 Project-specific skills that sit alongside framework skills but are not installed into other projects. Same `SKILL.md` format.
 
+## Skill Overrides
+
+**Directory:** `.claude/project/overrides/` (optional, one file per overridden skill)
+
+Per-skill amendments to base framework skills, indexed via a "Skill Overrides" section in `.claude/project/CLAUDE.md`. Before executing a listed skill, Claude reads `.claude/project/overrides/<skill-name>.md` and applies its contents as amendments — overrides win on conflict.
+
+Override files are created and maintained by Claude on user request. Because the index lives in `.claude/project/CLAUDE.md` (already in context), Claude never probes the filesystem for absent overrides. See the [Skill Overrides directive](directives.md#skill-overrides).
+
 ## Adding New Framework Skills
 
 1. Create `.claude/skills/<name>/SKILL.md`

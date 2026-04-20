@@ -54,6 +54,8 @@ When the framework is installed into a project, the target gains:
     └── project/                       # Project-specific content (never touched by install/update)
         ├── CLAUDE.md                  # Project conventions (optional)
         ├── memory.md                  # Project memory (optional, created on demand)
+        ├── overrides/                 # Per-skill amendments to base skills (optional)
+        │   └── <skill-name>.md        # Amendments for the named base skill
         └── skills/                    # Project-specific skills (optional)
 ```
 

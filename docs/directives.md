@@ -20,6 +20,7 @@ The root `CLAUDE.md` defines behavioral rules that Claude Code follows for every
 | Skill Authoring | Skill `description` fields state trigger conditions only, not workflow summaries |
 | Skill Backlog | Watch for reusable patterns and log them to `.claude/project/skill-backlog.md` |
 | Project Context | Read `.claude/project/CLAUDE.md` at session start if it exists |
+| Skill Overrides | Apply project-specific amendments to base skills via `.claude/project/overrides/<skill>.md` |
 | Project Memory | Accumulate project-specific facts in `.claude/project/memory.md` across sessions |
 | Subagent Context Isolation | Use subagents to contain large intermediate output, not just for parallelism |
 | Context Cache Design | Inject dynamic content via hooks; never edit the system prompt mid-session |
@@ -71,6 +72,12 @@ All changes go through branches. Commits are never made directly to `master`. PR
 If `.claude/project/CLAUDE.md` exists in the current project, Claude reads it at the start of every session. It contains project-specific conventions, stack details, and service context that extend the base directives without modifying them.
 
 If `.claude/project/skills/` exists, it is treated as an additional skills directory alongside `.claude/skills/`. Skills there are available for use but are project-specific and not part of the base framework.
+
+### Skill Overrides
+
+Projects can amend base skills without copying them wholesale. When `.claude/project/CLAUDE.md` contains a "Skill Overrides" section listing a skill by name, Claude reads `.claude/project/overrides/<skill-name>.md` before executing that skill and applies its contents as amendments — the override wins wherever it conflicts with the base skill.
+
+Override files are created and maintained by Claude at the user's request, never by hand. When the user asks to override part of a base skill, Claude writes the override file and adds the skill's entry to the Skill Overrides list in `.claude/project/CLAUDE.md` atomically. The list doubles as a registry: Claude only reads an override file if the list says one exists, so absent overrides cost nothing.
 
 ### Project Memory
 

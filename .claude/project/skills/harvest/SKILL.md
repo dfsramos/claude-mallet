@@ -1,29 +1,31 @@
 ---
 name: harvest
-description: Harvests project-specific skills from a target project into the ai-framework base, and checks for framework drift. Invokes when the user says "harvest", "run harvest", or "harvest <project-path>".
+description: Invoke when the user says "harvest", "run harvest", or "harvest <project-path>" inside the ai-framework repo. Promotes project-specific skills from a target project into the framework base and surfaces skill overrides for review.
 ---
 # Harvest
 
-Promote project-specific skills to the ai-framework base and reconcile framework drift in the target project.
+Review a target project for improvements worth pulling back into the framework base. Runs inside the ai-framework repo only.
 
-This skill has three phases:
-1. **Pull check** — ensure ai-framework is up to date before comparing anything
-2. **Drift detection** — compare every `source/` file against the target's installed version
-3. **Skill promotion** — lift selected project skills into the framework base
+Two phases:
+
+1. **Project skills** — lift selected project-specific skills from the target into the framework
+2. **Overrides** — surface skill overrides present in the target for review; never auto-promote
+
+Framework drift in the target is **not** addressed by harvest. Local edits to framework-managed files in a target are discarded by the next `update` run. If a target diverges, either (a) make it a project skill, (b) make it an override, or (c) propose a PR to the framework directly.
 
 ---
 
 ## 0. Resolve Target
 
-If the user provided a target path in their invocation, use it. Otherwise ask:
+If the user provided a target path, use it. Otherwise ask:
 
 ```
 AskUserQuestion: "Which project do you want to harvest? (absolute path)"
 ```
 
-Expand `~` and resolve to an absolute path. Confirm the directory exists. Store as `TARGET`.
+Expand `~`, resolve to absolute, confirm the directory exists. Store as `TARGET`.
 
-Locate the ai-framework repo root by reading the path of this skill file and walking up to the directory that contains `source/`. Store as `FRAMEWORK_ROOT`.
+`FRAMEWORK_ROOT` is the current working directory (this repo).
 
 ---
 
@@ -36,108 +38,77 @@ git fetch --quiet
 git status --short --branch
 ```
 
-Inspect the output. If the local branch is behind the remote (output contains `behind`):
-
-- Tell the user: "ai-framework is behind the remote. Pulling now..."
-- Run `git pull --ff-only`
-- If the pull fails (non-fast-forward or conflicts), stop and tell the user to resolve it manually before harvesting
-
-If already up to date, note it and continue.
+If the local branch is behind the remote, tell the user and run `git pull --ff-only`. If the pull fails, stop and ask the user to resolve manually. If already up to date, continue silently.
 
 ---
 
-## 2. Drift Detection
+## 2. Project Skills
 
-Compare every file under `FRAMEWORK_ROOT/source/` against its counterpart in `TARGET`.
+Scan `TARGET/.claude/project/skills/` for skill directories (one level deep). If empty or absent, note "No project skills found." and continue to Phase 3.
 
-**For each source file:**
-
-1. Derive the relative path (strip `source/` prefix)
-2. Check whether the file exists in `TARGET/<relative>`
-3. If it does not exist: flag as **missing**
-4. If it does exist: run `diff --unified=3 TARGET/<relative> FRAMEWORK_ROOT/source/<relative>` and capture output
-5. If diff is non-empty: flag as **outdated**
-
-Collect all flagged files. If none are found, report "No drift detected." and skip to Phase 3.
-
-**Present a drift report:**
-
-```
-Drift detected in <TARGET>:
-
-  MISSING  .claude/hooks/session-start.sh
-  OUTDATED CLAUDE.md
-  OUTDATED .claude/skills/plan-feature/SKILL.md
-```
-
-For each outdated file, read both versions and produce a brief human-readable summary of what changed (e.g. "Added a new Git Workflow section", "Updated the allowed-tools list"). Do not dump raw diffs — synthesise.
-
-Then ask the user:
-
-```
-AskUserQuestion: "Which drifted files do you want to update in <TARGET>?"
-(multi-select, one option per flagged file, plus "Skip all")
-```
-
-For each file the user selects:
-- Copy `FRAMEWORK_ROOT/source/<relative>` → `TARGET/<relative>`, creating parent directories as needed
-- Log: `Updated: <relative>`
-
-After applying updates, set hook permissions on any `.sh` files that were updated under `.claude/hooks/`.
-
----
-
-## 3. Skill Promotion
-
-Scan `TARGET/.claude/project/skills/` for skill directories (one level deep). If the directory does not exist or is empty, report "No project-specific skills found." and finish.
-
-List the discovered skills. Ask the user which to promote:
+List discovered skills with a one-line summary of each (read the `description` field). Ask:
 
 ```
 AskUserQuestion: "Which project skills do you want to promote to the framework base?"
-(multi-select)
+(multi-select; one option per skill plus "Skip all")
 ```
-
-If none selected, finish.
 
 **For each selected skill:**
 
-1. Source: `TARGET/.claude/project/skills/<skill>/`
-2. Destination: `FRAMEWORK_ROOT/source/.claude/skills/<skill>/`
+- Source: `TARGET/.claude/project/skills/<skill>/`
+- Destination: `FRAMEWORK_ROOT/.claude/skills/<skill>/`
 
 If the destination already exists:
 - Read both `SKILL.md` files
 - Summarise what differs (triggers, phases, tools)
 - Ask: `[overwrite] [skip]`
-- If skip: log and continue to next skill
+- If skip: log and continue
 
 If overwriting or new:
 - Copy the entire skill directory to the destination
-- Remove the skill directory from `TARGET/.claude/project/skills/`
+- Remove the directory from `TARGET/.claude/project/skills/`
 - Log: `Promoted: <skill>`
+
+---
+
+## 3. Overrides
+
+Scan `TARGET/.claude/project/overrides/` for `*.md` files. If empty or absent, note "No overrides found." and continue to Phase 4.
+
+For each override file:
+1. Read the override
+2. Read the matching base skill at `FRAMEWORK_ROOT/.claude/skills/<skill-name>/SKILL.md`
+3. Summarise what the override changes (one or two lines)
+
+Present the list with summaries, then ask:
+
+```
+AskUserQuestion: "Do any of these overrides reveal gaps worth fixing in the base skill?"
+(per override: [fold into base skill] [leave as project-specific] [skip])
+```
+
+For each "fold" selection:
+- Propose a concrete edit to the base skill that incorporates the override's intent (generalised, not project-specific)
+- Apply the edit only after user confirmation
+- Remove the override file and its entry from `TARGET/.claude/project/CLAUDE.md` Skill Overrides list
+- Log: `Folded: <skill-name>`
+
+For "leave" or "skip": log and continue.
 
 ---
 
 ## 4. Summary
 
-Print a final summary:
-
 ```
 ── Harvest complete ──────────────────────────────────────
-  Target:    <TARGET>
+  Target:             <TARGET>
 
-  Drift:
-    Updated:  <list or "none">
-    Skipped:  <list or "none">
+  Skills promoted:    <list or "none">
+  Skills skipped:     <list or "none">
 
-  Skills promoted:  <list or "none">
-  Skills skipped:   <list or "none">
-
-  Reminder: re-run the install skill on the target to propagate
-  any newly promoted base skills. Open this repo in Claude Code and say:
-
-    install the framework into <TARGET>
+  Overrides folded:   <list or "none">
+  Overrides retained: <list or "none">
 ─────────────────────────────────────────────────────────
 ```
 
-Only show the install reminder if at least one skill was promoted.
+If anything was promoted or folded, remind the user to commit the changes and run `update` in `TARGET` afterwards to pick up the new base skills.

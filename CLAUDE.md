@@ -150,6 +150,12 @@ When the user wants to plan a feature, build something new, or continue work on 
 If `.claude/project/CLAUDE.md` exists, read it at session start.
 If `.claude/project/skills/` exists, treat it as an additional skills directory alongside `.claude/skills/`.
 
+## Skill Overrides
+
+`.claude/project/CLAUDE.md` may contain a "Skill Overrides" section listing base skills with project-specific amendments. Before executing a skill that appears in that list, read `.claude/project/overrides/<skill-name>.md` and apply its contents as amendments to the base skill — the override wins wherever it conflicts.
+
+When the user asks to override part of a base skill, create or update `.claude/project/overrides/<skill-name>.md` with the project-specific content, then add (or confirm) the skill's entry under "Skill Overrides" in `.claude/project/CLAUDE.md`. Always keep the list and the override files in sync.
+
 ---
 
 ## Context Cache Design
