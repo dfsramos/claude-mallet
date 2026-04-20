@@ -4,186 +4,107 @@ description: Invoke when the user says "update the framework", "update from <url
 ---
 # Framework Update
 
-Update the AI framework in the current project to the latest version from the remote repository.
+Replace framework-managed files with the latest version from the remote repository. This is a **source-of-truth update** — local edits to framework files are discarded. User content is preserved in:
+
+- `.claude/project/**` — all project-scoped context, skills, memory, missions
+- `.claude/settings.local.json` — user permissions and local overrides
+- `.claude/framework.json` — updated at the end with the new version
+
+Everything else framework-owned (`.claude/hooks/`, `.claude/skills/`, `.claude/templates/`, `.claude/statusline.sh`, `.claude/settings.json`, root `CLAUDE.md`) is overwritten wholesale.
 
 ---
 
 ## 1. Resolve the Repo
 
-The user provided a GitHub URL. Extract `owner` and `repo` from it.
+If the user provided a GitHub URL (`https://github.com/{owner}/{repo}`), extract `owner` and `repo`.
 
-Pattern: `https://github.com/{owner}/{repo}`
+Otherwise, read `.claude/framework.json` and use its `repo` field (format `{owner}/{repo}`). If the file does not exist, stop:
 
-If no URL was provided, read `.claude/framework.json` and use the `repo` field directly.
+> "No framework installation found here. Run a fresh install instead."
 
----
-
-## 2. Check Current Installation
-
-Read `.claude/framework.json`. If it does not exist, stop and tell the user:
-
-> "No framework installation found in this directory. Run a fresh install instead."
-
-Extract `repo` and `version` (the installed commit hash) from the file.
-
-If a URL was provided and the `repo` field does not match it, warn the user and wait for confirmation before continuing.
+If a URL was provided and it does not match `framework.json.repo`, warn and wait for confirmation before continuing.
 
 ---
 
-## 3. Clone to a Temporary Directory
+## 2. Check Latest Version
 
-The clone directory is always `/tmp/ai-framework-update`. Remove any leftover from a prior run first, then clone:
+Query the default branch and its HEAD commit via the GitHub API:
 
 ```bash
-rm -rf /tmp/ai-framework-update
-git clone --depth=1 "https://github.com/{owner}/{repo}.git" /tmp/ai-framework-update
+BRANCH=$(curl -sf "https://api.github.com/repos/{owner}/{repo}" | jq -r '.default_branch')
+NEW_SHA=$(curl -sf "https://api.github.com/repos/{owner}/{repo}/commits/${BRANCH}" | jq -r '.sha')
 ```
 
-If the clone fails, report the error and stop.
+Compare `NEW_SHA` against `framework.json.version`. If they match, stop:
 
-Capture the new commit hash:
+> "Already up to date (version: {short_sha}). No changes made."
+
+---
+
+## 3. Download and Extract
 
 ```bash
-git -C /tmp/ai-framework-update rev-parse HEAD
+WORK=/tmp/ai-framework-update
+rm -rf "$WORK"
+mkdir -p "$WORK"
+curl -sfL "https://github.com/{owner}/{repo}/archive/${NEW_SHA}.tar.gz" -o "$WORK/tarball.tar.gz"
+tar -xzf "$WORK/tarball.tar.gz" -C "$WORK" --strip-components=1
 ```
 
-If the new hash matches the installed hash, stop and tell the user:
+After extraction, `$WORK/source/` contains the new framework tree. If the directory is missing, stop and report the download failure.
 
-> "Already up to date (version: {short_hash}). No changes were made."
+---
 
-Clean up and exit:
+## 4. Replace Framework-Managed Files
+
+From the project root:
 
 ```bash
-rm -rf /tmp/ai-framework-update
+rm -rf .claude/hooks .claude/skills .claude/templates .claude/statusline.sh .claude/settings.json CLAUDE.md
+
+cp -r "$WORK/source/.claude/hooks" "$WORK/source/.claude/skills" "$WORK/source/.claude/templates" .claude/
+cp "$WORK/source/.claude/statusline.sh" "$WORK/source/.claude/settings.json" .claude/
+cp "$WORK/source/CLAUDE.md" ./CLAUDE.md
 ```
+
+`.claude/project/**`, `.claude/settings.local.json`, and `.claude/framework.json` are untouched.
 
 ---
 
-## 4. Assess Changes
-
-From the project root, run a single recursive diff to identify which files differ:
+## 5. Restore Hook Permissions
 
 ```bash
-diff -rq /tmp/ai-framework-update/source .
+chmod +x .claude/hooks/*.sh
 ```
-
-This reports:
-- `Only in /tmp/ai-framework-update/source/...` → `NEW`: will be added
-- `Files ... and ... differ` → needs classification (see step 5)
-- Files not mentioned → `SAME`: no action needed
-
-**Important:** Do not use any Bash commands that assign shell variables (e.g. `VAR=...`, `arr=(...)`). Use only direct commands with literal paths.
 
 ---
 
-## 5. Classify Conflicts and Resolve Autonomously
-
-For each file flagged as differing, run:
-
-```bash
-diff /tmp/ai-framework-update/source/<relative-path> ./<relative-path>
-```
-
-Then apply the following decision logic. **Do not pause to ask the user** unless the conflict meets the escalation criteria below.
-
-### Auto-merge (proceed without asking)
-
-Apply these resolutions silently:
-
-- **Local is a superset** — local has everything upstream has, plus additional content (new sections, extra entries, appended lines). Keep local additions; apply any upstream changes to shared content.
-- **Upstream-only addition** — upstream adds new content that local does not have; local has not removed or changed the surrounding context. Apply the upstream addition.
-- **Minor wording/phrasing** — the only difference is cosmetic (punctuation, capitalisation, a rephrased sentence with the same meaning). Take the upstream version.
-- **Whitespace/line-endings only** — content is semantically identical. Take the upstream version.
-
-### Escalate to user (pause and ask)
-
-Only stop for:
-
-- **Local removed upstream content** — local is missing steps, sections, or instructions that exist upstream, suggesting deliberate removal of functionality.
-- **Structural divergence** — the file has been substantially reorganised locally such that a clean merge is not obvious.
-- **Conflicting intent** — both sides changed the same passage in incompatible ways that would result in contradictory instructions if naively merged.
-
-When escalating, show the relevant diff excerpt and ask specifically:
-
-> "Local `{file}` is missing upstream content. Keep local version, take upstream, or merge? Show me the diff if unsure."
-
----
-
-## 6. Show Pre-flight Summary and Proceed
-
-Present a brief summary, then immediately proceed without waiting for confirmation:
-
-```
-Current version:  {installed_short_hash}
-Latest version:   {new_short_hash} ({date of new commit})
-
-Plan:
-  Updated (identical/whitespace):  N file(s)
-  Auto-merged (additive):          N file(s)
-  Added (new files):               N file(s)
-  Escalated (requires input):      N file(s)  ← only shown if > 0
-```
-
-If there are escalated files, resolve them before proceeding to installation.
-
----
-
-## 7. Install Updated Files
-
-For each file (respecting the resolutions from step 5):
-
-- Read from `/tmp/ai-framework-update/source/<relative-path>` using the Read tool
-- **New files (Added):** Write to `<current-directory>/<relative-path>` using the Write tool
-- **Existing files (Updated/Merged):** Use Edit to apply only the changed content — do not rewrite the entire file with Write
-- For auto-merged files: apply each upstream addition or change as a targeted Edit
-- Log: `Updated:`, `Merged:`, `Added:`, or `Skipped:` per file
-
-Do not use Bash for file copying — use Read + Write/Edit per file.
-
----
-
-## 8. Update Framework Metadata
+## 6. Update Metadata
 
 Overwrite `.claude/framework.json`:
 
 ```json
 {
   "repo": "{owner}/{repo}",
-  "version": "<new full commit hash>",
-  "installed_at": "<today's date as YYYY-MM-DD>"
+  "version": "<NEW_SHA>",
+  "installed_at": "<today as YYYY-MM-DD>"
 }
 ```
 
 ---
 
-## 9. Set Hook Permissions
-
-For every `.sh` file under `.claude/hooks/`, run:
-
-```bash
-chmod +x <file>
-```
-
----
-
-## 10. Remove Temporary Directory
+## 7. Cleanup and Summary
 
 ```bash
 rm -rf /tmp/ai-framework-update
 ```
 
----
-
-## 11. Summary
+Print:
 
 ```
 ── Update complete ──────────────────────────────────────────
 
-  Version:  {installed_short_hash} → {new_short_hash} ({date})
-  Updated:  N file(s)
-  Merged:   N file(s)
-  Added:    N file(s)
-  Skipped:  N file(s)
+  Version:  {old_short_sha} → {new_short_sha}
 
 ────────────────────────────────────────────────────────────
 ```
