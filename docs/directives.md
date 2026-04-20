@@ -22,6 +22,7 @@ The root `CLAUDE.md` defines behavioral rules that Claude Code follows for every
 | Project Context | Read `.claude/project/CLAUDE.md` at session start if it exists |
 | Skill Overrides | Apply project-specific amendments to base skills via `.claude/project/overrides/<skill>.md` |
 | Project Memory | Accumulate project-specific facts in `.claude/project/memory.md` across sessions |
+| Mission Continuity | Read `.claude/project/missions/active.md` at session start; write one for multi-session work |
 | Subagent Context Isolation | Use subagents to contain large intermediate output, not just for parallelism |
 | Context Cache Design | Inject dynamic content via hooks; never edit the system prompt mid-session |
 | Task Calibration | Mandatory invocation of `task-calibrate` on UserPromptSubmit complexity reminder |
@@ -67,7 +68,11 @@ Before executing any operation, Claude assesses whether the target is a producti
 
 ### Git Workflow
 
-All changes go through branches. Commits are never made directly to `master`. PRs are opened for review and not merged without explicit instruction.
+All changes go through branches off `master` — or an isolated git worktree for work that must not disturb the current branch. Branches follow a two-prefix convention: `b/<description>` for bug fixes and `f/<description>` for everything else (features, refactors, docs). Branches are not reused across sessions; each new session starts a fresh one. Commits are never made directly to `master`, and PRs are never merged without explicit user instruction.
+
+One exception: files under `.claude/features/` are committed directly to `master` via a git worktree so that feature plans remain visible across every branch. This behaviour is owned by the `plan-feature` skill.
+
+Commit messages are one line: imperative verb, capital first letter, ends with a period. Example: `Add password reset email template.`
 
 ### Project Context
 
@@ -87,9 +92,15 @@ Override files are created and maintained by Claude at the user's request, never
 
 Claude appends entries during sessions when it encounters something useful and audits them during the session wrap-up. The file is injected into context at session start by the session-start hook.
 
+### Mission Continuity
+
+When ongoing work is likely to span multiple sessions, Claude writes `.claude/project/missions/active.md` (handled by the `reviewing-sessions` skill). At the next session start, Claude reads the file and surfaces the pending tasks, asking the user whether to resume or start fresh. Missions are reserved for genuinely multi-session work — contained, single-session tasks do not warrant one.
+
 ### Self-Improvement Loop
 
 After any correction from the user, Claude silently appends to `.claude/project/lessons.md`: what went wrong and the rule to prevent it recurring. If the file exists at session start, it is read and applied throughout the session.
+
+When a constraint or workaround from a previous model's limitations looks obsolete, Claude tags the relevant lesson with `[re-evaluate]` rather than removing it. That flag is the signal to the user that the entry is a candidate for pruning; the user decides when to actually remove it.
 
 ### Verification Before Done
 

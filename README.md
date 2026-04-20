@@ -8,6 +8,11 @@ A reusable set of configuration files (`CLAUDE.md` and `.claude/`) that shape ho
 
 It is not application code — it is a scaffold for standardising Claude Code behavior.
 
+Two workflows anchor the framework and return the most value per session:
+
+- **Discovery (`/discover`)** — structured codebase analysis that surfaces `.claude/` setup opportunities: detected stacks and services, MCP and skill-pack suggestions, conventions worth capturing, and quick wins Claude can implement immediately.
+- **Session wrap-up (`wrap up` / `end session`)** — end-of-session retrospective covering what went well, what went wrong, token-efficiency patterns, and applied improvements to skills, directives, and project memory. The wrap-up is the primary mechanism by which the framework gets better over time.
+
 ## Installation
 
 Open any project in Claude Code and say:
@@ -50,7 +55,9 @@ The session-start hook also checks for updates automatically on each session sta
 | `plan-feature` | "plan a feature", "I want to build X" |
 | `systematic-debugging` | Debugging errors or unexpected behaviour |
 | `reviewing-sessions` | "wrap up", "end session" |
-| `update` | "update the framework from \<url\>" |
+| `task-calibrate` | High-complexity prompt (auto), or "check model for this" |
+| `create-pr` | "create PR", "open a PR" |
+| `update` | "update the framework" |
 
 ## Requirements
 
