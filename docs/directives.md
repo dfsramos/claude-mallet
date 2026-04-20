@@ -49,6 +49,8 @@ Dedicated tools (Read, Edit, Write, Grep, Glob) are preferred over Bash for file
 
 Edit is always preferred over Write. Write is only used when creating a file that does not yet exist. For any existing file — even when replacing most of its content — Edit is used instead.
 
+Bash commands must never begin with a variable assignment (`TMPDIR="..." command`) or use shell arrays. Claude Code's permission system cannot match these patterns against its allow-list and will prompt for approval instead of auto-approving. Use literal paths throughout.
+
 After a Bash command executes, the output is not summarised or restated unless the user asked for an explanation. If the result is self-evident, Claude proceeds directly to the next step.
 
 ### Scope of Changes
