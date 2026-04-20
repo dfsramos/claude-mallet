@@ -40,7 +40,7 @@ update the framework
 
 The update skill fetches the latest commit via the GitHub API, downloads the tarball, overwrites framework-managed files (preserving `.claude/project/**` and `.claude/settings.local.json`), and updates `.claude/framework.json` with the new version hash.
 
-The session-start hook also checks for updates automatically on each session start (requires `gh`).
+The session-start hook also checks for updates automatically on each session start and surfaces them to Claude so you can accept or defer the upgrade inline.
 
 ## What's Included
 
@@ -57,7 +57,7 @@ The session-start hook also checks for updates automatically on each session sta
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
 - Bash 4+ (for hooks)
 - `jq` (required — hook parses session input JSON)
-- `gh` CLI (optional — enables session-start update checks)
+- `curl` (required — hook queries GitHub for update checks)
 
 ## Documentation
 

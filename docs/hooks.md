@@ -5,17 +5,22 @@ Hooks are shell scripts that run automatically in response to Claude Code events
 ## Session Start Hook
 
 **File:** `.claude/hooks/session-start.sh`
-**Trigger:** Claude Code session startup
+**Trigger:** Claude Code session startup (`matcher: "startup"`)
 
-Injects project memory into Claude's context at the start of every session.
+Injects project memory and a framework update notice (when available) at session start.
 
 ### What it does
 
-If `.claude/project/memory.md` exists, echoes its contents wrapped in `--- Project Memory ---` markers so project facts are available from the first message.
+1. **Project memory injection.** If `.claude/project/memory.md` exists, echoes its contents wrapped in `--- Project Memory ---` markers so project facts are in context from turn one.
+2. **Framework update check.** If `.claude/framework.json` exists and `curl` + `jq` are available, queries the GitHub API for the repo's default branch HEAD. If the local hash differs, emits a `--- Framework Update Available ---` notice instructing Claude to surface it to the user and offer to run the update skill.
+
+Both steps fail silently on any error (missing tools, network failure, unparseable JSON) — a hook failure never disrupts session start.
 
 ### Why it exists
 
-Project memory — persistent facts about commands, conventions, and non-obvious behaviours — needs to be in context from turn one, not discovered lazily. The hook surfaces it automatically at every session start.
+Project memory — persistent facts about commands, conventions, and non-obvious behaviours — needs to be in context from turn one, not discovered lazily.
+
+The update check moved from the statusline to this hook because the statusline re-renders continuously (forcing a 5-minute cache to avoid API spam), while session start fires exactly once. Moving the check removes the cache, and delivering the notice via context rather than statusline text means Claude can proactively offer to run the update instead of the user having to notice the tiny status string.
 
 ## UserPromptSubmit Hook
 
