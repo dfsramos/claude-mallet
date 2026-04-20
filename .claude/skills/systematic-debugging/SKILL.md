@@ -23,10 +23,9 @@ Do not proceed to step 2 until the failure is reproducible and the error origin 
 
 ## 2. Pattern Analysis
 
-- Find the closest working analogue in the codebase
-- Compare the failing and passing implementations completely, not selectively
-- List every difference, including ones that appear irrelevant
-- Map all dependencies touched by the failing code path
+- Find the closest working analogue in the codebase, if one exists
+- If an analogue exists: compare failing and passing implementations completely, not selectively; list every difference, including ones that appear irrelevant
+- If no analogue exists (unique code path): map all dependencies touched by the failing code path and reason from first principles
 
 ---
 
@@ -43,11 +42,10 @@ Do not proceed to step 2 until the failure is reproducible and the error origin 
 
 Once root cause is confirmed:
 
-1. Write a failing test that reproduces the bug
-2. Confirm the test fails before the fix is applied
-3. Apply a single targeted fix
-4. Confirm the test now passes
-5. Confirm no existing tests regressed
+1. If the bug has testable behaviour: write a failing test that reproduces it; confirm it fails before applying the fix. Skip this step only when the bug resists reliable test coverage (e.g., race conditions, intermittent UI glitches) — note why.
+2. Apply a single targeted fix
+3. Confirm the reproduction case now passes (the new test, or the manual repro if no test was written)
+4. Confirm no existing tests regressed
 
 ---
 

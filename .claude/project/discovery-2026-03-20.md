@@ -84,7 +84,7 @@ The skill ends at step 4a (memory audit). No step saves the wrap-up output to `.
 
 ## Skill Backlog Items (unactioned)
 
-Both items in `.claude/skill-backlog.md` are still open:
+Both items in `.claude/project/skill-backlog.md` are still open:
 
 1. **Hooks Layer** — session-end hook for auto-persisting wrap-up state; git-push reminder hook. High value, needs a dedicated session.
 2. **MCP Server Catalog for Discovery** — structured catalog of MCP servers the discover skill can consult, instead of hardcoding Context7 inline. Medium value.

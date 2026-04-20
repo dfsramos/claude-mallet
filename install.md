@@ -1,200 +1,115 @@
 # AI Framework — Remote Installation Instructions
 
-You are installing the AI framework into the current working directory. Follow these steps precisely.
+Install the AI framework into the current working directory from a GitHub URL. This is a **source-of-truth install** — framework-managed files overwrite any local equivalents. User content is preserved in `.claude/project/**` (created on demand) and `.claude/settings.local.json`.
 
 ---
 
-## 1. Derive the Repo Slug
+## 1. Resolve the Repo
 
-The user provided a GitHub URL. Extract `owner` and `repo` from it.
-
-Pattern: `https://github.com/{owner}/{repo}`
-
-From this point forward, refer to the repo as `{owner}/{repo}` (e.g. `dfsramos/ai-framework`).
+The user provided a GitHub URL (`https://github.com/{owner}/{repo}`). Extract `owner` and `repo`.
 
 ---
 
-## 2. Clone to a Temporary Directory
+## 2. Fetch the Latest Commit
 
-Run the following via Bash:
+Query the default branch and its HEAD commit via the GitHub API:
 
 ```bash
-TMPDIR="/tmp/ai-framework-install-$(date +%s)"
-git clone --depth=1 "https://github.com/{owner}/{repo}.git" "$TMPDIR"
+BRANCH=$(curl -sf "https://api.github.com/repos/{owner}/{repo}" | jq -r '.default_branch')
+NEW_SHA=$(curl -sf "https://api.github.com/repos/{owner}/{repo}/commits/${BRANCH}" | jq -r '.sha')
 ```
 
-If the clone fails, report the error and stop. Do not proceed.
+---
 
-Capture the commit hash of the clone:
+## 3. Download and Extract
 
 ```bash
-cd "$TMPDIR" && git rev-parse HEAD
+WORK=/tmp/ai-framework-install
+rm -rf "$WORK"
+mkdir -p "$WORK"
+curl -sfL "https://github.com/{owner}/{repo}/archive/${NEW_SHA}.tar.gz" -o "$WORK/tarball.tar.gz"
+tar -xzf "$WORK/tarball.tar.gz" -C "$WORK" --strip-components=1
 ```
 
-Store it — you will need it in step 5.
+After extraction, `$WORK/.claude/` and `$WORK/CLAUDE.md` contain the framework payload. If either is missing, stop and report the download failure.
 
 ---
 
-## 3. Inspect the Target (Current Directory)
+## 4. Install Framework Files
 
-Do this in parallel:
+**Before proceeding, confirm the target directory.** Run `pwd` and ask the user to confirm the absolute path is the project they want to install into. The next commands delete and replace files in that directory — if the user is in the wrong place, stop and do not run anything below.
 
-- Check if `.claude/` exists (fresh install vs. upgrade)
-- If upgrading: read the existing `CLAUDE.md` and compare against `$TMPDIR/source/CLAUDE.md` — note any local customisations
-- Read all existing skill files in `.claude/skills/` and `.claude/project/skills/` if present
-- Read `.claude/project/CLAUDE.md` if present
-- Detect project type: look for `package.json`, `go.mod`, `Cargo.toml`, `requirements.txt`, `pyproject.toml`, etc.
-- Check if the directory is a git repo (`.git/` present)
-- Read `.gitignore` if it exists
-
----
-
-## 4. Assess Conflicts
-
-Identify files that would be overwritten and that appear to have been customised:
-
-- `CLAUDE.md` with content beyond the base template
-- Any skill files with local modifications
-- `.claude/settings.json` with project-specific settings
-
-For each conflict, note: file path, what the customisation is, and whether the incoming version would destroy it.
-
----
-
-## 5. Report and Confirm
-
-Present a pre-flight summary:
-
-```
-Target:  <current directory>
-Mode:    fresh install | upgrade
-
-Files to install:   N
-Conflicts detected: N
-
-Conflicts:
-  - CLAUDE.md — contains local customisations (N lines added)
-  - [other files...]
-```
-
-If there are conflicts, ask:
-
-> "These files have local customisations that would be overwritten. How should I handle them?"
-
-Options:
-1. **Overwrite all** — replace with framework versions (customisations lost)
-2. **Skip conflicts** — install everything except conflicting files
-3. **Review each** — decide file by file
-
-If there are no conflicts, proceed without asking.
-
----
-
-## 6. Install Files
-
-Use the `find` command to list all files under `$TMPDIR/source/`:
+The `cp` commands below copy only framework-managed subtrees. `.claude/project/` and `.claude/features/` are not in the list, so any existing content at those paths — or their absence — remains untouched.
 
 ```bash
-find "$TMPDIR/source" -type f
+mkdir -p .claude
+rm -rf .claude/hooks .claude/skills .claude/templates .claude/statusline.sh .claude/settings.json CLAUDE.md
+
+cp -r "$WORK/.claude/hooks" "$WORK/.claude/skills" "$WORK/.claude/templates" .claude/
+cp "$WORK/.claude/statusline.sh" "$WORK/.claude/settings.json" .claude/
+cp "$WORK/CLAUDE.md" ./CLAUDE.md
 ```
 
-For each file:
-
-- Derive the relative path by stripping the `$TMPDIR/source/` prefix
-- If it is in the skip list, skip it
-- Read it from `$TMPDIR/source/<relative-path>` using the Read tool
-- **New files:** Write to `<current-directory>/<relative-path>` using the Write tool
-- **Existing files being overwritten:** Prefer Edit over Write whenever possible — only use Write if replacing the entire file content wholesale
-- Log: `Installed:` for new files, `Overwritten:` for replaced files
-
-Do not use Bash for file copying — use Read + Write/Edit per file so each change is visible and reviewable.
+`.claude/project/**`, `.claude/settings.local.json`, and `.claude/framework.json` are untouched.
 
 ---
 
-## 7. Write Framework Metadata
+## 5. Restore Hook Permissions
 
-Write `.claude/framework.json` in the current directory:
+```bash
+chmod +x .claude/hooks/*.sh
+```
+
+---
+
+## 6. Write Framework Metadata
+
+Write `.claude/framework.json`:
 
 ```json
 {
   "repo": "{owner}/{repo}",
-  "version": "<full commit hash from step 2>",
-  "installed_at": "<today's date as YYYY-MM-DD>"
+  "version": "<NEW_SHA>",
+  "installed_at": "<today as YYYY-MM-DD>"
 }
 ```
 
 ---
 
-## 8. Create Runtime Directories
-
-Ensure `.claude/sessions/` exists:
+## 7. Cleanup
 
 ```bash
-mkdir -p ".claude/sessions"
+rm -rf /tmp/ai-framework-install
 ```
 
 ---
 
-## 9. Set Hook Permissions
+## 8. Detect Project Type and Suggest Skills
 
-For every `.sh` file under `.claude/hooks/`, run:
+Scan the target for cues and offer up to 3 concrete skill suggestions:
 
-```bash
-chmod +x <file>
-```
+- **Node/TypeScript** (`package.json`): `context7` MCP server; scripts worth capturing
+- **Python** (`pyproject.toml`, `requirements.txt`): virtualenv/poetry workflow skills
+- **Go** (`go.mod`): build/test patterns
+- **CI config** (`.github/workflows/`, `.gitlab-ci.yml`): deploy skill
+- **Database ORM** (Prisma, Drizzle, SQLAlchemy, etc.): migration skills
 
----
-
-## 10. Update .gitignore
-
-If the target is a git repo, ensure `.gitignore` contains:
-
-```
-.claude/sessions/*
-```
-
-Read the existing `.gitignore` first. Append only if not already present.
+Keep suggestions brief. Do not create them automatically.
 
 ---
 
-## 11. Remove Temporary Directory
-
-```bash
-rm -rf "$TMPDIR"
-```
-
----
-
-## 12. Detect Project Type and Suggest Skills
-
-Based on what you found in step 3, provide tailored recommendations:
-
-- **Node/TypeScript**: suggest `context7` MCP server, note `package.json` scripts worth capturing as skills
-- **Python**: suggest virtualenv/poetry workflow skills if detected
-- **Go**: suggest build/test workflow patterns
-- **CI config present** (`.github/workflows/`, `.gitlab-ci.yml`): suggest a deploy skill
-- **Database ORM detected** (Prisma, Drizzle, SQLAlchemy, etc.): suggest migration skills
-
-List at most 3 high-value suggestions. Keep them concrete and brief.
-
----
-
-## 13. Summary
-
-Print a final summary:
+## 9. Summary
 
 ```
 ── Installation complete ────────────────────────────────────
 
   Target:    <current directory>
-  Version:   <short hash (first 7 chars)>
-  Installed: N file(s)
-  Skipped:   N file(s) (conflicts preserved)
+  Version:   <short sha (first 7 chars)>
 
   Next steps:
-    1. Open CLAUDE.md and customise it for this project
-    2. Run 'claude' in this directory to start a session
-    3. [Context-specific suggestion from step 12, if any]
+    1. Customise .claude/project/CLAUDE.md for this project (create if needed)
+    2. Run /discover to scan the project for .claude/ setup opportunities
+    3. [Context-specific suggestion from step 8, if any]
 
 ────────────────────────────────────────────────────────────
 ```

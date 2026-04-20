@@ -1,29 +1,41 @@
 #!/bin/bash
-# Session startup hook: injects session ID and project memory.
+# Session startup hook:
+#   1. Injects project memory into context (if present).
+#   2. Checks for a framework update and surfaces it as a notice (if available).
 
-# Read session ID from hook input JSON
-SESSION_ID=$(jq -r '.session_id // empty')
+# ── Project memory ──────────────────────────────────────────────────────────
 
-if [ -z "$SESSION_ID" ]; then
-  echo "Warning: could not read session_id from hook input" >&2
-  exit 0
-fi
-
-# Persist session ID as environment variable
-if [ -n "$CLAUDE_ENV_FILE" ]; then
-  echo "SESSION_ID=${SESSION_ID}" >> "$CLAUDE_ENV_FILE"
-fi
-
-# Always inject session ID
-echo "Session ID: ${SESSION_ID}"
-
-# Inject project memory if it exists
 MEMORY_FILE="${CLAUDE_PROJECT_DIR}/.claude/project/memory.md"
 if [ -f "$MEMORY_FILE" ]; then
-  echo ""
   echo "--- Project Memory ---"
   cat "$MEMORY_FILE"
   echo "--- End Project Memory ---"
+fi
+
+# ── Framework update check ──────────────────────────────────────────────────
+
+FRAMEWORK_JSON="${CLAUDE_PROJECT_DIR}/.claude/framework.json"
+if [ -f "$FRAMEWORK_JSON" ] && command -v curl >/dev/null && command -v jq >/dev/null; then
+  LOCAL_HASH=$(jq -r '.version // empty' "$FRAMEWORK_JSON")
+  REPO=$(jq -r '.repo // empty' "$FRAMEWORK_JSON")
+
+  if [ -n "$LOCAL_HASH" ] && [ -n "$REPO" ]; then
+    BRANCH=$(curl -sf --max-time 3 "https://api.github.com/repos/${REPO}" | jq -r '.default_branch // empty')
+
+    if [ -n "$BRANCH" ]; then
+      LATEST=$(curl -sf --max-time 3 "https://api.github.com/repos/${REPO}/commits/${BRANCH}")
+      LATEST_HASH=$(echo "$LATEST" | jq -r '.sha // empty')
+      LATEST_DATE=$(echo "$LATEST" | jq -r '.commit.committer.date // empty' | cut -c1-10)
+
+      if [ -n "$LATEST_HASH" ] && [ "$LOCAL_HASH" != "$LATEST_HASH" ]; then
+        echo "--- Framework Update Available ---"
+        echo "Current: ${LOCAL_HASH:0:7}"
+        echo "Latest:  ${LATEST_HASH:0:7} (${LATEST_DATE})"
+        echo "Mention this to the user and offer to run the update skill."
+        echo "--- End Framework Update Available ---"
+      fi
+    fi
+  fi
 fi
 
 exit 0

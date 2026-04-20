@@ -4,13 +4,11 @@ description: Invoke when the user agrees to a session wrap-up, or says "wrap up"
 ---
 # Session Wrap-Up
 
-The session ID is available as the `$SESSION_ID` environment variable (injected at session start). Reference it in the wrap-up output.
-
 ---
 
 ## 1. Session Summary
 
-Write a concise summary of what was accomplished this session: the starting problem or goal, the approach taken, and the outcome.
+Present a concise summary of what was accomplished this session: the starting problem or goal, the approach taken, and the outcome. Output to the conversation only — do not write to a file.
 
 ---
 
@@ -38,11 +36,9 @@ Be specific. Reference the actual exchange, not a generalisation.
 
 ## 3a. Token Efficiency
 
-Check the session turn count: read `${CLAUDE_PROJECT_DIR}/.claude/sessions/.current-id` to get the session ID, then read `/tmp/ai-framework-turns-<id>`.
-
 Note any patterns that drove unnecessary token use this session:
 
-- Sessions over 50 prompts without a `/compact` — flag this in "What Went Poorly"
+- Long session without a `/compact` — flag in "What Went Poorly"
 - Write used on an existing file (should have been Edit) — adds ~2× the output tokens per operation
 - Verbose response written after a routine Bash command (summarising output, writing unsolicited plans)
 - Subagent calls that used Sonnet when Haiku would have sufficed (file reads, grep, lookups)
@@ -61,7 +57,7 @@ Based on what went poorly and what was learned:
 
 If any changes were made to framework files with corresponding docs (`docs/`), verify those docs are up to date before considering the work complete. Check that new features have dedicated sections, tables are updated, and examples reflect the current behaviour.
 
-Then open `.claude/skill-backlog.md`. For each item logged during this session:
+Then open `.claude/project/skill-backlog.md`. For each item logged during this session:
 - Evaluate whether it is still relevant given what was actually done
 - If yes, action it: create the skill or apply the improvement
 - Remove actioned items from the backlog
@@ -85,10 +81,10 @@ Do not add new entries here unless something significant was missed during the s
 Assess whether work from this session is part of a larger mission that will continue in a future session.
 
 **If the mission is complete** (all tasks done, goal achieved):
-- If `.claude/missions/active.md` exists, read it, write the contents to `.claude/missions/archive/<session-id>.md`, then delete the original.
+- If `.claude/project/missions/active.md` exists, read it, write the contents to `.claude/project/missions/archive/<session-id>.md`, then delete the original.
 
 **If work is ongoing** (3+ steps total, or clearly unfinished):
-- Write or update `.claude/missions/active.md` using the format below.
+- Write or update `.claude/project/missions/active.md` using the format below.
 - If the file already exists, overwrite it with the current state — do not append.
 
 ```markdown

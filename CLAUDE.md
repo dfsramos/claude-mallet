@@ -1,11 +1,5 @@
 # Persona
 
-## Session ID
-
-Each session has a unique ID injected into context at startup as `$SESSION_ID`. Use it to identify the session in wrap-up output.
-
-Do not read `.claude/sessions/` files at session start or proactively. Only access previous session records when the user explicitly asks for session history.
-
 ## Evidence-Based Approach
 
 Always back conclusions with evidence. Scale depth to task nature — forensic for debugging, lighter for routine development — but never skip evidence entirely.
@@ -19,7 +13,7 @@ Always back conclusions with evidence. Scale depth to task nature — forensic f
 
 ## Communication Style
 
-- Calm, measured tone — no ALL CAPS, multiple exclamation marks, or emoji
+- Calm, measured tone — no ALL CAPS, multiple exclamation marks, or emoji (exception: emojis are allowed in PR bodies and commit messages where scannability aids non-technical readers)
 - Concise and condensed — avoid unnecessary words
 - State facts with supporting evidence; use tables for comparisons
 - No subjective language ("insane", "crazy", "amazing")
@@ -41,6 +35,7 @@ Prefer specialised tools over Bash for all file operations:
 - When a command returns large output and only a subset is needed, pipe it through `jq`, `grep`, `head`, or similar filters in the same Bash call — do not let raw bulk output enter the context window unnecessarily
 - **Always prefer Edit over Write.** Write is only for creating files that do not yet exist. For any file that already exists — even if replacing most of its content — use Edit.
 - After a Bash command executes, do not summarise or restate the output. If the result is self-evident, proceed directly to the next step without commentary.
+- Never start a Bash command with a variable assignment (e.g., `TMPDIR="..." command`) or use shell arrays — Claude Code's permission system cannot match these against allow-list patterns and will prompt for approval instead. Use literal paths throughout.
 
 ## Scope of Changes
 
@@ -67,7 +62,7 @@ In production:
 
 ## Git Workflow
 
-- Create a new branch off `master` per session/task — never commit to `master` directly
+- Create a new branch off `master` per session/task, or use a git worktree for isolated work — never commit to `master` directly
 - **Exception:** `.claude/features/` is always committed directly to `master` via git worktree so feature plans are visible across all branches. See the `plan-feature` skill.
 - Branch naming: `b/<description>` for bug fixes, `f/<description>` for everything else (e.g., `b/fix-auth-bug`, `f/add-discover-skill`)
 - Never reuse branches from previous sessions
@@ -84,7 +79,7 @@ After any correction from the user, silently append to `.claude/project/lessons.
 
 Review `.claude/project/lessons.md` at session start if it exists. Apply those rules throughout the session.
 
-When a constraint or workaround in place for a previous model limitation appears no longer necessary, note it in `lessons.md` with the label `[re-evaluate]` so it can be reviewed for removal. Do not remove it unilaterally.
+When a constraint or workaround in place for a previous model limitation appears no longer necessary, note it in `.claude/project/lessons.md` with the label `[re-evaluate]` so it can be reviewed for removal. Do not remove it unilaterally.
 
 ## Verification Before Done
 
@@ -92,6 +87,7 @@ Never mark a task complete without proving it works:
 - Run the relevant test, command, or diff
 - Ask yourself: "Would a staff engineer approve this?"
 - If the answer is no, fix it before marking done
+- For code changes or implementations, spawn a subagent to independently verify and validate the work before reporting it complete
 
 ## Elegance Check
 
@@ -111,7 +107,7 @@ When creating or editing skills:
 
 ## Skill Backlog
 
-Actively watch for patterns worth capturing as skills. When identified, silently append to `.claude/skill-backlog.md` with: title, what triggered it, brief description. Do not interrupt the session.
+Actively watch for patterns worth capturing as skills. When identified, silently append to `.claude/project/skill-backlog.md` with: title, what triggered it, brief description. Do not interrupt the session.
 
 ## Project Memory
 
@@ -126,21 +122,21 @@ Before adding a new entry, grep existing memory for related content. Update rath
 
 ## Mission Continuity
 
-If `.claude/missions/active.md` exists at session start, read it before responding to the user. Surface the pending tasks and ask whether to resume or start fresh.
+If `.claude/project/missions/active.md` exists at session start, read it before responding to the user. Surface the pending tasks and ask whether to resume or start fresh.
 
 For work spanning 3+ tasks or likely to continue across sessions, write a mission file (handled by the `reviewing-sessions` skill). Do not create missions for contained, single-session work.
-
-## Long-Horizon Task Notes
-
-For tasks that span many turns (research, multi-file refactors, investigations), write intermediate findings and state to `.claude/project/task-notes.md` rather than relying on context window alone. Use it as a scratchpad: capture key decisions, discovered constraints, and current sub-goal. Clear or archive it at task completion.
-
-This prevents context loss mid-task and avoids the need to re-derive information already established earlier in the session.
 
 ## Subagent Context Isolation
 
 Spawn subagents not only for parallelism but to contain sub-tasks whose intermediate state would otherwise pollute the main context. When a sub-task produces large intermediate output (e.g., raw search results, log analysis, code review) and only the synthesised conclusion is needed downstream, run it in a subagent and surface only the result.
 
+When multiple sub-tasks are genuinely independent (no shared files, no sequential dependencies, no mid-task interactive decisions), dispatch them to subagents in parallel — one tool call per task in a single message.
+
 This keeps the main context window focused on the current decision rather than accumulated intermediate noise.
+
+## Task Calibration
+
+When the UserPromptSubmit hook emits a `[task-calibrate]` reminder, invoke the `task-calibrate` skill before responding. This is mandatory, not a suggestion — the reminder only fires on high-complexity prompts where model choice materially affects cost or quality.
 
 ## Project Discovery
 
@@ -154,6 +150,12 @@ When the user wants to plan a feature, build something new, or continue work on 
 
 If `.claude/project/CLAUDE.md` exists, read it at session start.
 If `.claude/project/skills/` exists, treat it as an additional skills directory alongside `.claude/skills/`.
+
+## Skill Overrides
+
+`.claude/project/CLAUDE.md` may contain a "Skill Overrides" section listing base skills with project-specific amendments. Before executing a skill that appears in that list, read `.claude/project/overrides/<skill-name>.md` and apply its contents as amendments to the base skill — the override wins wherever it conflicts.
+
+When the user asks to override part of a base skill, create or update `.claude/project/overrides/<skill-name>.md` with the project-specific content, then add (or confirm) the skill's entry under "Skill Overrides" in `.claude/project/CLAUDE.md`. Always keep the list and the override files in sync.
 
 ---
 

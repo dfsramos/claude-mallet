@@ -1,18 +1,18 @@
 # Framework-Specific Conventions
 
-## Two-Location Rule
+## Framework vs Project Content
 
-Every new skill added to `.claude/skills/` must be mirrored to `source/.claude/skills/` so it is included in future installs and updates — **except** framework-only skills:
+Everything under `.claude/project/` and `.claude/features/` is **this repo's own content** — it is never installed into target projects. The install and update flows skip both paths explicitly.
 
-| Skill | Location | Reason |
-|-------|----------|--------|
-| `install` | `.claude/skills/` only | Requires the `source/` directory; not useful in target projects |
-| `harvest` | `.claude/project/skills/` only | Framework maintenance; never distributed |
-| `update` | `source/.claude/skills/` only | Requires `framework.json`; not useful in the framework repo itself |
+All other `.claude/` content (`hooks/`, `skills/`, `templates/`, `statusline.sh`, `settings.json`) plus the root `CLAUDE.md` is **framework payload** — it ships to every target.
+
+When adding a new skill:
+- **Framework skill** (should ship to target projects): `.claude/skills/<name>/`
+- **Project skill** (only this repo): `.claude/project/skills/<name>/`
 
 ## Docs Parity
 
-Any change to a skill or hook must update the corresponding section in `docs/`. Specifically:
+Any change to a skill or hook must update the corresponding section in `docs/`:
 - Skill changes → `docs/skills.md`
 - Hook changes → `docs/hooks.md`
 - Structural changes → `docs/structure.md`
@@ -20,4 +20,4 @@ Any change to a skill or hook must update the corresponding section in `docs/`. 
 
 ## Session Records
 
-Session wrap-ups are conversational only — no files are written to `.claude/sessions/`. The directory exists solely for runtime state (e.g., `.current`).
+Session wrap-ups are conversational only — no files are written to disk.
