@@ -63,4 +63,4 @@ The complexity scorer acts as a lightweight tripwire: when architectural signals
    ```json
    { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/my-hook.sh\"" }
    ```
-   Using `bash` explicitly avoids relying on the execute bit, which git does not track in this repo (`core.fileMode = false`).
+   Using `bash` explicitly avoids relying on the hook script having the execute bit set on disk. This matters because (a) git may not preserve the bit across platforms (e.g., with `core.fileMode = false`), and (b) tarball extraction and fresh copies can drop permissions until `chmod +x` runs.
