@@ -31,9 +31,6 @@
 │   ├── templates/
 │   │   └── knowledge-skill/
 │   │       └── SKILL.md               # Template for domain knowledge skills
-│   ├── sessions/
-│   │   ├── .current                   # Active session ID (gitignored)
-│   │   └── <session-id>.md            # Per-session wrap-up records (gitignored)
 │   └── project/
 │       └── skill-backlog.md           # Ideas for future skills (created on demand)
 ├── source/
