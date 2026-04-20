@@ -78,9 +78,9 @@ Structured end-of-session retrospective. Wrap-ups are **conversational only** �
 2. **What went well** — efficient tasks, effective patterns, good tool use
 3. **What went poorly** — mistakes, user corrections, rule violations (with specific references)
 3a. **Token efficiency** — flags patterns that drove unnecessary cost (long sessions without compaction, Write on existing files, verbose post-Bash responses, oversized subagents); adds CLAUDE.md directives for any gaps found
-4. **Applied improvements** — updates to skills or directives based on session observations; skill backlog reviewed and actioned
+4. **Applied improvements** — updates to skills or directives based on session observations; skill backlog reviewed and actioned; **docs parity check** — any change to a skill, hook, or directive must reflect in the corresponding `docs/` section before the work counts as done
 4a. **Memory audit** — review and revise `.claude/project/memory.md` entries added during the session
-4b. **Mission state** — if work continues beyond this session, write `.claude/project/missions/active.md`
+4b. **Mission state** — if work continues beyond this session, write `.claude/project/missions/active.md`; if the mission completed, move `active.md` to `.claude/project/missions/archive/<session-id>.md`
 
 ## Task Calibration
 
@@ -90,9 +90,8 @@ Structured end-of-session retrospective. Wrap-ups are **conversational only** �
 Surfaces a model and effort recommendation before work begins.
 
 1. **Classify** — Architectural, Complex, Routine, or Large Context
-2. **Apply model matrix** — tier → recommended model + switch command
-3. **Subagent guidance** — model selection for spawned agents (Haiku for lookups, Sonnet for standard dev, Sonnet/Opus for deep analysis)
-4. **Surface** — only interrupt when a switch is warranted; proceed silently otherwise
+2. **Apply model matrix** — tier → recommended model + switch command; includes a subagent-model table (Haiku for lookups, Sonnet for standard dev, Sonnet/Opus for deep analysis)
+3. **Surface** — only interrupt when a switch is warranted; proceed silently otherwise
 
 ## Systematic Debugging
 
@@ -122,7 +121,13 @@ Generates a structured, non-technical PR summary (What Changed / Why / Customer 
 **Directory:** `.claude/project/skills/harvest/`
 **Triggered by:** "harvest", "run harvest", or "harvest `<project-path>`"
 
-Promotes project-specific skills from an installed project into the framework base. Runs in the ai-framework repo only.
+Reviews a target project for improvements worth pulling back into the framework base. Runs in the ai-framework repo only.
+
+1. **Pull check** — ensures the framework repo is up to date before comparing anything
+2. **Project skills** — scans `TARGET/.claude/project/skills/`; offers to promote selected skills into `.claude/skills/`
+3. **Overrides** — scans `TARGET/.claude/project/overrides/`; surfaces each override with a summary and asks whether it reveals a gap worth folding into the base skill (overrides are project-specific by design and never auto-promoted)
+
+Framework drift in the target is intentionally **not** addressed — local edits to framework-managed files are overwritten on the next `update`. If a target diverges, the clean path is an override, a project skill, or a direct PR to the framework.
 
 ## Knowledge Skill Template
 
