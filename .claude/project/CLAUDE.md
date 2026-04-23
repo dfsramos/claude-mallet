@@ -21,3 +21,10 @@ Any change to a skill or hook must update the corresponding section in `docs/`:
 ## Session Records
 
 Session wrap-ups are conversational only — no files are written to disk.
+
+## Git Workflow Override
+
+Overrides the main CLAUDE.md "Git Workflow" section for this repo only:
+
+- Commit and push directly to `master` — do not create feature branches or PRs.
+- The `b/` and `f/` branch-naming rules do not apply here.
