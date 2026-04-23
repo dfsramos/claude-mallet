@@ -17,11 +17,9 @@ INSTALLED_AT=$(jq -r '.installed_at // empty' "$FRAMEWORK_JSON")
 
 [ -z "$LOCAL_HASH" ] && exit 0
 
-echo "AI Framework ${LOCAL_HASH:0:7} · ${INSTALLED_AT}"
+# Helpers ────────────────────────────────────────────────────────────────────
 
-# ── Second line: git branch + usage ─────────────────────────────────────────
-
-# Helper: format seconds as "Xd Yh", "Xh Ym", or "Xm"
+# Format seconds as "Xd Yh", "Xh Ym", or "Xm"
 format_remaining() {
   local secs=$1
   local days=$(( secs / 86400 ))
@@ -33,57 +31,94 @@ format_remaining() {
   fi
 }
 
-parts=()
-now=$(date +%s)
+# Format a token count as "N", "Nk", or "N.NNM"
+format_tokens() {
+  local n=$1
+  if   [ "$n" -ge 1000000 ]; then awk "BEGIN{printf \"%.2fM\", $n/1000000}"
+  elif [ "$n" -ge 1000 ];    then awk "BEGIN{printf \"%.1fk\", $n/1000}"
+  else                            echo "$n"
+  fi
+}
 
-# Repo/branch (from project dir)
+# Join a parts array with " · " separator and echo the line
+emit_line() {
+  local -n arr=$1
+  [ ${#arr[@]} -eq 0 ] && return
+  local out="${arr[0]}"
+  local p
+  for p in "${arr[@]:1}"; do out+=" · $p"; done
+  echo "$out"
+}
+
+now=$(date +%s)
+transcript_path=$(echo "$input" | jq -r '.transcript_path // empty' 2>/dev/null)
+
+# Pre-compute token totals from the transcript (single jq pass) ──────────────
+tok_in=0; tok_cw=0; tok_cr=0; tok_out=0
+if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
+  read -r tok_in tok_cw tok_cr tok_out < <(jq -rs '
+    [.[] | select(.message.usage) | .message.usage] as $u |
+    [
+      ([$u[].input_tokens // 0]                  | add // 0),
+      ([$u[].cache_creation_input_tokens // 0]   | add // 0),
+      ([$u[].cache_read_input_tokens // 0]       | add // 0),
+      ([$u[].output_tokens // 0]                 | add // 0)
+    ] | @tsv
+  ' "$transcript_path" 2>/dev/null)
+  tok_in=${tok_in:-0}; tok_cw=${tok_cw:-0}; tok_cr=${tok_cr:-0}; tok_out=${tok_out:-0}
+fi
+tok_total=$(( tok_in + tok_cw + tok_cr + tok_out ))
+
+# Line 1: framework version · installed_at · branch ──────────────────────────
+line1_parts=("AI Framework ${LOCAL_HASH:0:7}")
+[ -n "$INSTALLED_AT" ] && line1_parts+=("$INSTALLED_AT")
 if [ -n "$PROJECT_DIR" ] && command -v git &>/dev/null; then
   branch=$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null)
   repo_name=$(basename "$(git -C "$PROJECT_DIR" rev-parse --show-toplevel 2>/dev/null)")
-  [ -n "$branch" ] && parts+=("⎇ ${repo_name}/${branch}")
+  [ -n "$branch" ] && line1_parts+=("⎇ ${repo_name}/${branch}")
 fi
+emit_line line1_parts
 
-# Session cost
+# Line 2: cost · context % · 7d · 5h · turns ─────────────────────────────────
+line2_parts=()
+
 cost=$(echo "$input" | jq -r '.cost.total_cost_usd // empty' 2>/dev/null)
-[ -n "$cost" ] && parts+=("\$$(printf '%.4f' "$cost")")
+[ -n "$cost" ] && line2_parts+=("\$$(printf '%.4f' "$cost")")
 
-# Session usage — context window percentage
 session_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty' 2>/dev/null)
-[ -n "$session_pct" ] && parts+=("◷ $(printf '%.0f' "$session_pct")%")
+[ -n "$session_pct" ] && line2_parts+=("◷ $(printf '%.0f' "$session_pct")%")
 
-# 7-day rate limit + time to reset
 seven_day=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty' 2>/dev/null)
 if [ -n "$seven_day" ]; then
-  seven_day_str="7d: $(printf '%.0f' "$seven_day")%"
+  s="7d: $(printf '%.0f' "$seven_day")%"
   resets_at=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty' 2>/dev/null)
-  if [ -n "$resets_at" ] && [ "$resets_at" -gt "$now" ]; then
-    seven_day_str+=" ($(format_remaining $(( resets_at - now ))))"
-  fi
-  parts+=("$seven_day_str")
+  [ -n "$resets_at" ] && [ "$resets_at" -gt "$now" ] && s+=" ($(format_remaining $(( resets_at - now ))))"
+  line2_parts+=("$s")
 fi
 
-# 5-hour rate limit + time to reset
 five_hour=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty' 2>/dev/null)
 if [ -n "$five_hour" ]; then
-  five_hour_str="5h: $(printf '%.0f' "$five_hour")%"
+  s="5h: $(printf '%.0f' "$five_hour")%"
   resets_at=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty' 2>/dev/null)
-  if [ -n "$resets_at" ] && [ "$resets_at" -gt "$now" ]; then
-    five_hour_str+=" ($(format_remaining $(( resets_at - now ))))"
-  fi
-  parts+=("$five_hour_str")
+  [ -n "$resets_at" ] && [ "$resets_at" -gt "$now" ] && s+=" ($(format_remaining $(( resets_at - now ))))"
+  line2_parts+=("$s")
 fi
 
-# Session turn count from transcript
-transcript_path=$(echo "$input" | jq -r '.transcript_path // empty' 2>/dev/null)
 if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
   TURNS=$(jq -rs '[.[] | select(.isSidechain != true and .isApiErrorMessage != true and ((.message.role // .role) == "user"))] | length' "$transcript_path" 2>/dev/null)
-  [ -n "$TURNS" ] && [ "$TURNS" -gt 0 ] && parts+=("T:${TURNS}")
+  [ -n "$TURNS" ] && [ "$TURNS" -gt 0 ] && line2_parts+=("T:${TURNS}")
 fi
 
-if [ ${#parts[@]} -gt 0 ]; then
-  result="${parts[0]}"
-  for part in "${parts[@]:1}"; do
-    result+=" · $part"
-  done
-  echo "$result"
+emit_line line2_parts
+
+# Line 3: token totals + breakdown ───────────────────────────────────────────
+if [ "$tok_total" -gt 0 ]; then
+  line3_parts=(
+    "Σ $(format_tokens "$tok_total")"
+    "in: $(format_tokens "$tok_in")"
+    "cache_w: $(format_tokens "$tok_cw")"
+    "cache_r: $(format_tokens "$tok_cr")"
+    "out: $(format_tokens "$tok_out")"
+  )
+  emit_line line3_parts
 fi
