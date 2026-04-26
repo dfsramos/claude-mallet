@@ -34,6 +34,7 @@ Prefer specialised tools over Bash for all file operations:
 - Don't use Python scripts for tasks with a dedicated executable; identify the right tool, or ask permission to install it
 - When a command returns large output and only a subset is needed, pipe it through `jq`, `grep`, `head`, or similar filters in the same Bash call — do not let raw bulk output enter the context window unnecessarily
 - **Always prefer Edit over Write.** Write is only for creating files that do not yet exist. For any file that already exists — even if replacing most of its content — use Edit.
+- **Never use `replace_all: true` on bare numeric literals** (e.g. `"100"`, `"200"`) in CSS, JS, or HTML files. Numeric strings appear in unrelated contexts (percentages, z-indices, multipliers, viewport units) and a replace-all will silently corrupt them. Always provide enough surrounding context to make the match unique, or make each replacement individually.
 - After a Bash command executes, do not summarise or restate the output. If the result is self-evident, proceed directly to the next step without commentary.
 - Never start a Bash command with a variable assignment (e.g., `TMPDIR="..." command`) or use shell arrays — Claude Code's permission system cannot match these against allow-list patterns and will prompt for approval instead. Use literal paths throughout.
 
