@@ -26,6 +26,19 @@ This is a **source-of-truth install** — framework files overwrite any local eq
 { "repo": "owner/repo", "version": "<full SHA>", "installed_at": "YYYY-MM-DD" }
 ```
 
+## Hooks Setup
+
+**Directory:** `.claude/skills/hooks-setup/`
+**Triggered by:** `/hooks-setup`, "set up hooks", "enable typecheck", "enable push confirmation"
+
+Activates optional hook scripts in the current project. The framework distributes hook scripts for all projects but only registers the default set at install time. `hooks-setup` is the activation mechanism for the opt-in tier.
+
+1. **Audit** — reads `settings.json` and reports which optional hooks (`typecheck`, `push-confirm`) are already registered
+2. **Detect stack** — checks for `tsconfig.json` / `"typescript"` in `package.json` (TypeScript) and `vendor/bin/phpstan` (PHP)
+3. **Present options** — lists unregistered hooks with descriptions; skips `typecheck` if neither stack is detected
+4. **Register** — for each selected hook: verifies the script exists in `.claude/hooks/`, checks idempotency by script filename, appends to the correct event array in `settings.json` using Edit
+5. **Confirm** — reports what was registered and what was skipped (already present / script missing / stack not detected)
+
 ## Preflight
 
 **Directory:** `.claude/skills/preflight/`

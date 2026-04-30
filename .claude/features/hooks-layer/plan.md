@@ -1,5 +1,5 @@
 # Feature: hooks-layer
-Status: in-progress
+Status: done
 Created: 2026-04-30
 Branch: —
 
@@ -12,7 +12,7 @@ The framework ships hooks that are active by default (write-guard, session-start
 push-confirm is advisory (exit 0) not blocking (exit 2) because a blocking hook creates an infinite loop: Claude retries after user confirmation, the hook fires again and blocks again.
 
 ## Tasks
-- [ ] 01-typecheck-hook — Write `.claude/hooks/typecheck.sh` [deps: —] [parallel: yes]
-- [ ] 02-push-confirm-hook — Write `.claude/hooks/push-confirm.sh` [deps: —] [parallel: yes]
-- [ ] 03-hooks-setup-skill — Write `.claude/skills/hooks-setup/SKILL.md` [deps: 01, 02] [parallel: no]
-- [ ] 04-docs — Update `docs/hooks.md` and `docs/skills.md` [deps: 03] [parallel: no]
+- [x] 01-typecheck-hook — Write `.claude/hooks/typecheck.sh` [deps: —] [parallel: yes]
+- [x] 02-push-confirm-hook — Write `.claude/hooks/push-confirm.sh` [deps: —] [parallel: yes]
+- [x] 03-hooks-setup-skill — Write `.claude/skills/hooks-setup/SKILL.md` [deps: 01, 02] [parallel: no]
+- [x] 04-docs — Update `docs/hooks.md` and `docs/skills.md` [deps: 03] [parallel: no]

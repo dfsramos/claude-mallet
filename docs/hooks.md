@@ -76,6 +76,62 @@ Blocks `Write` calls on files that already exist. CLAUDE.md requires `Edit` for 
 
 The hook only fires on `PreToolUse` for `Write`, so it adds zero overhead to all other tool calls.
 
+## Typecheck Hook
+
+**File:** `.claude/hooks/typecheck.sh`
+**Trigger:** `PostToolUse` — fires after every `Edit` tool call (`matcher: "Edit"`)
+**Activation:** opt-in via `/hooks-setup` — not registered by default
+
+Runs the project's type-checker or linter after each file edit and surfaces errors directly into Claude's context, catching type errors at the moment they're introduced rather than at the end of a session.
+
+### What it does
+
+1. Reads `tool_name` and `tool_input.file_path` from the hook input JSON.
+2. Exits 0 immediately if the tool is not `Edit` or `file_path` is empty.
+3. Detects the file extension and runs the appropriate linter:
+   - `.ts` / `.tsx` — if `tsconfig.json` exists in `$CLAUDE_PROJECT_DIR`, runs `npx tsc --noEmit 2>&1 | head -20`
+   - `.php` — if `vendor/bin/phpstan` exists, runs `phpstan analyse <file> --no-progress 2>&1 | head -20`
+   - All other extensions — exits 0 silently
+4. Outputs non-empty linter results prefixed with `[typecheck]`.
+5. Always exits 0 — advisory only, never blocks.
+
+### Why it exists
+
+Linter errors that surface only after a multi-file session require backtracking. Running the type-checker after each edit closes the feedback loop to the turn level, catching errors while the relevant context is still in Claude's window.
+
+## Push-Confirm Hook
+
+**File:** `.claude/hooks/push-confirm.sh`
+**Trigger:** `PreToolUse` — fires before every `Bash` tool call (`matcher: "Bash"`)
+**Activation:** opt-in via `/hooks-setup` — not registered by default
+
+Warns Claude before any `git push` executes and requires it to verify the push was explicitly requested, preventing pushes that fire as side effects of autonomous multi-step tasks.
+
+### What it does
+
+1. Reads `tool_name` and `tool_input.command` from the hook input JSON.
+2. Exits 0 immediately if the tool is not `Bash`.
+3. Checks whether the command contains `git push` using `grep -qE '(^|[;&|]\s*)git\s+push(\s|$)'`.
+4. If matched: outputs a `[push-confirm]` warning with the full command and instructs Claude to verify intent before proceeding.
+5. Always exits 0 — advisory only, never blocks.
+
+### Why advisory and not blocking
+
+A blocking hook (exit 2) creates an infinite retry loop: after the user confirms, Claude re-runs the command, the hook fires again and blocks again. An advisory hook instead injects the warning into Claude's context; Claude reads it, verifies intent against the conversation, and either proceeds or stops and asks.
+
+## Hook Tiers
+
+The framework ships hooks in two tiers:
+
+**Default hooks** — registered in `settings.json` at install time, active in every project:
+- `session-start.sh` — memory injection and update check
+- `user-prompt-submit.sh` — complexity scorer and turn counter
+- `write-guard.sh` — blocks Write on existing files
+
+**Optional hooks** — scripts are distributed by the framework but not registered by default; activated per-project via `/hooks-setup`:
+- `typecheck.sh` — PostToolUse linter for TypeScript and PHP projects
+- `push-confirm.sh` — PreToolUse warning before git push
+
 ## Adding New Hooks
 
 1. Create a script in `.claude/hooks/`
