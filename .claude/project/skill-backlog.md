@@ -17,8 +17,8 @@ Items logged during sessions for future review.
 ---
 
 ## Hooks Layer
-- **Triggered by:** everything-claude-code evaluation (2026-03-04)
-- **Description:** Claude Code supports event-driven hook scripts (PreToolUse, PostToolUse, session start/end) that fire automatically without user invocation. Two patterns worth implementing: (1) a session-end hook that persists state and extracts reusable patterns — automating what reviewing-sessions does manually; (2) a git push reminder hook that intercepts `git push` and prompts for review before executing. Requires hook scripts, a distribution mechanism, and project-level activation. Deserves its own focused session.
+- **Triggered by:** everything-claude-code evaluation (2026-03-04); reinforced by /insights report (2026-04-30)
+- **Description:** The write-guard PreToolUse hook (shipped 2026-04-30) validated the hook pattern. Three further patterns are worth implementing as a focused session: (1) a session-end hook that persists state and extracts reusable patterns — automating what reviewing-sessions does manually; (2) a git push reminder hook that intercepts `git push` and prompts for review before executing; (3) a PostToolUse typecheck/lint hook that runs after Edit on TypeScript/PHP/etc. files to catch errors before they accumulate. A `hooks-setup` skill that guides users through adding these to any project would tie it together.
 
 ---
 

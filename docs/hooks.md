@@ -56,6 +56,26 @@ The turn counter catches runaway sessions — the primary driver of token costs.
 
 The complexity scorer acts as a lightweight tripwire: when architectural signals coincide, it surfaces `task-calibrate` so Claude can assess whether Opus would be a better fit. The threshold (≥ 3) is deliberately conservative — two strong signals, or one signal plus a long prompt, must coincide before anything is injected.
 
+## Write Guard Hook
+
+**File:** `.claude/hooks/write-guard.sh`
+**Trigger:** `PreToolUse` — fires before every `Write` tool call (`matcher: "Write"`)
+
+Blocks `Write` calls on files that already exist. CLAUDE.md requires `Edit` for existing files; `Write` is reserved for new files only. This hook enforces that rule at the tooling level.
+
+### What it does
+
+1. Reads the hook input JSON from stdin.
+2. Extracts `tool_name` and `tool_input.file_path`.
+3. If `file_path` points to an existing file, outputs a message directing Claude to use `Edit`, then exits 2 — which blocks the tool call before it executes.
+4. If the file does not exist (Write is creating a new file), exits 0 and the call proceeds normally.
+
+### Why it exists
+
+`Edit` sends only the changed lines; `Write` re-sends the full file content, roughly doubling output tokens per operation. CLAUDE.md already states the preference, but a directive alone relies on Claude remembering it every time. A blocking hook enforces it mechanically — Claude receives the block reason and retries with `Edit`.
+
+The hook only fires on `PreToolUse` for `Write`, so it adds zero overhead to all other tool calls.
+
 ## Adding New Hooks
 
 1. Create a script in `.claude/hooks/`

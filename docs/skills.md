@@ -26,6 +26,18 @@ This is a **source-of-truth install** — framework files overwrite any local eq
 { "repo": "owner/repo", "version": "<full SHA>", "installed_at": "YYYY-MM-DD" }
 ```
 
+## Preflight
+
+**Directory:** `.claude/skills/preflight/`
+**Triggered by:** `/preflight`, or when environment issues are suspected before git-heavy work
+
+Runs four environment checks and reports results as a concise status block. Designed to catch recurring WSL2 and Git LFS issues before they derail a session.
+
+1. **Worktree health** — `git worktree list --porcelain`; flags stale entries with Windows WSL gitdir paths and entries whose paths no longer exist on disk; runs `--dry-run` prune to show what would be removed (never prunes without confirmation)
+2. **LFS hook check** — checks `.git/hooks/post-checkout` for `git lfs`; if present, flags that it will block `git worktree add` and offers the `--no-checkout` workaround
+3. **Working tree state** — reports current branch name and whether the tree is clean
+4. **Status summary** — one `[ok]` / `[warn]` / `[block]` line per check; outputs `preflight ok — no issues found` when everything passes
+
 ## Update
 
 **Directory:** `.claude/skills/update/`
