@@ -144,6 +144,8 @@ When multiple sub-tasks are genuinely independent (no shared files, no sequentia
 
 This keeps the main context window focused on the current decision rather than accumulated intermediate noise.
 
+**Subagent model selection:** use `model: "haiku"` for subagents whose work is bounded and mechanical — file reads, grep, lookups, writing a single file from a detailed spec. Reserve Sonnet for subagents that require reasoning, multi-file coordination, or open-ended analysis.
+
 ## Task Calibration
 
 When the UserPromptSubmit hook emits a `[task-calibrate]` reminder, invoke the `task-calibrate` skill before responding. This is mandatory, not a suggestion — the reminder only fires on high-complexity prompts where model choice materially affects cost or quality.

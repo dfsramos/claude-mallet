@@ -16,9 +16,9 @@ Items logged during sessions for future review.
 
 ---
 
-## Hooks Layer
-- **Triggered by:** everything-claude-code evaluation (2026-03-04); reinforced by /insights report (2026-04-30)
-- **Description:** The write-guard PreToolUse hook (shipped 2026-04-30) validated the hook pattern. Three further patterns are worth implementing as a focused session: (1) a session-end hook that persists state and extracts reusable patterns — automating what reviewing-sessions does manually; (2) a git push reminder hook that intercepts `git push` and prompts for review before executing; (3) a PostToolUse typecheck/lint hook that runs after Edit on TypeScript/PHP/etc. files to catch errors before they accumulate. A `hooks-setup` skill that guides users through adding these to any project would tie it together.
+## Session-End Hook
+- **Triggered by:** everything-claude-code evaluation (2026-03-04); re-evaluated 2026-05-01
+- **Description:** Automatically persist state and extract reusable patterns at session end, replacing the manual reviewing-sessions flow. Deferred because automating the wrap-up removes the review step — the manual skill produces higher-quality output. Needs a clearer design before implementation: what does an automated wrap-up look like that preserves quality?
 
 ---
 
