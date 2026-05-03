@@ -11,6 +11,15 @@
 │   ├── hooks/
 │   │   ├── session-start.sh           # Session startup actions
 │   │   └── user-prompt-submit.sh      # Complexity scoring and turn tracking
+│   ├── agents/
+│   │   ├── _contract.md               # Shared agent contract (capabilities, tone, tool access)
+│   │   ├── code-analyst.md
+│   │   ├── code-reviewer.md
+│   │   ├── feature-analyst.md
+│   │   ├── implementer.md
+│   │   ├── plan-critic.md
+│   │   ├── scope-validator.md
+│   │   └── test-runner.md
 │   ├── skills/
 │   │   ├── create-pr/SKILL.md
 │   │   ├── discover/SKILL.md
@@ -46,6 +55,7 @@ When the framework is installed into a project, the target gains:
 └── .claude/
     ├── settings.json                  # Installed (overwrites)
     ├── statusline.sh                  # Installed (overwrites)
+    ├── agents/                        # Installed (overwrites)
     ├── hooks/                         # Installed (overwrites)
     ├── skills/                        # Installed (overwrites)
     ├── templates/                     # Installed (overwrites)
@@ -63,6 +73,7 @@ When the framework is installed into a project, the target gains:
 
 | Path | Purpose |
 |---|---|
+| `.claude/agents/` | Sub-agent persona definitions — installed into target projects |
 | `.claude/hooks/` | Scripts triggered automatically by Claude Code events |
 | `.claude/skills/` | Framework skill definitions — installed into target projects |
 | `.claude/templates/` | Skill templates — installed into target projects |
