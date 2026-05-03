@@ -10,7 +10,7 @@ Replace framework-managed files with the latest version from the remote reposito
 - `.claude/settings.local.json` — user permissions and local overrides
 - `.claude/framework.json` — updated at the end with the new version
 
-Everything else framework-owned (`.claude/hooks/`, `.claude/skills/`, `.claude/templates/`, `.claude/statusline.sh`, `.claude/settings.json`, root `CLAUDE.md`) is overwritten wholesale.
+Everything else framework-owned (`.claude/agents/`, `.claude/hooks/`, `.claude/skills/`, `.claude/templates/`, `.claude/statusline.sh`, `.claude/settings.json`, root `CLAUDE.md`) is overwritten wholesale.
 
 ---
 
@@ -60,9 +60,9 @@ After extraction, `$WORK/.claude/` and `$WORK/CLAUDE.md` contain the new framewo
 From the project root:
 
 ```bash
-rm -rf .claude/hooks .claude/skills .claude/templates .claude/statusline.sh .claude/settings.json CLAUDE.md
+rm -rf .claude/agents .claude/hooks .claude/skills .claude/templates .claude/statusline.sh .claude/settings.json CLAUDE.md
 
-cp -r "$WORK/.claude/hooks" "$WORK/.claude/skills" "$WORK/.claude/templates" .claude/
+cp -r "$WORK/.claude/agents" "$WORK/.claude/hooks" "$WORK/.claude/skills" "$WORK/.claude/templates" .claude/
 cp "$WORK/.claude/statusline.sh" "$WORK/.claude/settings.json" .claude/
 cp "$WORK/CLAUDE.md" ./CLAUDE.md
 ```

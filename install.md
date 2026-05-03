@@ -43,9 +43,9 @@ The `cp` commands below copy only framework-managed subtrees. `.claude/project/`
 
 ```bash
 mkdir -p .claude
-rm -rf .claude/hooks .claude/skills .claude/templates .claude/statusline.sh .claude/settings.json CLAUDE.md
+rm -rf .claude/agents .claude/hooks .claude/skills .claude/templates .claude/statusline.sh .claude/settings.json CLAUDE.md
 
-cp -r "$WORK/.claude/hooks" "$WORK/.claude/skills" "$WORK/.claude/templates" .claude/
+cp -r "$WORK/.claude/agents" "$WORK/.claude/hooks" "$WORK/.claude/skills" "$WORK/.claude/templates" .claude/
 cp "$WORK/.claude/statusline.sh" "$WORK/.claude/settings.json" .claude/
 cp "$WORK/CLAUDE.md" ./CLAUDE.md
 ```
