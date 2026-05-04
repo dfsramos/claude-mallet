@@ -1,6 +1,6 @@
 # AI Framework — Remote Installation Instructions
 
-Install the AI framework into the current working directory from a GitHub URL. This is a **source-of-truth install** — framework-managed files overwrite any local equivalents. User content is preserved in `.claude/project/**` (created on demand) and `.claude/settings.local.json`.
+Install the AI framework into the current working directory from a GitHub URL. This is a **source-of-truth install** — framework-managed files overwrite any local equivalents. `.claude/project/` is reset to a clean scaffold (any prior content is wiped). `.claude/settings.local.json` is preserved.
 
 ---
 
@@ -39,7 +39,7 @@ After extraction, `$WORK/.claude/` and `$WORK/CLAUDE.md` contain the framework p
 
 **Before proceeding, confirm the target directory.** Run `pwd` and ask the user to confirm the absolute path is the project they want to install into. The next commands delete and replace files in that directory — if the user is in the wrong place, stop and do not run anything below.
 
-The `cp` commands below copy only framework-managed subtrees. `.claude/project/` and `.claude/features/` are not in the list, so any existing content at those paths — or their absence — remains untouched.
+The `cp` commands below copy only framework-managed subtrees. `.claude/project/` is reset in step 5 — do not copy it here.
 
 ```bash
 mkdir -p .claude
@@ -50,11 +50,24 @@ cp "$WORK/.claude/statusline.sh" "$WORK/.claude/settings.json" .claude/
 cp "$WORK/CLAUDE.md" ./CLAUDE.md
 ```
 
-`.claude/project/**`, `.claude/settings.local.json`, and `.claude/framework.json` are untouched.
+`.claude/settings.local.json` and `.claude/framework.json` are untouched.
 
 ---
 
-## 5. Restore Hook Permissions
+## 5. Reset Project Scaffold
+
+A fresh install must not inherit the source repo's own project files (lessons, skill backlog, feature plans, etc.). Wipe `.claude/project/` and recreate only the minimal scaffold:
+
+```bash
+rm -rf .claude/project
+mkdir -p .claude/project/missions
+```
+
+`.claude/settings.local.json` and `.claude/framework.json` are untouched.
+
+---
+
+## 6. Restore Hook Permissions
 
 ```bash
 chmod +x .claude/hooks/*.sh
@@ -62,7 +75,7 @@ chmod +x .claude/hooks/*.sh
 
 ---
 
-## 6. Write Framework Metadata
+## 7. Write Framework Metadata
 
 Write `.claude/framework.json`:
 
@@ -76,7 +89,7 @@ Write `.claude/framework.json`:
 
 ---
 
-## 7. Cleanup
+## 8. Cleanup
 
 ```bash
 rm -rf /tmp/claude-mallet-install
@@ -84,7 +97,7 @@ rm -rf /tmp/claude-mallet-install
 
 ---
 
-## 8. Detect Project Type and Suggest Skills
+## 9. Detect Project Type and Suggest Skills
 
 Scan the target for cues and offer up to 3 concrete skill suggestions:
 
@@ -98,7 +111,7 @@ Keep suggestions brief. Do not create them automatically.
 
 ---
 
-## 9. Summary
+## 10. Summary
 
 ```
 ── Installation complete ────────────────────────────────────
@@ -109,7 +122,7 @@ Keep suggestions brief. Do not create them automatically.
   Next steps:
     1. Customise .claude/project/CLAUDE.md for this project (create if needed)
     2. Run /discover to scan the project for .claude/ setup opportunities
-    3. [Context-specific suggestion from step 8, if any]
+    3. [Context-specific suggestion from step 9, if any]
 
 ────────────────────────────────────────────────────────────
 ```
