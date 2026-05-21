@@ -58,3 +58,24 @@ Stop and re-investigate if any of these arise:
 - The test was written after the fix, not before
 - The fix works but the reason is unclear
 - A different symptom appeared after the fix
+- Three different fix locations have all failed — this signals an architectural problem, not a hypothesis failure; stop and map the system
+
+**Rationalizations to reject** — these justify skipping root cause investigation and are always wrong:
+- "I have a strong hunch" — hunches applied without confirmation create new bugs
+- "This fix is obvious" — obvious fixes applied to wrong root causes waste time and obscure the real issue
+- "We're under pressure to ship" — a wrong fix under pressure still ships a bug
+- "I'll just try it and see" — speculative changes corrupt the hypothesis space and make root cause harder to find afterward
+
+---
+
+## Condition-Based Waiting
+
+When debugging intermittent failures or async timing issues, replace arbitrary `sleep` delays with polling for the actual condition:
+
+```
+poll until <condition is true>:
+  check every 10ms
+  timeout after N seconds → fail with descriptive message
+```
+
+Arbitrary sleeps are fragile: they either wait too long (slow) or expire before the condition is met (flaky). Condition-based polling is faster on fast machines and more reliable on slow ones. A sleep that works locally is not a fix — it is a bet on timing.

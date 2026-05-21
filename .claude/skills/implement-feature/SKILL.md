@@ -35,8 +35,8 @@ Do not proceed until you have all three.
 
 > Before I start, a few quick questions:
 > 1. Run a **plan critique** after the change plan is drafted? (Challenges the plan before any code is written)
-> 2. Run a **code review** after implementation? (Senior-developer review of the diff)
-> 3. Run a **scope validation** at the end? (Verifies all acceptance criteria are met and no scope creep)
+> 2. Run a **scope validation** after implementation? (Verifies all acceptance criteria are met and no scope creep — runs before code review so quality review is only done on correctly-scoped work)
+> 3. Run a **code review** after scope validation? (Senior-developer code quality review of the diff)
 
 Record the answers and skip the corresponding steps (3, 6, 7) if the user answers no.
 
@@ -50,8 +50,8 @@ working_dir: <path>
 test_command: <command>
 settings:
   critique: yes|no
-  review: yes|no
   scope_validation: yes|no
+  review: yes|no
 
 ## Current Step
 0 (pre-flight)
@@ -148,29 +148,31 @@ On return:
 
 ---
 
-## 6. Code Review
+## 6. Scope Validation
+
+Spawn `scope-validator` subagent (Sylvie) using `.claude/agents/scope-validator.md`:
+- Pass: original feature spec Handoff + changed files list + working directory
+- Model: sonnet
+
+Rationale: spec compliance is verified before code quality. If the implementation targets the wrong scope, a code review is wasted effort.
+
+On return:
+- `approve` → checkpoint state, proceed to step 7
+- `revise` → surface specific gaps to user and ask whether to re-enter the pipeline at step 2 or 4
+
+---
+
+## 7. Code Review
 
 Spawn `code-reviewer` subagent (Clifford) using `.claude/agents/code-reviewer.md`:
-- Pass: list of changed files + working directory
+- Pass: list of changed files + working directory + Sylvie's Validation Report (if step 6 ran, as optional SPEC context)
 - Model: sonnet
 - Iteration cap: 1 (one revision cycle only)
 
 On return:
-- `approve` → checkpoint state, proceed to step 7
+- `approve` → checkpoint state, proceed to wrap-up
 - `revise` → return to step 4 (Ingrid) with blocking issues Handoff appended (counts against step 4's iteration cap)
 - `blocked` → surface to user
-
----
-
-## 7. Scope Validation
-
-Spawn `scope-validator` subagent (Sylvie) using `.claude/agents/scope-validator.md`:
-- Pass: original feature spec Handoff + changed files list + working directory + reviewer non-blocking notes (if step 6 ran)
-- Model: sonnet
-
-On return:
-- `approve` → checkpoint state, proceed to wrap-up
-- `revise` → surface specific gaps to user and ask whether to re-enter the pipeline at step 2 or 4
 
 ---
 
@@ -186,8 +188,8 @@ Step 2  Callum    approve   2 iterations  (1 revision from Percy)
 Step 3  Percy     approve   1 iteration
 Step 4  Ingrid    approve   1 iteration
 Step 5  Tobias    approve   2 iterations  (1 test fix)
-Step 6  Clifford  approve   1 iteration   2 non-blocking notes
-Step 7  Sylvie    approve   1 iteration
+Step 6  Sylvie    approve   1 iteration
+Step 7  Clifford  approve   1 iteration   2 non-blocking notes
 ──────────────────────────────────────────
 Files changed: [list]
 Tests: 47 passed, 0 failed

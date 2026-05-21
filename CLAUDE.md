@@ -91,6 +91,10 @@ Review `.claude/project/lessons.md` at session start if it exists. Apply those r
 
 When a constraint or workaround in place for a previous model limitation appears no longer necessary, note it in `.claude/project/lessons.md` with the label `[re-evaluate]` so it can be reviewed for removal. Do not remove it unilaterally.
 
+## Skill Invocation
+
+Before responding to any non-trivial request, ask: does any skill apply? If there is even a 1% chance a skill is relevant, invoke it — don't default to improvised behaviour when a structured approach exists. Common rationalizations to reject: "this is too simple for that", "I need more context first", "the user didn't mention the skill name."
+
 ## Verification Before Done
 
 Never mark a task complete without proving it works:
@@ -98,6 +102,12 @@ Never mark a task complete without proving it works:
 - Ask yourself: "Would a staff engineer approve this?"
 - If the answer is no, fix it before marking done
 - For code changes or implementations, spawn a subagent to independently verify and validate the work before reporting it complete
+
+**Rationalizations to reject** — these justify skipping verification and are always wrong:
+- "The tests passed so it must be correct" — tests prove what was tested, not what was built
+- "I just made a small change" — small changes have caused large regressions
+- "It worked in my head" — unrun code is speculation
+- "I'll verify after the next step" — the next step may depend on this being correct
 
 ## Elegance Check
 

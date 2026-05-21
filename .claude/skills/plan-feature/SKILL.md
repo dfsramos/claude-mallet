@@ -41,6 +41,20 @@ Follow up with targeted questions where the picture is still incomplete. Stop wh
 
 ---
 
+## 2a. Design Approval Gate
+
+Before decomposing into tasks, present a one-paragraph design summary to the user:
+
+> **Proposed design:** [what will be built, how it fits the existing system, key tradeoffs]
+>
+> Does this match your intent, or should we adjust before I break it into tasks?
+
+Do not proceed to decomposition until the user explicitly approves. Rationalizations to reject:
+- "The intake was thorough so we can proceed" — intake gathers facts; the design summary is the synthesis that can still be wrong
+- "I'll adjust during implementation if needed" — misaligned decomposition produces misaligned tasks; a one-sentence correction now saves N task rewrites later
+
+---
+
 ## 2b. Assess Knowledge Skill Opportunity
 
 After intake, check whether the feature operates in a domain with strong, stable conventions where encoding expertise as a knowledge skill would improve implementation quality.
@@ -100,6 +114,9 @@ Deps: <list or —>
 
 ## Goal
 
+## Steps
+<!-- No TBD, no placeholders. Each step must be a concrete action: exact file path, specific command, precise code change. If a step cannot be written concretely, the design is underspecified — resolve that before writing the task. -->
+
 ## TDD Checklist
 _(Omit if the task has no testable behaviour.)_
 - [ ] Write failing test
@@ -110,6 +127,12 @@ _(Omit if the task has no testable behaviour.)_
 
 ## Notes
 ```
+
+**Task content discipline:** before committing any task file, verify:
+- Every step names a specific file path or command — no "update the relevant file"
+- No step contains TBD, TODO, or "as appropriate"
+- The TDD checklist is present for any task with testable behaviour
+- The goal is one sentence that could be copy-pasted into a commit message
 
 Commit to master:
 

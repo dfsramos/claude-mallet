@@ -130,7 +130,39 @@ Four-phase methodology enforcing root cause investigation before any fix.
 3. **Hypothesis and testing** — falsifiable hypothesis; one variable at a time; discard or refine on evidence
 4. **Implementation** — write a failing test first (when behaviour is testable); apply a single targeted fix; confirm pass and no regressions
 
-Hard rule: no fix is applied before root cause is confirmed.
+Hard rule: no fix is applied before root cause is confirmed. Three consecutive failed fixes in different locations signals an architectural problem — stop and map the system rather than continue guessing.
+
+Includes a **condition-based waiting** pattern: replace arbitrary `sleep` delays in tests with polling for the actual condition (check every 10ms, timeout with a descriptive message). Eliminates flaky timing-dependent failures.
+
+## Receiving Code Review
+
+**Directory:** `.claude/skills/receiving-code-review/`
+**Triggered by:** A code review is returned from any source (Clifford, human reviewer, PR feedback) and needs to be processed
+
+Methodical framework for processing review feedback without performative compliance or uncritical acceptance.
+
+1. **Understand completely** — read and classify all feedback (blocking / non-blocking) before acting on any item
+2. **Verify against reality** — confirm each flagged location and described behaviour matches the actual code before accepting the review as correct
+3. **Evaluate technically** — test each blocking item for correctness, functionality impact, context completeness, scope (YAGNI), and architectural fit; surface conflicts with a specific technical explanation rather than silently complying
+4. **Respond factually** — describe the actual fix, not praise ("Changed guard at `auth.ts:42`" not "Great catch!"); push back technically when warranted
+5. **Implement methodically** — locate, understand, apply targeted fixes; batch all blocking fixes before re-review
+
+Hard rule: reviewer seniority does not override technical correctness. An incorrect fix applied under social pressure ships wrong code.
+
+## Dispatching Parallel Agents
+
+**Directory:** `.claude/skills/dispatching-parallel-agents/`
+**Triggered by:** 3 or more independent failures or problem domains, or a large task partitioned into non-overlapping workstreams
+
+Structured approach for concurrent subagent dispatch when problems are genuinely independent.
+
+Use when all three hold: (1) 3+ independent domains, each understandable in isolation; (2) no shared files between agents; (3) no sequential dependency between tracks.
+
+1. **Identify domains** — confirm each failure or workstream can be fully resolved without knowledge of the others
+2. **Scope tasks** — write a self-contained description per agent (specific error, file paths, test command, output contract)
+3. **Dispatch in parallel** — send all agents in a **single message** (one tool call per domain)
+4. **Review and integrate** — read all results before acting; check for unexpected file conflicts; run the full test suite once
+5. **Surface results** — per-domain status, files changed, verification outcome
 
 ## Create PR
 
