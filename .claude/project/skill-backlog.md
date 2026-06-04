@@ -40,6 +40,18 @@ Items logged during sessions for future review.
 
 ---
 
+## 3-Layer Filter-Before-Fetch Retrieval Directive
+- **Triggered by:** Claude-Mem evaluation (2026-06-04)
+- **Description:** When retrieving from any large dataset (codebase search, issue lists, web results, grep output), follow a 3-layer sequence: (1) get a compact index of IDs/summaries, (2) identify relevant items, (3) fetch full detail only for those items. Mallet's current directives cover piping bulk output through filters and "Think in Code", but the explicit index→filter→fetch sequencing is more actionable and generalises across all retrieval tasks. Candidate for a directive in CLAUDE.md under Tool Preferences, or as a new "Retrieval" section.
+
+---
+
+## Progressive Disclosure for Mallet Memory System
+- **Triggered by:** Claude-Mem evaluation (2026-06-04)
+- **Description:** Claude-Mem injects memory in layers (cheap index first, expensive detail on demand) rather than all at once. Mallet's `MEMORY.md` is currently injected in full at session start — fine at small scale, but will degrade as memory grows. A tiered approach: inject the index (MEMORY.md as-is), fetch individual memory files only when relevant to the current task. Larger design decision — needs thought on how to trigger per-file reads from the session-start hook context.
+
+---
+
 ## PreCompact Hook for Mission Continuity
 - **Triggered by:** Context Mode evaluation (2026-06-04)
 - **Description:** Mallet's mission continuity relies on a manual wrap-up step writing `active.md`. Context Mode uses a PreCompact hook that automatically captures in-progress state (files being edited, active tasks, errors, user decisions) before the conversation compacts, then restores it at session start. Mallet doesn't currently register a PreCompact hook at all. An automated snapshot hook would make continuity more reliable than the current manual flow. Needs design: what to capture, where to write it, and how to avoid conflicts with the existing `active.md` mechanism.
