@@ -40,10 +40,4 @@ Items logged during sessions for future review.
 
 ---
 
-## PreCompact Hook for Mission Continuity
-- **Triggered by:** Context Mode evaluation (2026-06-04)
-- **Description:** Mallet's mission continuity relies on a manual wrap-up step writing `active.md`. Context Mode uses a PreCompact hook that automatically captures in-progress state (files being edited, active tasks, errors, user decisions) before the conversation compacts, then restores it at session start. Mallet doesn't currently register a PreCompact hook at all. An automated snapshot hook would make continuity more reliable than the current manual flow. Needs design: what to capture, where to write it, and how to avoid conflicts with the existing `active.md` mechanism.
-
----
-
 

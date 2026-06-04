@@ -12,7 +12,8 @@ Injects project memory and a framework update notice (when available) at session
 ### What it does
 
 1. **Project memory injection.** If `.claude/project/memory.md` exists, echoes its contents wrapped in `--- Project Memory ---` markers so project facts are in context from turn one.
-2. **Framework update check.** If `.claude/framework.json` exists and `curl` + `jq` are available, queries the GitHub API for the repo's default branch HEAD. If the local hash differs, emits a `--- Framework Update Available ---` notice instructing Claude to surface it to the user and offer to run the update skill.
+2. **Compact snapshot restore.** If `.claude/project/compact-snapshot.md` exists (written by the PreCompact hook before the last compaction), injects its contents then deletes the file. This restores branch, uncommitted changes, and active mission context in sessions that start after a compaction.
+3. **Framework update check.** If `.claude/framework.json` exists and `curl` + `jq` are available, queries the GitHub API for the repo's default branch HEAD. If the local hash differs, emits a `--- Framework Update Available ---` notice instructing Claude to surface it to the user and offer to run the update skill.
 
 Both steps fail silently on any error (missing tools, network failure, unparseable JSON) — a hook failure never disrupts session start.
 
@@ -55,6 +56,31 @@ The hook runs two passive guardrails per prompt without burdening every interact
 The turn counter catches runaway sessions — the primary driver of token costs. Long sessions account for ~87% of output tokens. The 50-prompt soft reminder and 80-prompt hard warning give Claude the signal to suggest `/compact` before the session becomes expensive.
 
 The complexity scorer acts as a lightweight tripwire: when architectural signals coincide, it surfaces `task-calibrate` so Claude can assess whether Opus would be a better fit. The threshold (≥ 3) is deliberately conservative — two strong signals, or one signal plus a long prompt, must coincide before anything is injected.
+
+## PreCompact Hook
+
+**File:** `.claude/hooks/pre-compact.sh`
+**Trigger:** `PreCompact` — fires before Claude Code compacts the conversation
+
+Captures in-progress state before compaction so critical context survives both within the current session and across restarts.
+
+### What it does
+
+Two outputs simultaneously via `tee`:
+
+1. **stdout** — injected into the compaction context so the summariser has branch, uncommitted changes, recent commits, and any active mission to preserve in its summary.
+2. **`.claude/project/compact-snapshot.md`** — a snapshot file read by `session-start.sh` when a _new_ session begins after a compaction. `session-start.sh` injects it then deletes it, so it never accumulates.
+
+Captured state:
+- Timestamp
+- Current git branch
+- Uncommitted changes (`git status --short`, up to 15 lines)
+- Last 5 commits (`git log --oneline`)
+- Full contents of `.claude/project/missions/active.md` (if present)
+
+### Why it exists
+
+Context compaction discards conversation history to free the window. Without intervention, Claude loses track of the active branch, what files were being edited, and where a multi-session task was up to. The session-start hook partially addressed this via `active.md`, but that file is only written at manual wrap-up. The PreCompact hook writes the equivalent state automatically — no human action required.
 
 ## Write Guard Hook
 
@@ -124,9 +150,10 @@ A blocking hook (exit 2) creates an infinite retry loop: after the user confirms
 The framework ships hooks in two tiers:
 
 **Default hooks** — registered in `settings.json` at install time, active in every project:
-- `session-start.sh` — memory injection and update check
+- `session-start.sh` — memory injection, compact-snapshot restore, and update check
 - `user-prompt-submit.sh` — complexity scorer and turn counter
 - `write-guard.sh` — blocks Write on existing files
+- `pre-compact.sh` — captures git state and active mission before compaction
 
 **Optional hooks** — scripts are distributed by the framework but not registered by default; activated per-project via `/hooks-setup`:
 - `typecheck.sh` — PostToolUse linter for TypeScript and PHP projects
