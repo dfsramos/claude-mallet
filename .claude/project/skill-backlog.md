@@ -23,8 +23,8 @@ Items logged during sessions for future review.
 ---
 
 ## MCP Server Catalog for Discovery
-- **Triggered by:** Context7 evaluation (2026-02-27)
-- **Description:** The discover skill currently knows about Context7 specifically. As the MCP ecosystem grows, consider maintaining a structured catalog of MCP servers worth recommending during discovery — each with criteria for when it applies (language, framework type, service category). Could live as a separate reference file the discover skill consults rather than hardcoding server knowledge inline.
+- **Triggered by:** Context7 evaluation (2026-02-27); partially resolved by CLI-Anything addition (2026-06-04)
+- **Description:** The discover skill knows about Context7, Impeccable, CLI-Anything, and Graphify inline. As the ecosystem grows further, consider a separate reference file the discover skill consults rather than hardcoding knowledge inline — each entry with install command and trigger criteria. CLI-Anything already demonstrates what a well-structured catalog looks like at the skill-pack layer; the same structure could work for MCP servers.
 
 ---
 

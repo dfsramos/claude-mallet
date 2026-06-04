@@ -38,6 +38,20 @@ Check whether the project would benefit from project-scoped additions:
 
 **Skill packs** — domain-specific command bundles. Recommend when the project's domain matches an existing pack. Example: Impeccable (`npx skills add pbakaus/impeccable`) for frontend UI/design work.
 
+**CLI-Anything** — a registry of ~100+ pre-built `SKILL.md` harnesses that make desktop and server software agent-native. Install the hub: `pip install cli-anything-hub`, then `cli-hub install <name>`. Individual skills install via `npx skills add HKUDS/CLI-Anything --skill <name>`. Recommend when the project interacts with design, media, GIS, automation, or desktop software. Trigger examples:
+
+| Detected software / dependency | Suggested harness |
+|---|---|
+| Blender, FreeCAD, 3MF files | `blender`, `freecad`, `3mf` |
+| GIMP, Krita, Inkscape | `gimp`, `krita`, `inkscape` |
+| Godot, Unreal Engine | `godot`, `unreal-insights` |
+| Obsidian, Zotero, Joplin | `obsidian`, `zotero`, `joplin` |
+| LibreOffice, Calibre | `libreoffice`, `calibre` |
+| n8n, Dify | `n8n`, `dify-workflow` |
+| QGIS, ArcGIS | `qgis`, `arcgis-pro` |
+
+Browse the full registry at `cli-hub list` or https://hkuds.github.io/CLI-Anything/.
+
 **Graphify** (`pip install graphify` / `uv add graphify`) — turns a codebase into a queryable knowledge graph (god nodes, surprising connections, interactive visualisation). Requires Python. Evaluate against these signals:
 
 Recommend when 3 or more are true:
@@ -110,6 +124,10 @@ _(Omit if none.)_
 | Pack | Purpose | Install | Trigger |
 
 _(Omit if none.)_
+
+## CLI-Anything Harnesses
+| Harness | Software | Install |
+_(List only harnesses relevant to detected software. Omit section if none detected.)_
 
 ## Graphify
 Verdict: [Recommended / Not recommended] — <one-line rationale listing which signals fired>

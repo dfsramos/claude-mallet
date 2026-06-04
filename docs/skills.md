@@ -71,7 +71,7 @@ Structured analysis of a project's codebase to identify `.claude/` setup opportu
 
 1. **Scan** — languages, frameworks, build tools, structure
 2. **External services** — SDKs, auth providers, data services, observability
-3. **Augmentation opportunities** — MCP servers (e.g., Context7 for libraries with live docs), skill packs (e.g., Impeccable for frontend UI work), and Graphify (knowledge graph tool — recommended for large, polyglot, or multi-modal codebases; skipped for small or simple projects)
+3. **Augmentation opportunities** — MCP servers (e.g., Context7 for libraries with live docs), skill packs (e.g., Impeccable for frontend UI work), CLI-Anything harnesses (pre-built `SKILL.md` wrappers for ~100+ desktop/server apps — recommended when the project interacts with design, media, GIS, or automation software), and Graphify (knowledge graph tool — recommended for large, polyglot, or multi-modal codebases; skipped for small or simple projects)
 4. **Focused questions** via `AskUserQuestion` to resolve priorities
 5. **Research** — WebSearch for confirmed services, propose concrete skills
 6. **Skill and documentation opportunities** — including connection data, project conventions for `.claude/project/CLAUDE.md`, and patterns promotable to the base framework
