@@ -145,6 +145,27 @@ Warns Claude before any `git push` executes and requires it to verify the push w
 
 A blocking hook (exit 2) creates an infinite retry loop: after the user confirms, Claude re-runs the command, the hook fires again and blocks again. An advisory hook instead injects the warning into Claude's context; Claude reads it, verifies intent against the conversation, and either proceeds or stops and asks.
 
+## Explore Redirect Hook
+
+**File:** `.claude/hooks/explore-redirect.sh`
+**Trigger:** `PreToolUse` on `Bash` — fires before Bash commands matching broad search patterns
+**Activation:** opt-in via `/hooks-setup`
+
+When Claude runs a broad recursive search (`grep -r`, `find .`, `rg`, `ag`), checks whether a richer source of information is available and suggests using it first. Always advisory (exit 0) — never blocks.
+
+### What it suggests
+
+| Resource found | Suggestion |
+|---|---|
+| `graphify-out/graph.json` | Use `/graphify query`, `/graphify path`, or `/graphify explain` for semantic search |
+| `.claude/project/discovery-*.md` | Check the Critical Files section before grepping broadly |
+
+Only fires when the resource actually exists — silent on projects that have neither.
+
+### Why opt-in
+
+Broad searches are often intentional (writing tests, auditing for a pattern). The redirect adds value on large or well-documented codebases but would be noise on smaller ones. Opt-in lets teams enable it where the signal-to-noise ratio justifies it.
+
 ## Hook Tiers
 
 The framework ships hooks in two tiers:
@@ -158,6 +179,7 @@ The framework ships hooks in two tiers:
 **Optional hooks** — scripts are distributed by the framework but not registered by default; activated per-project via `/hooks-setup`:
 - `typecheck.sh` — PostToolUse linter for TypeScript and PHP projects
 - `push-confirm.sh` — PreToolUse warning before git push
+- `explore-redirect.sh` — PreToolUse suggestion to use Graphify or discovery report before broad searches
 
 ## Adding New Hooks
 

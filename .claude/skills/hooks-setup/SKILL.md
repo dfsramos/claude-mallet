@@ -13,6 +13,7 @@ Activates optional hook scripts in the current project. Run from the target proj
 Read `.claude/settings.json`. For each optional hook, check whether its script filename already appears in any hook command string:
 - `typecheck.sh` present → already registered
 - `push-confirm.sh` present → already registered
+- `explore-redirect.sh` present → already registered
 
 Report the current state.
 
@@ -41,6 +42,9 @@ Runs the type-checker after every file edit and surfaces errors directly in cont
 **push-confirm** _(PreToolUse on Bash)_
 Warns before any `git push` and asks Claude to verify the push was explicitly requested. Works with any project.
 
+**explore-redirect** _(PreToolUse on Bash)_
+When Claude runs a broad recursive search (`grep -r`, `find .`, `rg`, etc.), checks whether a Graphify knowledge graph (`graphify-out/graph.json`) or a discovery report (`.claude/project/discovery-*.md`) exists and suggests querying the richer source first. Advisory only — never blocks. Useful on large or well-documented codebases; low value on small projects.
+
 Ask: "Which hooks would you like to enable?" List only unregistered hooks. If all are already registered, report that and stop.
 
 ---
@@ -55,6 +59,7 @@ For each hook the user selected:
 4. Determine the event and matcher:
    - `typecheck.sh` → event `PostToolUse`, matcher `Edit`
    - `push-confirm.sh` → event `PreToolUse`, matcher `Bash`
+   - `explore-redirect.sh` → event `PreToolUse`, matcher `Bash`
 5. If the event key does not exist in `hooks`, add it as an empty array first.
 6. Append this object to the event array:
    ```json
