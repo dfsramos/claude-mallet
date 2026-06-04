@@ -170,6 +170,10 @@ When the user says "discover", "analyze the codebase", or runs `/discover`, use 
 
 When the user wants to plan a feature, build something new, or continue work on an existing feature, use the `plan-feature` skill.
 
+## Architecture Decisions
+
+When a significant architectural choice is made — database selection, framework adoption, communication pattern, key library — or the user says "record this decision", "create an ADR", or runs `/adr`, use the `adr` skill.
+
 ## Project Context
 
 If `.claude/project/CLAUDE.md` exists, read it at session start.

@@ -92,6 +92,20 @@ Intake-to-execution pipeline. Supports resumption across sessions. All planning 
 5. **Execute (wave model)** — identifies tasks whose dependencies are satisfied (a wave); when parallel, dispatches each task to its own subagent so only results surface to the main context
 6. **Resume** — loads `plan.md` and `state.md` from master
 
+## Architecture Decision Records
+
+**Directory:** `.claude/skills/adr/`
+**Triggered by:** "record this decision", "create an ADR", "document why we chose X", `/adr`, or during `plan-feature` when a significant architectural choice is made
+
+Captures a significant architectural decision in Nygard format so the rationale survives beyond the session.
+
+1. **Locate** — finds `docs/adr/` and determines the next four-digit number; creates the directory if it doesn't exist
+2. **Gather** — extracts context, decision, alternatives, and consequences from the conversation; asks only for what's missing
+3. **Write** — creates `docs/adr/NNNN-<title>.md` with Context, Decision, Alternatives Considered, and Consequences sections
+4. **Index** — appends to (or creates) `docs/adr/README.md`
+5. **Link** — offers to reference the ADR from an active feature plan or mission file
+6. **Commit** — stages and commits with `Add ADR-NNNN: <title>.`
+
 ## Session Wrap-Up
 
 **Directory:** `.claude/skills/reviewing-sessions/`

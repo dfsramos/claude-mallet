@@ -52,9 +52,4 @@ Items logged during sessions for future review.
 
 ---
 
-## Architecture Decision Records (ADR) Skill
-- **Triggered by:** Ruflo evaluation (2026-06-04); Ruflo's `ruflo-adr` plugin
-- **Description:** A `/adr` skill that scaffolds and maintains Architecture Decision Records in the standard Nygard format (`docs/adr/NNNN-title.md`): Context, Decision, Consequences. Invoked when a significant architectural choice is being made (database selection, framework adoption, key pattern choices). No equivalent exists in Mallet. Would complement the `plan-feature` skill — significant design decisions made during planning could be immediately captured as ADRs.
-
----
 
