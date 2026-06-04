@@ -40,12 +40,6 @@ Items logged during sessions for future review.
 
 ---
 
-## 3-Layer Filter-Before-Fetch Retrieval Directive
-- **Triggered by:** Claude-Mem evaluation (2026-06-04)
-- **Description:** When retrieving from any large dataset (codebase search, issue lists, web results, grep output), follow a 3-layer sequence: (1) get a compact index of IDs/summaries, (2) identify relevant items, (3) fetch full detail only for those items. Mallet's current directives cover piping bulk output through filters and "Think in Code", but the explicit index→filter→fetch sequencing is more actionable and generalises across all retrieval tasks. Candidate for a directive in CLAUDE.md under Tool Preferences, or as a new "Retrieval" section.
-
----
-
 ## Progressive Disclosure for Mallet Memory System
 - **Triggered by:** Claude-Mem evaluation (2026-06-04)
 - **Description:** Claude-Mem injects memory in layers (cheap index first, expensive detail on demand) rather than all at once. Mallet's `MEMORY.md` is currently injected in full at session start — fine at small scale, but will degrade as memory grows. A tiered approach: inject the index (MEMORY.md as-is), fetch individual memory files only when relevant to the current task. Larger design decision — needs thought on how to trigger per-file reads from the session-start hook context.
@@ -64,8 +58,3 @@ Items logged during sessions for future review.
 
 ---
 
-## 3-Tier Routing Dimension for task-calibrate
-- **Triggered by:** Ruflo evaluation (2026-06-04); Ruflo's ADR-026/ADR-143
-- **Description:** Ruflo defines Tier 1 = deterministic codemod (structural transforms with no LLM, $0), Tier 2 = Haiku, Tier 3 = Sonnet/Opus. Mallet's `task-calibrate` currently decides Sonnet vs Opus. Worth adding a "no model needed" tier for purely structural transforms (rename, reformat, mechanical find-and-replace) — tasks that should be identified as codemods or direct tool calls before reaching for any model at all.
-
----

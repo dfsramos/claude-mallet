@@ -115,7 +115,7 @@ Structured end-of-session retrospective. No session record files are written —
 
 Surfaces a model and effort recommendation before work begins.
 
-1. **Classify** — Architectural, Complex, Routine, or Large Context
+1. **Classify** — Mechanical (no model needed), Architectural, Complex, Routine, or Large Context
 2. **Apply model matrix** — tier → recommended model + switch command; includes a subagent-model table (Haiku for lookups, Sonnet for standard dev, Sonnet/Opus for deep analysis)
 3. **Surface** — only interrupt when a switch is warranted; proceed silently otherwise
 

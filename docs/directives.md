@@ -50,6 +50,8 @@ Dedicated tools (Read, Edit, Write, Grep, Glob) are preferred over Bash for file
 
 For analysis tasks that span many files, a script is written to compute and print only the result rather than reading files sequentially into context. One filtered Bash call replaces dozens of Read calls. The principle: program the analysis, don't perform it inline.
 
+When retrieving from any large dataset, the pattern is index → filter → fetch: get a compact summary or ID list first, identify relevant items, then fetch full detail only for those. Full content is never pulled for every result when only a subset is needed.
+
 Edit is always preferred over Write. Write is only used when creating a file that does not yet exist. For any existing file — even when replacing most of its content — Edit is used instead.
 
 Bash commands must never begin with a variable assignment (`TMPDIR="..." command`) or use shell arrays. Claude Code's permission system cannot match these patterns against its allow-list and will prompt for approval instead of auto-approving. Use literal paths throughout.

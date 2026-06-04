@@ -14,6 +14,7 @@ Read the user's prompt and classify it against the matrix below. When in doubt, 
 
 | Tier | Characteristics |
 |------|----------------|
+| **Mechanical** | Purely structural transforms requiring no judgement: rename a symbol, reformat, find-and-replace a string, sort lines, mechanically apply a pattern. The correct answer is deterministic regardless of model. |
 | **Architectural** | System design, major tradeoffs, cross-cutting decisions, evaluating approaches, new framework primitives, migrations, "from scratch" features, decisions with lasting consequences |
 | **Complex** | Multi-file refactors, debugging across files, feature implementation (3–10 files), writing skills with multiple interacting concerns |
 | **Routine** | Single-file edits, config changes, skill/hook tweaks, simple refactors, answering factual questions about the codebase |
@@ -25,6 +26,7 @@ Read the user's prompt and classify it against the matrix below. When in doubt, 
 
 | Tier | Recommended | Switch | Why |
 |------|------------|--------|-----|
+| Mechanical | No model needed | — | Use direct tools (Edit, Bash, grep) — no model invocation required. Flag this explicitly so the user doesn't wait for a model response on a deterministic operation. |
 | Architectural | `opusplan` | `/model opusplan` | Opus plans, Sonnet executes; use `/model opus` for Opus throughout |
 | Complex | `sonnet` | `/model sonnet` | Capable for multi-file work; Opus overhead not justified |
 | Routine | `haiku` (new session, T ≤ 2) or `sonnet` (current session) | `/model haiku` | Haiku produces identical results on boilerplate at a fraction of the cost. Suggest a new session only when T ≤ 2; session-switch overhead exceeds savings otherwise |
