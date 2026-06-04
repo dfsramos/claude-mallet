@@ -12,8 +12,10 @@
 │   │   ├── session-start.sh           # Session startup actions
 │   │   ├── user-prompt-submit.sh      # Complexity scoring and turn tracking
 │   │   ├── write-guard.sh             # Blocks Write on existing files (default)
+│   │   ├── pre-compact.sh             # Captures state before compaction (default)
 │   │   ├── typecheck.sh               # PostToolUse linter for TS/PHP (opt-in)
-│   │   └── push-confirm.sh            # PreToolUse warning before git push (opt-in)
+│   │   ├── push-confirm.sh            # PreToolUse warning before git push (opt-in)
+│   │   └── explore-redirect.sh        # Steers broad searches toward richer sources (opt-in)
 │   ├── agents/
 │   │   ├── _contract.md               # Shared agent contract (capabilities, tone, tool access)
 │   │   ├── code-analyst.md
@@ -24,6 +26,7 @@
 │   │   ├── scope-validator.md
 │   │   └── test-runner.md
 │   ├── skills/
+│   │   ├── adr/SKILL.md
 │   │   ├── create-pr/SKILL.md
 │   │   ├── discover/SKILL.md
 │   │   ├── dispatching-parallel-agents/SKILL.md
