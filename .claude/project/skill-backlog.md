@@ -34,12 +34,6 @@ Items logged during sessions for future review.
 
 ---
 
-## "God Nodes" Surface in Discover Skill
-- **Triggered by:** Graphify evaluation (2026-06-04)
-- **Description:** Graphify's GRAPH_REPORT.md surfaces the highest-degree nodes — the files/symbols everything routes through. Mallet's discover skill produces gap analysis and recommendations but doesn't surface centrality. Adding a "critical files" output to discover — even approximated via import counts or cross-reference grep — would help Claude and the user orient faster in unfamiliar codebases.
-
----
-
 ## Progressive Disclosure for Mallet Memory System
 - **Triggered by:** Claude-Mem evaluation (2026-06-04)
 - **Description:** Claude-Mem injects memory in layers (cheap index first, expensive detail on demand) rather than all at once. Mallet's `MEMORY.md` is currently injected in full at session start — fine at small scale, but will degrade as memory grows. A tiered approach: inject the index (MEMORY.md as-is), fetch individual memory files only when relevant to the current task. Larger design decision — needs thought on how to trigger per-file reads from the session-start hook context.

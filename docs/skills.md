@@ -70,13 +70,14 @@ Mechanically identical to install, with a version check: the skill queries the c
 Structured analysis of a project's codebase to identify `.claude/` setup opportunities:
 
 1. **Scan** — languages, frameworks, build tools, structure
-2. **External services** — SDKs, auth providers, data services, observability
-3. **Augmentation opportunities** — MCP servers (e.g., Context7 for libraries with live docs), skill packs (e.g., Impeccable for frontend UI work), CLI-Anything harnesses (pre-built `SKILL.md` wrappers for ~100+ desktop/server apps — recommended when the project interacts with design, media, GIS, or automation software), and Graphify (knowledge graph tool — recommended for large, polyglot, or multi-modal codebases; skipped for small or simple projects)
-4. **Focused questions** via `AskUserQuestion` to resolve priorities
-5. **Research** — WebSearch for confirmed services, propose concrete skills
-6. **Skill and documentation opportunities** — including connection data, project conventions for `.claude/project/CLAUDE.md`, and patterns promotable to the base framework
-7. **Report** — saved to `.claude/project/discovery-YYYY-MM-DD.md`
-8. **Quick wins** — offer to implement high-value suggestions immediately
+2. **Critical files** — inbound-reference count script identifies the highest-centrality modules (god nodes); reported with reference count and why they matter. Skipped for small projects.
+3. **External services** — SDKs, auth providers, data services, observability
+4. **Augmentation opportunities** — MCP servers (e.g., Context7 for libraries with live docs), skill packs (e.g., Impeccable for frontend UI work), CLI-Anything harnesses (pre-built `SKILL.md` wrappers for ~100+ desktop/server apps — recommended when the project interacts with design, media, GIS, or automation software), and Graphify (knowledge graph tool — recommended for large, polyglot, or multi-modal codebases; skipped for small or simple projects)
+5. **Focused questions** via `AskUserQuestion` to resolve priorities
+6. **Research** — WebSearch for confirmed services, propose concrete skills
+7. **Skill and documentation opportunities** — including connection data, project conventions for `.claude/project/CLAUDE.md`, and patterns promotable to the base framework
+8. **Report** — saved to `.claude/project/discovery-YYYY-MM-DD.md`
+9. **Quick wins** — offer to implement high-value suggestions immediately
 
 ## Feature Planning
 

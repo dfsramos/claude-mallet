@@ -18,6 +18,37 @@ Identify stack and structure from manifests and entry points:
 
 ---
 
+## 1.5. Surface Critical Files
+
+Identify the files that the most of the codebase depends on — the highest-centrality modules a new contributor (or AI agent) must understand first.
+
+Use the "Think in Code" principle: write a short script to count inbound references rather than reading files manually. Adapt the script to the primary language detected in Step 1.
+
+**JS / TS:**
+```bash
+find . \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) \
+  ! -path "*/node_modules/*" ! -path "*/dist/*" ! -path "*/.next/*" \
+  | xargs grep -h "from ['\"]" 2>/dev/null \
+  | grep -oP "(?<=from ['\"])[./][^'\"]*" \
+  | sed 's/\/index$//' | sort | uniq -c | sort -rn | head -10
+```
+
+**Python:**
+```bash
+find . -name "*.py" ! -path "*/__pycache__/*" ! -path "*/venv/*" \
+  | xargs grep -hE "^from \.|^import \." 2>/dev/null \
+  | grep -oP "(?<=from |import )\S+" \
+  | sort | uniq -c | sort -rn | head -10
+```
+
+**Go / Rust / other languages:** write an equivalent that extracts local import paths and counts frequency.
+
+Report files with noticeably more references than the median (typically 3× or more). Also flag any file in a path containing `lib/`, `utils/`, `shared/`, `core/`, or `common/` that appears in the top results — these are structurally load-bearing regardless of reference count.
+
+Skip this step for projects with fewer than ~15 source files — the answer will be obvious from a directory listing.
+
+---
+
 ## 2. Detect External Services
 
 Search imports and configs for third-party integrations:
@@ -111,6 +142,11 @@ Project: <name>
 
 ## Overview
 <project type, stack, key findings>
+
+## Critical Files
+| File | Inbound refs | Why it matters |
+
+_(Omit if fewer than ~15 source files or no clear outliers.)_
 
 ## External Services
 | Service | Purpose | Integration | Skill Opportunities |
