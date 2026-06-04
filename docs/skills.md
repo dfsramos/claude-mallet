@@ -97,7 +97,7 @@ Intake-to-execution pipeline. Supports resumption across sessions. All planning 
 **Directory:** `.claude/skills/reviewing-sessions/`
 **Triggered by:** "wrap up", "all done", "end session"
 
-Structured end-of-session retrospective. Wrap-ups are **conversational only** — no files are written to disk.
+Structured end-of-session retrospective. No session record files are written — skill and directive updates (step 4) do write to framework files.
 
 1. **Session summary** — goal, approach, outcome
 2. **What went well** — efficient tasks, effective patterns, good tool use
@@ -106,6 +106,7 @@ Structured end-of-session retrospective. Wrap-ups are **conversational only** �
 4. **Applied improvements** — updates to skills or directives based on session observations; skill backlog reviewed and actioned; **docs parity check** — any change to a skill, hook, or directive must reflect in the corresponding `docs/` section before the work counts as done
 4a. **Memory audit** — review and revise `.claude/project/memory.md` entries added during the session
 4b. **Mission state** — if work continues beyond this session, write `.claude/project/missions/active.md`; if the mission completed, move `active.md` to `.claude/project/missions/archive/<session-id>.md`
+5. **Close out** — clear task-notes scratchpad if used; confirm correct working branch; present the full wrap-up to the user
 
 ## Task Calibration
 

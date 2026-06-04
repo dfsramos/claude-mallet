@@ -1,6 +1,6 @@
 ---
 name: update
-description: Invoke when the user says "update the framework", "update from <url>", or asks to upgrade the AI framework to the latest version. Requires a GitHub URL to the framework repository.
+description: Invoke when the user says "update the framework", "update from <url>", or asks to upgrade Claude Mallet to the latest version. Requires a GitHub URL to the framework repository.
 ---
 # Framework Update
 
@@ -96,7 +96,7 @@ Overwrite `.claude/framework.json`:
 ## 7. Cleanup and Summary
 
 ```bash
-rm -rf /tmp/ai-framework-update
+rm -rf /tmp/claude-mallet-update
 ```
 
 Print:

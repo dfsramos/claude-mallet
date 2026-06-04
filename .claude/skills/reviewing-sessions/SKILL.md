@@ -114,3 +114,11 @@ Keep entries terse. The next session reads this cold — each pending task must 
 
 **If work was single-session with no continuation expected**: skip this step entirely.
 
+---
+
+## 5. Close Out
+
+- If `.claude/project/task-notes.md` exists and was used during this session, clear its contents — the scratchpad is no longer needed.
+- Confirm you are on the correct working branch (not a feature branch left over from this session).
+- Present the completed wrap-up (sections 1–4b) to the user as a single formatted response.
+

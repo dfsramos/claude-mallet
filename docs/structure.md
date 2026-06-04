@@ -10,7 +10,10 @@
 │   ├── statusline.sh                  # Statusline renderer
 │   ├── hooks/
 │   │   ├── session-start.sh           # Session startup actions
-│   │   └── user-prompt-submit.sh      # Complexity scoring and turn tracking
+│   │   ├── user-prompt-submit.sh      # Complexity scoring and turn tracking
+│   │   ├── write-guard.sh             # Blocks Write on existing files (default)
+│   │   ├── typecheck.sh               # PostToolUse linter for TS/PHP (opt-in)
+│   │   └── push-confirm.sh            # PreToolUse warning before git push (opt-in)
 │   ├── agents/
 │   │   ├── _contract.md               # Shared agent contract (capabilities, tone, tool access)
 │   │   ├── code-analyst.md
@@ -23,7 +26,12 @@
 │   ├── skills/
 │   │   ├── create-pr/SKILL.md
 │   │   ├── discover/SKILL.md
+│   │   ├── dispatching-parallel-agents/SKILL.md
+│   │   ├── hooks-setup/SKILL.md
+│   │   ├── implement-feature/SKILL.md
 │   │   ├── plan-feature/SKILL.md
+│   │   ├── preflight/SKILL.md
+│   │   ├── receiving-code-review/SKILL.md
 │   │   ├── reviewing-sessions/SKILL.md
 │   │   ├── systematic-debugging/SKILL.md
 │   │   ├── task-calibrate/SKILL.md
@@ -38,6 +46,7 @@
 │       ├── CLAUDE.md                  # Project conventions
 │       ├── lessons.md                 # Recorded after user corrections
 │       ├── skill-backlog.md           # Ideas for future skills
+│       ├── missions/                  # Active and archived mission files
 │       └── skills/
 │           └── harvest/SKILL.md       # Maintenance skills for this repo
 └── docs/
@@ -61,9 +70,11 @@ When the framework is installed into a project, the target gains:
     ├── templates/                     # Installed (overwrites)
     ├── framework.json                 # Install metadata (gitignored, written once per install/update)
     ├── settings.local.json            # User permissions (gitignored, never touched by install/update)
+    ├── pipeline-state/                # In-progress implement-feature pipelines (gitignored, created on demand)
     └── project/                       # Project-specific content (never touched by install/update)
         ├── CLAUDE.md                  # Project conventions (optional)
         ├── memory.md                  # Project memory (optional, created on demand)
+        ├── missions/                  # Active and archived mission files (optional)
         ├── overrides/                 # Per-skill amendments to base skills (optional)
         │   └── <skill-name>.md        # Amendments for the named base skill
         └── skills/                    # Project-specific skills (optional)

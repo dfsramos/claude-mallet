@@ -1,5 +1,5 @@
 #!/bin/bash
-# Statusline: shows AI Framework version, git branch, and usage.
+# Statusline: shows Claude Mallet version, git branch, and usage.
 # Receives Claude Code session JSON via stdin.
 # Update checks are handled by the session-start hook.
 
@@ -70,7 +70,7 @@ fi
 tok_total=$(( tok_in + tok_cw + tok_cr + tok_out ))
 
 # Line 1: framework version · installed_at · branch ──────────────────────────
-line1_parts=("AI Framework ${LOCAL_HASH:0:7}")
+line1_parts=("Claude Mallet ${LOCAL_HASH:0:7}")
 [ -n "$INSTALLED_AT" ] && line1_parts+=("$INSTALLED_AT")
 if [ -n "$PROJECT_DIR" ] && command -v git &>/dev/null; then
   branch=$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null)

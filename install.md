@@ -1,6 +1,6 @@
-# AI Framework — Remote Installation Instructions
+# Claude Mallet — Remote Installation Instructions
 
-Install the AI framework into the current working directory from a GitHub URL. This is a **source-of-truth install** — framework-managed files overwrite any local equivalents. `.claude/project/` is reset to a clean scaffold (any prior content is wiped). `.claude/settings.local.json` is preserved.
+Install Claude Mallet into the current working directory from a GitHub URL. This is a **source-of-truth install** — framework-managed files overwrite any local equivalents. `.claude/project/` is reset to a clean scaffold (any prior content is wiped). `.claude/settings.local.json` is preserved.
 
 ---
 
