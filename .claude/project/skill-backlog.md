@@ -16,12 +16,6 @@ Items logged during sessions for future review.
 
 ---
 
-## Session-End Hook
-- **Triggered by:** everything-claude-code evaluation (2026-03-04); re-evaluated 2026-05-01
-- **Description:** Automatically persist state and extract reusable patterns at session end, replacing the manual reviewing-sessions flow. Deferred because automating the wrap-up removes the review step — the manual skill produces higher-quality output. Needs a clearer design before implementation: what does an automated wrap-up look like that preserves quality?
-
----
-
 ## MCP Server Catalog for Discovery
 - **Triggered by:** Context7 evaluation (2026-02-27); partially resolved by CLI-Anything addition (2026-06-04)
 - **Description:** The discover skill knows about Context7, Impeccable, CLI-Anything, and Graphify inline. As the ecosystem grows further, consider a separate reference file the discover skill consults rather than hardcoding knowledge inline — each entry with install command and trigger criteria. CLI-Anything already demonstrates what a well-structured catalog looks like at the skill-pack layer; the same structure could work for MCP servers.
