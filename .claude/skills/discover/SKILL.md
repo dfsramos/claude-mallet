@@ -38,6 +38,20 @@ Check whether the project would benefit from project-scoped additions:
 
 **Skill packs** — domain-specific command bundles. Recommend when the project's domain matches an existing pack. Example: Impeccable (`npx skills add pbakaus/impeccable`) for frontend UI/design work.
 
+**Graphify** (`pip install graphify` / `uv add graphify`) — turns a codebase into a queryable knowledge graph (god nodes, surprising connections, interactive visualisation). Requires Python. Evaluate against these signals:
+
+Recommend when 3 or more are true:
+- Large codebase — many source files spread across multiple modules, packages, or services
+- Polyglot — 3+ languages in meaningful use (e.g. TypeScript + Python + SQL + shell)
+- Mixed modalities — docs, PDFs, architectural diagrams, or research papers live alongside code
+- High interdependence — layered architecture, microservices, multiple databases, or complex import graph
+- Team context — multiple contributors; a shared `graphify-out/graph.json` committed to git has compounding value
+
+Skip when any of these apply:
+- Small project (fewer than ~20 meaningful source files)
+- Primarily configuration or scripts with minimal application logic
+- Logic concentrated in one or two files — the graph won't reveal non-obvious connections
+
 Note the trigger (specific dependencies or project type) so the report can justify the recommendation.
 
 ---
@@ -96,6 +110,11 @@ _(Omit if none.)_
 | Pack | Purpose | Install | Trigger |
 
 _(Omit if none.)_
+
+## Graphify
+Verdict: [Recommended / Not recommended] — <one-line rationale listing which signals fired>
+
+_(Omit if not recommended.)_
 
 ## Recommended Skills
 **High Priority** / **Medium** / **Low** — name, description, why valuable.

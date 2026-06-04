@@ -27,3 +27,15 @@ Items logged during sessions for future review.
 - **Description:** The discover skill currently knows about Context7 specifically. As the MCP ecosystem grows, consider maintaining a structured catalog of MCP servers worth recommending during discovery — each with criteria for when it applies (language, framework type, service category). Could live as a separate reference file the discover skill consults rather than hardcoding server knowledge inline.
 
 ---
+
+## PreToolUse as Behavior-Shaping Hook
+- **Triggered by:** Graphify evaluation (2026-06-04)
+- **Description:** Graphify installs a PreToolUse hook that intercepts raw file reads and steers Claude toward a richer source (the knowledge graph). Mallet's hooks currently gate, validate, and log — not redirect. Worth exploring a generalized pattern for "prefer X before Y" hooks that shape tool selection rather than block it. Example use: steer Claude toward `memory.md` or the discover output before broad codebase searches.
+
+---
+
+## "God Nodes" Surface in Discover Skill
+- **Triggered by:** Graphify evaluation (2026-06-04)
+- **Description:** Graphify's GRAPH_REPORT.md surfaces the highest-degree nodes — the files/symbols everything routes through. Mallet's discover skill produces gap analysis and recommendations but doesn't surface centrality. Adding a "critical files" output to discover — even approximated via import counts or cross-reference grep — would help Claude and the user orient faster in unfamiliar codebases.
+
+---
