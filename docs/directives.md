@@ -48,6 +48,8 @@ Claude reads files and runs commands proactively instead of asking whether it sh
 
 Dedicated tools (Read, Edit, Write, Grep, Glob) are preferred over Bash for file operations. Python scripts are not used when a dedicated executable exists for the task. When a command returns large output and only a subset is needed, it is piped through `jq`, `grep`, `head`, or a similar filter in the same Bash call — raw bulk output is never passed into the context window.
 
+For analysis tasks that span many files, a script is written to compute and print only the result rather than reading files sequentially into context. One filtered Bash call replaces dozens of Read calls. The principle: program the analysis, don't perform it inline.
+
 Edit is always preferred over Write. Write is only used when creating a file that does not yet exist. For any existing file — even when replacing most of its content — Edit is used instead.
 
 Bash commands must never begin with a variable assignment (`TMPDIR="..." command`) or use shell arrays. Claude Code's permission system cannot match these patterns against its allow-list and will prompt for approval instead of auto-approving. Use literal paths throughout.

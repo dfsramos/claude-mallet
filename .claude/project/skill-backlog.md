@@ -39,3 +39,21 @@ Items logged during sessions for future review.
 - **Description:** Graphify's GRAPH_REPORT.md surfaces the highest-degree nodes — the files/symbols everything routes through. Mallet's discover skill produces gap analysis and recommendations but doesn't surface centrality. Adding a "critical files" output to discover — even approximated via import counts or cross-reference grep — would help Claude and the user orient faster in unfamiliar codebases.
 
 ---
+
+## PreCompact Hook for Mission Continuity
+- **Triggered by:** Context Mode evaluation (2026-06-04)
+- **Description:** Mallet's mission continuity relies on a manual wrap-up step writing `active.md`. Context Mode uses a PreCompact hook that automatically captures in-progress state (files being edited, active tasks, errors, user decisions) before the conversation compacts, then restores it at session start. Mallet doesn't currently register a PreCompact hook at all. An automated snapshot hook would make continuity more reliable than the current manual flow. Needs design: what to capture, where to write it, and how to avoid conflicts with the existing `active.md` mechanism.
+
+---
+
+## Architecture Decision Records (ADR) Skill
+- **Triggered by:** Ruflo evaluation (2026-06-04); Ruflo's `ruflo-adr` plugin
+- **Description:** A `/adr` skill that scaffolds and maintains Architecture Decision Records in the standard Nygard format (`docs/adr/NNNN-title.md`): Context, Decision, Consequences. Invoked when a significant architectural choice is being made (database selection, framework adoption, key pattern choices). No equivalent exists in Mallet. Would complement the `plan-feature` skill — significant design decisions made during planning could be immediately captured as ADRs.
+
+---
+
+## 3-Tier Routing Dimension for task-calibrate
+- **Triggered by:** Ruflo evaluation (2026-06-04); Ruflo's ADR-026/ADR-143
+- **Description:** Ruflo defines Tier 1 = deterministic codemod (structural transforms with no LLM, $0), Tier 2 = Haiku, Tier 3 = Sonnet/Opus. Mallet's `task-calibrate` currently decides Sonnet vs Opus. Worth adding a "no model needed" tier for purely structural transforms (rename, reformat, mechanical find-and-replace) — tasks that should be identified as codemods or direct tool calls before reaching for any model at all.
+
+---
