@@ -26,6 +26,7 @@ The root `CLAUDE.md` defines behavioral rules that Claude Code follows for every
 | Subagent Context Isolation | Use subagents to contain large intermediate output, not just for parallelism |
 | Context Cache Design | Inject dynamic content via hooks; never edit the system prompt mid-session |
 | Task Calibration | Mandatory invocation of `task-calibrate` on UserPromptSubmit complexity reminder |
+| Ultracode Mode | Use Workflow tool when `[ultracode]` fires or prompt contains explicit ultracode signal; bind agents to existing mallet personas |
 | Session Closure | Proactively offer a wrap-up when a task concludes |
 
 ## Details
@@ -135,6 +136,16 @@ Prompt caches are per-model and invalidate when the system prompt changes. To pr
 ### Task Calibration
 
 When the UserPromptSubmit hook emits a `[task-calibrate]` reminder (complexity score ≥ 3), Claude must invoke the `task-calibrate` skill before responding. The reminder only fires on high-complexity prompts where model choice materially affects cost or quality, so invocation is mandatory rather than a soft nudge.
+
+### Ultracode Mode
+
+When the UserPromptSubmit hook emits an `[ultracode]` reminder (ultracode score ≥ 2), Claude consults the ultracode tier in `task-calibrate` to assess whether multi-agent Workflow execution is appropriate.
+
+If the prompt already contains an explicit ultracode signal (`ultracode`, `ultra review`, `ultra audit`, etc.), that keyword doubles as the user's opt-in for the Workflow tool — Claude proceeds directly without asking for confirmation.
+
+If the reminder was hook-triggered only (no explicit keyword), Claude surfaces the recommendation and waits for the user to confirm before invoking Workflow.
+
+In all Workflow scripts authored under ultracode, Claude binds agents to existing mallet personas via `agentType` wherever the role matches — `code-analyst` (Callum), `code-reviewer` (Clifford), `feature-analyst` (Frida), `implementer` (Ingrid), `plan-critic` (Percy), `scope-validator` (Sylvie), `test-runner` (Tobias). Novel roles get an inline persona using the same named-persona style, and all agents follow the output contract in `.claude/agents/_contract.md`.
 
 ### Session Closure
 

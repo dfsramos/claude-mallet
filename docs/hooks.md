@@ -46,16 +46,26 @@ Reads the full hook input JSON on stdin, then:
    - **Architectural/design keywords** (`architect`, `redesign`, `rethink`, `overhaul`, `refactor`, `strategy`, `tradeoff`, `migrate`, `evaluate`, `pros and cons`, `which approach`, `from scratch`, etc.) — +2 points
    - **Planning/scope keywords** (`should I/we`, `plan the/a`, `design the/a`, `how should we structure`, `cross-cutting`, `system-wide`, etc.) — +2 points
    - **Long prompt** (> 80 words) — +1 point
-3. If `score >= 3`: injects a one-line flag instructing Claude to invoke the `task-calibrate` skill before proceeding
+3. If `score >= 3`: injects a `[task-calibrate]` flag instructing Claude to invoke the `task-calibrate` skill before proceeding
 4. Otherwise: exits silently
+
+**Ultracode scorer:**
+1. Scores the prompt on four signals (independent of complexity score):
+   - **Explicit ultracode intent** (`ultracode`, `ultra review`, `ultra audit`, `ultra sweep`, `ultra analysis`, `ultra mode`) — +3 points
+   - **Exhaustiveness/comprehensiveness** (`comprehensive`, `exhaustive`, `thorough`, `find all`, `audit all`, `review everything`, `scan all`, `migrate all`, `codebase-wide`) — +2 points
+   - **Broad scope** (`across the entire codebase`, `every file`, `all files`, `entire codebase`, `whole codebase`) — +1 point
+   - **Fan-out task types** (`security audit`, `full audit`, `code audit`, `bug sweep`, `dependency audit`, `coverage gap`, `dead code`, `tech debt`) — +1 point
+2. If `ultra_score >= 2`: injects an `[ultracode]` flag instructing Claude to consult the ultracode tier in `task-calibrate`; if an explicit signal is already in the prompt, Claude treats it as an opt-in and proceeds with the Workflow tool directly
 
 ### Why it exists
 
-The hook runs two passive guardrails per prompt without burdening every interaction.
+The hook runs three passive guardrails per prompt without burdening every interaction.
 
 The turn counter catches runaway sessions — the primary driver of token costs. Long sessions account for ~87% of output tokens. The 50-prompt soft reminder and 80-prompt hard warning give Claude the signal to suggest `/compact` before the session becomes expensive.
 
 The complexity scorer acts as a lightweight tripwire: when architectural signals coincide, it surfaces `task-calibrate` so Claude can assess whether Opus would be a better fit. The threshold (≥ 3) is deliberately conservative — two strong signals, or one signal plus a long prompt, must coincide before anything is injected.
+
+The ultracode scorer detects tasks where parallel multi-agent execution would produce better coverage than a single sequential agent. An explicit "ultracode" keyword in the prompt scores +3 alone and is sufficient to cross the threshold — this doubles as the user's opt-in for the Workflow tool.
 
 ## PreCompact Hook
 

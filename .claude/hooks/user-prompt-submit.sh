@@ -47,10 +47,38 @@ if [ "$WORD_COUNT" -gt 80 ]; then
   SCORE=$((SCORE + 1))
 fi
 
+# --- Ultracode scoring ---
+
+ULTRA_SCORE=0
+
+# Explicit ultracode intent (+3 — sufficient alone to cross threshold)
+if echo "$PROMPT" | grep -qiE "(ultracode|ultra (review|audit|sweep|analysis|mode))"; then
+  ULTRA_SCORE=$((ULTRA_SCORE + 3))
+fi
+
+# Exhaustiveness/comprehensiveness signals (+2)
+if echo "$PROMPT" | grep -qiE "(comprehensive|exhaustive|thorough(ly)?|find all|audit all|review (everything|all)|scan all|migrate all|codebase.wide)"; then
+  ULTRA_SCORE=$((ULTRA_SCORE + 2))
+fi
+
+# Broad scope signals (+1)
+if echo "$PROMPT" | grep -qiE "(across (the |this )?(entire |whole )?codebase|every file|all files|entire codebase|whole codebase)"; then
+  ULTRA_SCORE=$((ULTRA_SCORE + 1))
+fi
+
+# Fan-out task types (+1)
+if echo "$PROMPT" | grep -qiE "(security audit|full audit|code audit|bug sweep|dependency audit|coverage gap|dead code|tech.?debt)"; then
+  ULTRA_SCORE=$((ULTRA_SCORE + 1))
+fi
+
 # --- Output ---
 
 if [ "$SCORE" -ge 3 ]; then
   echo "[task-calibrate] High-complexity task detected (score=${SCORE}). Invoke the task-calibrate skill now, before responding, to check whether a different model would better fit this task."
+fi
+
+if [ "$ULTRA_SCORE" -ge 2 ]; then
+  echo "[ultracode] Multi-agent execution warranted (score=${ULTRA_SCORE}). Consult the ultracode tier in task-calibrate. If the prompt already contains an explicit ultracode signal, treat it as opt-in and proceed with the Workflow tool directly."
 fi
 
 exit 0

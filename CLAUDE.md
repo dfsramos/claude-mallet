@@ -162,6 +162,15 @@ This keeps the main context window focused on the current decision rather than a
 
 When the UserPromptSubmit hook emits a `[task-calibrate]` reminder, invoke the `task-calibrate` skill before responding. This is mandatory, not a suggestion — the reminder only fires on high-complexity prompts where model choice materially affects cost or quality.
 
+## Ultracode Mode
+
+When the UserPromptSubmit hook emits an `[ultracode]` reminder, or the user's prompt contains "ultracode" or uses "ultra" as an explicit qualifier (e.g. "ultra review", "ultra audit"), treat this as an explicit opt-in for Workflow-based multi-agent orchestration. Proceed with the Workflow tool without asking for additional confirmation.
+
+When authoring Workflow scripts under ultracode:
+- Use existing agent personas via `agentType` wherever the role maps to a defined agent: `code-analyst` (Callum), `code-reviewer` (Clifford), `feature-analyst` (Frida), `implementer` (Ingrid), `plan-critic` (Percy), `scope-validator` (Sylvie), `test-runner` (Tobias).
+- For novel roles not covered by existing agents, describe the persona inline in the agent prompt using the named-persona style: a name, a narrowly scoped role, a single job.
+- All workflow agents must follow the output contract in `.claude/agents/_contract.md`.
+
 ## Project Discovery
 
 When the user says "discover", "analyze the codebase", or runs `/discover`, use the `discover` skill.

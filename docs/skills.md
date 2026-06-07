@@ -126,13 +126,14 @@ Structured end-of-session retrospective. No session record files are written —
 ## Task Calibration
 
 **Directory:** `.claude/skills/task-calibrate/`
-**Triggered by:** `UserPromptSubmit` hook flagging high complexity (mandatory invocation), or explicit "check model for this" / `/task-calibrate`
+**Triggered by:** `UserPromptSubmit` hook flagging high complexity (`[task-calibrate]`) or ultracode signals (`[ultracode]`), or explicit "check model for this" / `/task-calibrate`
 
-Surfaces a model and effort recommendation before work begins.
+Surfaces a model and execution-mode recommendation before work begins.
 
-1. **Classify** — Mechanical (no model needed), Architectural, Complex, Routine, or Large Context
-2. **Apply model matrix** — tier → recommended model + switch command; includes a subagent-model table (Haiku for lookups, Sonnet for standard dev, Sonnet/Opus for deep analysis)
-3. **Surface** — only interrupt when a switch is warranted; proceed silently otherwise
+1. **Classify** — Mechanical (no model needed), Ultracode, Architectural, Complex, Routine, or Large Context
+2. **Apply model matrix** — tier → recommended model + switch command; includes subagent-model table (Haiku for lookups, Sonnet for standard dev, Sonnet/Opus for deep analysis); Ultracode tier recommends the Workflow tool with Sonnet (sweep) or Opus (per-agent depth)
+3. **Surface** — only interrupt when a switch is warranted; for Ultracode with an explicit prompt signal, proceed directly; for Ultracode hook-only, wait for confirmation
+4. **Ultracode agent personas** — Workflow scripts should bind agents to existing mallet personas via `agentType`: `code-analyst` (Callum), `code-reviewer` (Clifford), `feature-analyst` (Frida), `implementer` (Ingrid), `plan-critic` (Percy), `scope-validator` (Sylvie), `test-runner` (Tobias). Novel roles get an inline persona in the same named style.
 
 ## Systematic Debugging
 
