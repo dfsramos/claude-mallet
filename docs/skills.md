@@ -107,6 +107,18 @@ Captures a significant architectural decision in Nygard format so the rationale 
 5. **Link** — offers to reference the ADR from an active feature plan or mission file
 6. **Commit** — stages and commits with `Add ADR-NNNN: <title>.`
 
+## Checkpoint
+
+**Directory:** `.claude/skills/checkpoint/`
+**Triggered by:** "checkpoint", "save state", `/checkpoint`, or proactively before `/compact`
+
+Persists in-progress session state to disk so it survives compaction or a restart. No summary or reflection — write-only. Complements `reviewing-sessions` (use checkpoint mid-session, wrap-up at the end).
+
+1. **Lessons** — appends new corrections/rules to `.claude/project/lessons.md` using the standard dated format; skips if nothing new
+2. **Memory** — adds new facts to `.claude/project/memory.md` (non-obvious commands, confirmed conventions, tool quirks); skips anything already in CLAUDE.md or a skill
+3. **Mission state** — writes or overwrites `.claude/project/missions/active.md` if work is ongoing and multi-step; skips for single-session or complete work
+4. **Confirm** — one-line report of what was written, e.g. `Checkpoint complete: lessons.md (+1), missions/active.md (updated)`
+
 ## Session Wrap-Up
 
 **Directory:** `.claude/skills/reviewing-sessions/`

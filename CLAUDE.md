@@ -205,6 +205,12 @@ Prompt caches are per-model and invalidate when the system prompt changes. To pr
 
 This principle applies to hooks and any tooling that augments context at runtime.
 
+## Session Checkpoint
+
+When a session is running long — many tool calls, large outputs accumulated, or the user is about to run `/compact` — proactively offer: "Want me to run a checkpoint to save state before compacting?"
+
+If the user agrees, follow the `checkpoint` skill. This persists lessons, memory, and mission state to disk so nothing is lost in the summarisation pass.
+
 ## Session Closure
 
 When a task reaches a natural conclusion, proactively offer a wrap-up: "Want me to do a quick session wrap-up?"
