@@ -10,7 +10,7 @@ Persist the session's in-progress state to disk so it survives compaction or a r
 
 ## 1. Lessons
 
-Open `.claude/project/lessons.md`. Append any corrections or rules that emerged during this session and have not already been recorded. Use the standard format:
+Open `.mallet/lessons.md`. Append any corrections or rules that emerged during this session and have not already been recorded. Use the standard format:
 
 ```
 ## YYYY-MM-DD — <short title>
@@ -24,7 +24,7 @@ Skip if nothing new to record.
 
 ## 2. Memory
 
-If `.claude/project/memory.md` exists, open it. Add any new facts discovered this session that belong in persistent memory: non-obvious commands, confirmed conventions, tool quirks, environment gotchas.
+If `.mallet/memory.md` exists, open it. Add any new facts discovered this session that belong in persistent memory: non-obvious commands, confirmed conventions, tool quirks, environment gotchas.
 
 Do not add anything already covered by CLAUDE.md or a skill, and do not add session-specific state (current branch, task list, in-progress work — that belongs in the mission file).
 
@@ -37,7 +37,7 @@ Skip if nothing new to record.
 Assess whether this session's work is part of an ongoing mission that will need to continue.
 
 **If work is clearly ongoing** (multi-step task not yet complete):
-- Write or overwrite `.claude/project/missions/active.md` with the current state:
+- Write or overwrite `.mallet/missions/active.md` with the current state:
 
 ```markdown
 # Mission: <name>

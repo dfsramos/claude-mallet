@@ -124,7 +124,7 @@ Look for repeatable patterns worth capturing:
 
 - **Skills** — deployment workflows, database operations, testing flows, scaffolding, release processes, environment management
 - **Connection data** — DB hosts/ports, API base URLs, required env vars, dev/staging/prod distinctions
-- **Project conventions** for `.claude/project/CLAUDE.md` — code organisation, naming, testing requirements, review processes
+- **Project conventions** for `.mallet/conventions.md` — code organisation, naming, testing requirements, review processes
 - **Promotable patterns** — generic workflows that could move to the base framework
 
 For each skill candidate, note what it does, where it's currently implemented, and what could be automated.
@@ -133,7 +133,7 @@ For each skill candidate, note what it does, where it's currently implemented, a
 
 ## 7. Generate Report
 
-Write the report to `.claude/project/discovery-YYYY-MM-DD.md`:
+Write the report to `.mallet/discovery-YYYY-MM-DD.md`:
 
 ```markdown
 # Project Discovery Report
@@ -176,7 +176,7 @@ _(Omit if not recommended.)_
 ## Connection Data
 - Service/system → what to document, where it goes, required fields.
 
-## Project Conventions (for .claude/project/CLAUDE.md)
+## Project Conventions (for .mallet/conventions.md)
 - Area → convention.
 
 ## Promotable to Framework
@@ -193,9 +193,9 @@ Present a summary to the user.
 ## 8. Offer Quick Wins
 
 Offer to implement high-value, low-effort improvements immediately:
-- Stub skill files for top 2–3 recommendations in `.claude/project/skills/`
+- Stub skill files for top 2–3 recommendations in `.mallet/skills/`
 - Connection data templates for critical services
-- Project conventions written to `.claude/project/CLAUDE.md` (not base `CLAUDE.md`)
+- Project conventions written to `.mallet/conventions.md` (not base `CLAUDE.md`)
 - MCP servers added to `.mcp.json` at project root (Claude Code reads this automatically; do not place inside `.claude/`)
 
 Ask: "Want me to implement any of these now?" Implement whatever the user selects.

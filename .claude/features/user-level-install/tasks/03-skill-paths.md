@@ -1,5 +1,5 @@
 # Task: skill-paths
-Status: pending
+Status: done
 Deps: —
 
 ## Goal
@@ -65,13 +65,13 @@ Three sites need more than a path swap:
 4. `.claude/skills/plan-feature/SKILL.md:67` — the template copy source becomes `~/.claude/templates/knowledge-skill/SKILL.md`; the destination becomes `.mallet/skills/<domain>-knowledge/SKILL.md`.
 
 ## TDD Checklist
-- [ ] Write failing assertion: `grep -rn '\.claude/\(project\|features\|pipeline-state\)' CLAUDE.md .claude/skills/ .claude/agents/ .claude/templates/ .claude/project/` returns matches
-- [ ] Confirm it fails (red)
-- [ ] Apply sections A and B
-- [ ] Confirm the assertion now returns zero matches, excluding the historical files named in Context
-- [ ] Assert no `$CLAUDE_PROJECT_DIR/.claude/hooks` or `$CLAUDE_PROJECT_DIR/.claude/skills` references remain: `grep -rn 'CLAUDE_PROJECT_DIR/\.claude/\(hooks\|skills\|agents\|templates\)' .` returns nothing
-- [ ] Assert the three opt-in hook registrations still target the *project* `.claude/settings.json`, not `~/.claude/settings.json`
-- [ ] Read `CLAUDE.md` start to finish and confirm no sentence now contradicts itself (e.g. a directive telling Claude to read a file that moved)
+- [x] Write failing assertion: `grep -rn '\.claude/\(project\|features\|pipeline-state\)' CLAUDE.md .claude/skills/ .claude/agents/ .claude/templates/ .claude/project/` returns matches
+- [x] Confirm it fails (red)
+- [x] Apply sections A and B
+- [x] Confirm the assertion now returns zero matches, excluding the historical files named in Context
+- [x] Assert no `$CLAUDE_PROJECT_DIR/.claude/hooks` or `$CLAUDE_PROJECT_DIR/.claude/skills` references remain: `grep -rn 'CLAUDE_PROJECT_DIR/\.claude/\(hooks\|skills\|agents\|templates\)' .` returns nothing
+- [x] Assert the three opt-in hook registrations still target the *project* `.claude/settings.json`, not `~/.claude/settings.json`
+- [x] Read `CLAUDE.md` start to finish and confirm no sentence now contradicts itself (e.g. a directive telling Claude to read a file that moved)
 
 ## Notes
 Section B's enumeration is deliberately a command rather than a line list — the payload-path references were not individually audited, unlike section A's.

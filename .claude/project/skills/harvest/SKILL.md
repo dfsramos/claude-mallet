@@ -44,7 +44,7 @@ If the local branch is behind the remote, tell the user and run `git pull --ff-o
 
 ## 2. Project Skills
 
-Scan `TARGET/.claude/project/skills/` for skill directories (one level deep). If empty or absent, note "No project skills found." and continue to Phase 3.
+Scan `TARGET/.mallet/skills/` for skill directories (one level deep). If empty or absent, note "No project skills found." and continue to Phase 3.
 
 List discovered skills with a one-line summary of each (read the `description` field). Ask:
 
@@ -55,7 +55,7 @@ AskUserQuestion: "Which project skills do you want to promote to the framework b
 
 **For each selected skill:**
 
-- Source: `TARGET/.claude/project/skills/<skill>/`
+- Source: `TARGET/.mallet/skills/<skill>/`
 - Destination: `FRAMEWORK_ROOT/.claude/skills/<skill>/`
 
 If the destination already exists:
@@ -66,14 +66,14 @@ If the destination already exists:
 
 If overwriting or new:
 - Copy the entire skill directory to the destination
-- Remove the directory from `TARGET/.claude/project/skills/`
+- Remove the directory from `TARGET/.mallet/skills/`
 - Log: `Promoted: <skill>`
 
 ---
 
 ## 3. Overrides
 
-Scan `TARGET/.claude/project/overrides/` for `*.md` files. If empty or absent, note "No overrides found." and continue to Phase 4.
+Scan `TARGET/.mallet/overrides/` for `*.md` files. If empty or absent, note "No overrides found." and continue to Phase 4.
 
 For each override file:
 1. Read the override
@@ -90,7 +90,7 @@ AskUserQuestion: "Do any of these overrides reveal gaps worth fixing in the base
 For each "fold" selection:
 - Propose a concrete edit to the base skill that incorporates the override's intent (generalised, not project-specific)
 - Apply the edit only after user confirmation
-- Remove the override file and its entry from `TARGET/.claude/project/CLAUDE.md` Skill Overrides list
+- Remove the override file and its entry from `TARGET/.mallet/conventions.md` Skill Overrides list
 - Log: `Folded: <skill-name>`
 
 For "leave" or "skip": log and continue.

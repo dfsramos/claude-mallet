@@ -12,7 +12,7 @@
 #
 # Suggests:
 #   1. Graphify knowledge graph  — if graphify-out/graph.json exists
-#   2. Discovery report          — if .claude/project/discovery-*.md exists
+#   2. Discovery report          — if .mallet/discovery-*.md exists
 
 INPUT=$(cat)
 TOOL=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
@@ -43,10 +43,10 @@ fi
 
 # ── Discovery report (critical files list) ───────────────────────────────────
 
-REPORT=$(ls "${CLAUDE_PROJECT_DIR}/.claude/project/discovery-"*.md 2>/dev/null | sort | tail -1)
+REPORT=$(ls "${CLAUDE_PROJECT_DIR}/.mallet/discovery-"*.md 2>/dev/null | sort | tail -1)
 if [ -n "$REPORT" ]; then
   REPORT_NAME=$(basename "$REPORT")
-  echo "[explore-redirect] A discovery report exists (.claude/project/${REPORT_NAME})."
+  echo "[explore-redirect] A discovery report exists (.mallet/${REPORT_NAME})."
   echo "  Its Critical Files section lists the highest-centrality modules — check those first"
   echo "  to narrow your search before grepping broadly."
   SUGGESTIONS=$((SUGGESTIONS + 1))

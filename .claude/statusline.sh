@@ -5,9 +5,10 @@
 
 input=$(cat)
 
-# Locate framework.json from project dir (env var preferred, JSON fallback)
+# Resolve the project dir for git/branch reporting (env var preferred, JSON fallback).
+# framework.json is user-level: Mallet is installed once at ~/.claude/.
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(echo "$input" | jq -r '.workspace.project_dir // empty' 2>/dev/null)}"
-FRAMEWORK_JSON="${PROJECT_DIR}/.claude/framework.json"
+FRAMEWORK_JSON="${HOME}/.claude/framework.json"
 
 [ ! -f "$FRAMEWORK_JSON" ] && exit 0
 command -v jq &>/dev/null || exit 0

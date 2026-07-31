@@ -86,7 +86,7 @@ If `docs/adr/README.md` exists, append a row. If it doesn't exist, create it:
 
 ## 5. Offer to Link It
 
-If there is an active feature plan (`.claude/features/`) or a mission file (`.claude/project/missions/active.md`) whose scope this decision belongs to, offer to add a reference:
+If there is an active feature plan (`.mallet/features/`) or a mission file (`.mallet/missions/active.md`) whose scope this decision belongs to, offer to add a reference:
 
 > "Want me to link this ADR from the feature plan / active mission?"
 

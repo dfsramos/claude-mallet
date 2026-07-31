@@ -1,5 +1,5 @@
 # Feature: user-level-install
-Status: planning
+Status: in-progress
 Created: 2026-07-31
 Branch: — (this repo commits directly to master per `.claude/project/CLAUDE.md`)
 
@@ -37,9 +37,9 @@ Used by tasks 02, 03, 05, 09, 10. Any reference not in this table stays unchange
 | `.claude/settings.local.json` | unchanged — never touched |
 
 ## Tasks
-- [ ] 01-settings-fragment — Convert `.claude/settings.json` to a `$HOME`-pathed merge fragment and define the jq merge routine [deps: —] [parallel: yes]
-- [ ] 02-hook-paths — Repoint hook data paths to `.mallet/` and `framework.json` to `~/.claude/` [deps: —] [parallel: yes]
-- [ ] 03-skill-paths — Rewrite the 110 `.claude/project|features|pipeline-state` references across CLAUDE.md, skills, and agents [deps: —] [parallel: yes]
+- [x] 01-settings-fragment — Convert `.claude/settings.json` to a `$HOME`-pathed merge fragment and define the jq merge routine [deps: —] [parallel: yes]
+- [x] 02-hook-paths — Repoint hook data paths to `.mallet/` and `framework.json` to `~/.claude/` [deps: —] [parallel: yes]
+- [x] 03-skill-paths — Rewrite the 110 `.claude/project|features|pipeline-state` references across CLAUDE.md, skills, and agents [deps: —] [parallel: yes]
 - [ ] 04-hook-hardening — Fix `statusline.sh` hard-exit and add update-check caching [deps: 02] [parallel: no]
 - [ ] 05-migrate-skill — Author the `migrate` skill: detection, backup, CLAUDE.md strip, settings pruning, state move [deps: 01] [parallel: yes]
 - [ ] 06-install-rewrite — Rewrite `install.md` for user-level install with scan-and-clean [deps: 01, 05] [parallel: yes]

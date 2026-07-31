@@ -6,7 +6,7 @@ description: Invoke when the user wants to plan a new feature, build something n
 
 ## Setup
 
-Feature plans live in `.claude/features/` on master so they're visible across branches.
+Feature plans live in `.mallet/features/` on master so they're visible across branches.
 
 - **If already on master**: work in the current directory. No worktree needed.
 - **Otherwise**: open a master worktree:
@@ -24,7 +24,7 @@ Below, paths prefixed `/tmp/feature-planning/` apply to the worktree case — dr
 
 ## 1. Pre-Check
 
-Read all `plan.md` files under `/tmp/feature-planning/.claude/features/`. If any overlap with what the user is describing, surface them and ask: extend an existing feature or create a new one?
+Read all `plan.md` files under `/tmp/feature-planning/.mallet/features/`. If any overlap with what the user is describing, surface them and ask: extend an existing feature or create a new one?
 
 ---
 
@@ -64,7 +64,7 @@ Signals — the feature touches API design, auth flows, data modelling, security
 If any signals are present, ask: "This feature touches [domain] — would a knowledge skill help guide implementation? I can scaffold one alongside the plan."
 
 If yes:
-- Copy `.claude/templates/knowledge-skill/SKILL.md` to `.claude/project/skills/<domain>-knowledge/SKILL.md`
+- Copy `~/.claude/templates/knowledge-skill/SKILL.md` to `.mallet/skills/<domain>-knowledge/SKILL.md`
 - Fill in what is already known from intake; leave the rest as placeholders
 - Note the skill in `plan.md` under a **Supporting Skills** section
 
@@ -74,7 +74,7 @@ If yes:
 
 Confirm a slug with the user (lowercase, hyphenated).
 
-Create `/tmp/feature-planning/.claude/features/<slug>/plan.md`:
+Create `/tmp/feature-planning/.mallet/features/<slug>/plan.md`:
 
 ```markdown
 # Feature: <name>
@@ -93,7 +93,7 @@ Branch: —
 - [ ] 02-<name> — <description> [deps: 01] [parallel: yes/no]
 ```
 
-Create `/tmp/feature-planning/.claude/features/<slug>/state.md`:
+Create `/tmp/feature-planning/.mallet/features/<slug>/state.md`:
 
 ```markdown
 # State: <feature-name>
@@ -137,7 +137,7 @@ _(Omit if the task has no testable behaviour.)_
 Commit to master:
 
 ```bash
-git -C /tmp/feature-planning add .claude/features/<slug>/
+git -C /tmp/feature-planning add .mallet/features/<slug>/
 git -C /tmp/feature-planning commit -m "Add feature plan: <slug>."
 ```
 

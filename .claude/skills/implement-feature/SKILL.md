@@ -11,11 +11,11 @@ Orchestrates a structured, context-isolated pipeline for implementing features. 
 
 ## 0. Pre-flight
 
-Read `.claude/agents/_contract.md`. All subagents must return output in that contract format.
+Read `~/.claude/agents/_contract.md`. All subagents must return output in that contract format.
 
 **Check for an existing pipeline state file first.** Run:
 ```bash
-ls .claude/pipeline-state/ 2>/dev/null
+ls .mallet/pipeline-state/ 2>/dev/null
 ```
 If a state file exists, ask the user: "I found an in-progress pipeline for `<slug>` (last completed: step N — <agent name>). Resume it, or start fresh?"
 
@@ -40,7 +40,7 @@ Do not proceed until you have all three.
 
 Record the answers and skip the corresponding steps (3, 6, 7) if the user answers no.
 
-**Initialise the state file** at `.claude/pipeline-state/<slug>.md`:
+**Initialise the state file** at `.mallet/pipeline-state/<slug>.md`:
 
 ```markdown
 # Pipeline: <slug>
@@ -64,7 +64,7 @@ settings:
 <!-- Populated as steps complete -->
 ```
 
-Create the `.claude/pipeline-state/` directory if it does not exist.
+Create the `.mallet/pipeline-state/` directory if it does not exist.
 
 ---
 
@@ -82,7 +82,7 @@ Do this before spawning the next subagent. If the session ends between steps, th
 
 ## 1. Feature Analysis
 
-Spawn `feature-analyst` subagent (Frida) using `.claude/agents/feature-analyst.md`:
+Spawn `feature-analyst` subagent (Frida) using `~/.claude/agents/feature-analyst.md`:
 - Pass: feature description + any available project context (README, CLAUDE.md excerpt, relevant file list)
 - Model: sonnet
 
@@ -96,7 +96,7 @@ On return:
 
 Before spawning: identify candidate files using grep/find based on the spec's scope. Pass file paths — not file contents — to the subagent, and let it read what it needs.
 
-Spawn `code-analyst` subagent (Callum) using `.claude/agents/code-analyst.md`:
+Spawn `code-analyst` subagent (Callum) using `~/.claude/agents/code-analyst.md`:
 - Pass: feature spec Handoff + list of candidate file paths + working directory
 - Model: sonnet
 - Iteration cap: 2
@@ -110,7 +110,7 @@ On return:
 
 ## 3. Plan Critique
 
-Spawn `plan-critic` subagent (Percy) using `.claude/agents/plan-critic.md`:
+Spawn `plan-critic` subagent (Percy) using `~/.claude/agents/plan-critic.md`:
 - Pass: feature spec Handoff + change plan Handoff
 - Model: sonnet
 - Iteration cap: 2 (across steps 2–3 combined)
@@ -124,7 +124,7 @@ On return:
 
 ## 4. Implementation
 
-Spawn `implementer` subagent (Ingrid) using `.claude/agents/implementer.md`:
+Spawn `implementer` subagent (Ingrid) using `~/.claude/agents/implementer.md`:
 - Pass: approved change plan Handoff + working directory
 - Model: sonnet
 - Iteration cap: 2 (across steps 4–5 combined)
@@ -137,7 +137,7 @@ On return:
 
 ## 5. Test
 
-Spawn `test-runner` subagent (Tobias) using `.claude/agents/test-runner.md`:
+Spawn `test-runner` subagent (Tobias) using `~/.claude/agents/test-runner.md`:
 - Pass: test command + working directory + changed files list (from implementer Handoff)
 - Model: haiku
 
@@ -150,7 +150,7 @@ On return:
 
 ## 6. Scope Validation
 
-Spawn `scope-validator` subagent (Sylvie) using `.claude/agents/scope-validator.md`:
+Spawn `scope-validator` subagent (Sylvie) using `~/.claude/agents/scope-validator.md`:
 - Pass: original feature spec Handoff + changed files list + working directory
 - Model: sonnet
 
@@ -164,7 +164,7 @@ On return:
 
 ## 7. Code Review
 
-Spawn `code-reviewer` subagent (Clifford) using `.claude/agents/code-reviewer.md`:
+Spawn `code-reviewer` subagent (Clifford) using `~/.claude/agents/code-reviewer.md`:
 - Pass: list of changed files + working directory + Sylvie's Validation Report (if step 6 ran, as optional SPEC context)
 - Model: sonnet
 - Iteration cap: 1 (one revision cycle only)
@@ -201,7 +201,7 @@ This run log is what the `reviewing-sessions` wrap-up skill uses for its "What W
 
 Delete the state file on successful completion:
 ```bash
-rm .claude/pipeline-state/<slug>.md
+rm .mallet/pipeline-state/<slug>.md
 ```
 
 Offer: "Want me to open a PR?"

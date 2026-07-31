@@ -1,7 +1,7 @@
 {
   "statusLine": {
     "type": "command",
-    "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/statusline.sh\""
+    "command": "bash \"$HOME/.claude/statusline.sh\""
   },
   "hooks": {
     "SessionStart": [
@@ -10,7 +10,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh\""
+            "command": "bash \"$HOME/.claude/hooks/session-start.sh\""
           }
         ]
       }
@@ -21,7 +21,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/user-prompt-submit.sh\""
+            "command": "bash \"$HOME/.claude/hooks/user-prompt-submit.sh\""
           }
         ]
       }
@@ -32,7 +32,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact.sh\""
+            "command": "bash \"$HOME/.claude/hooks/pre-compact.sh\""
           }
         ]
       }
@@ -43,7 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/write-guard.sh\""
+            "command": "bash \"$HOME/.claude/hooks/write-guard.sh\""
           }
         ]
       }

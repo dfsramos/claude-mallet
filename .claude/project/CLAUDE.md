@@ -2,13 +2,13 @@
 
 ## Framework vs Project Content
 
-Everything under `.claude/project/` and `.claude/features/` is **this repo's own content** — it is never installed into target projects. The install and update flows skip both paths explicitly.
+Everything under `.mallet/` and `.mallet/features/` is **this repo's own content** — it is never installed into target projects. The install and update flows skip both paths explicitly.
 
 All other `.claude/` content (`agents/`, `hooks/`, `skills/`, `templates/`, `statusline.sh`, `settings.json`) plus the root `CLAUDE.md` is **framework payload** — it ships to every target.
 
 When adding a new skill:
 - **Framework skill** (should ship to target projects): `.claude/skills/<name>/`
-- **Project skill** (only this repo): `.claude/project/skills/<name>/`
+- **Project skill** (only this repo): `.mallet/skills/<name>/`
 
 ## Docs Parity
 

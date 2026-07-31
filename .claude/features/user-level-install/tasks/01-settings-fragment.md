@@ -1,5 +1,5 @@
 # Task: settings-fragment
-Status: pending
+Status: done
 Deps: —
 
 ## Goal
@@ -71,13 +71,13 @@ echo "merged $FRAGMENT into $TARGET"
 4. `chmod +x .claude/merge-settings.sh`
 
 ## TDD Checklist
-- [ ] Write failing test: copy the real `~/.claude/settings.json` to `<scratchpad>/fixture.json`, point the script at it, assert `model`, `effortLevel`, `enabledPlugins`, and the `Stop`/`Notification` hooks all survive and the 4 base hooks plus `statusLine` are present
-- [ ] Confirm test fails (red) before `merge-settings.sh` exists
-- [ ] Implement steps 1–4
-- [ ] Confirm test passes (green)
-- [ ] Idempotency: run the merge twice, assert `jq -S . ` output is byte-identical and no hook entry is duplicated
-- [ ] Corrupt-input guard: run against a fixture containing `{invalid`, assert non-zero exit and the fixture is unmodified
-- [ ] Empty-target case: run against a missing file, assert a valid settings.json is created
+- [x] Write failing test: copy the real `~/.claude/settings.json` to `<scratchpad>/fixture.json`, point the script at it, assert `model`, `effortLevel`, `enabledPlugins`, and the `Stop`/`Notification` hooks all survive and the 4 base hooks plus `statusLine` are present
+- [x] Confirm test fails (red) before `merge-settings.sh` exists
+- [x] Implement steps 1–4
+- [x] Confirm test passes (green)
+- [x] Idempotency: run the merge twice, assert `jq -S . ` output is byte-identical and no hook entry is duplicated
+- [x] Corrupt-input guard: run against a fixture containing `{invalid`, assert non-zero exit and the fixture is unmodified
+- [x] Empty-target case: run against a missing file, assert a valid settings.json is created
 
 ## Notes
 The strip regex is intentionally narrower than the full hook set — see the comment in the script. Widening it to include the opt-in hooks would make the merge lossy.

@@ -5,7 +5,7 @@
 
 # ── Project memory ──────────────────────────────────────────────────────────
 
-MEMORY_FILE="${CLAUDE_PROJECT_DIR}/.claude/project/memory.md"
+MEMORY_FILE="${CLAUDE_PROJECT_DIR}/.mallet/memory.md"
 if [ -f "$MEMORY_FILE" ]; then
   echo "--- Project Memory ---"
   cat "$MEMORY_FILE"
@@ -16,7 +16,7 @@ fi
 # If a compact snapshot was written before the last compaction, inject it so
 # Claude can restore continuity without re-reading the full conversation.
 
-SNAPSHOT_FILE="${CLAUDE_PROJECT_DIR}/.claude/project/compact-snapshot.md"
+SNAPSHOT_FILE="${CLAUDE_PROJECT_DIR}/.mallet/compact-snapshot.md"
 if [ -f "$SNAPSHOT_FILE" ]; then
   echo "--- Compact Snapshot (from last compaction) ---"
   cat "$SNAPSHOT_FILE"
@@ -26,7 +26,7 @@ fi
 
 # ── Framework update check ──────────────────────────────────────────────────
 
-FRAMEWORK_JSON="${CLAUDE_PROJECT_DIR}/.claude/framework.json"
+FRAMEWORK_JSON="${HOME}/.claude/framework.json"
 if [ -f "$FRAMEWORK_JSON" ] && command -v curl >/dev/null && command -v jq >/dev/null; then
   LOCAL_HASH=$(jq -r '.version // empty' "$FRAMEWORK_JSON")
   REPO=$(jq -r '.repo // empty' "$FRAMEWORK_JSON")

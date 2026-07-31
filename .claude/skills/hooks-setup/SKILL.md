@@ -43,7 +43,7 @@ Runs the type-checker after every file edit and surfaces errors directly in cont
 Warns before any `git push` and asks Claude to verify the push was explicitly requested. Works with any project.
 
 **explore-redirect** _(PreToolUse on Bash)_
-When Claude runs a broad recursive search (`grep -r`, `find .`, `rg`, etc.), checks whether a Graphify knowledge graph (`graphify-out/graph.json`) or a discovery report (`.claude/project/discovery-*.md`) exists and suggests querying the richer source first. Advisory only — never blocks. Useful on large or well-documented codebases; low value on small projects.
+When Claude runs a broad recursive search (`grep -r`, `find .`, `rg`, etc.), checks whether a Graphify knowledge graph (`graphify-out/graph.json`) or a discovery report (`.mallet/discovery-*.md`) exists and suggests querying the richer source first. Advisory only — never blocks. Useful on large or well-documented codebases; low value on small projects.
 
 Ask: "Which hooks would you like to enable?" List only unregistered hooks. If all are already registered, report that and stop.
 
@@ -53,8 +53,8 @@ Ask: "Which hooks would you like to enable?" List only unregistered hooks. If al
 
 For each hook the user selected:
 
-1. Verify `.claude/hooks/<name>.sh` exists. If missing, skip it and report which file is absent.
-2. Read `.claude/settings.json` fresh.
+1. Verify `~/.claude/hooks/<name>.sh` exists. Hook scripts ship with the user-level install; if missing, skip it and report which file is absent.
+2. Read the **project's** `.claude/settings.json` fresh. Opt-in hooks register per project — the script is global, the choice is local.
 3. Check again whether the script filename already appears in any command string — if yes, skip (idempotent).
 4. Determine the event and matcher:
    - `typecheck.sh` → event `PostToolUse`, matcher `Edit`
@@ -65,7 +65,7 @@ For each hook the user selected:
    ```json
    {
      "matcher": "<matcher>",
-     "hooks": [{ "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/<name>.sh\"" }]
+     "hooks": [{ "type": "command", "command": "bash \"$HOME/.claude/hooks/<name>.sh\"" }]
    }
    ```
 7. Write the change using **Edit, not Write**.

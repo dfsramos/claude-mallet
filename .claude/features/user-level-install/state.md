@@ -19,6 +19,16 @@
 ## Blockers
 <!-- none -->
 
+## Implementation notes
+<!-- 2026-07-31 (task 02): pre-compact.sh uses `mkdir -p ... || SNAPSHOT_FILE=/dev/null` rather than the `|| exit 0` the task file specified. `exit 0` would discard the stdout snapshot injection, which the hook's own header documents as output 1 of 2. Falling back to /dev/null drops only the file write, which is the failure mode that actually matters. -->
+<!-- 2026-07-31 (task 03): the mapping collapsed to far fewer rules than expected. Every `.claude/project/<x>` → `.mallet/<x>` case is handled by one generic substitution; the only genuine special case is `.claude/project/CLAUDE.md` → `.mallet/conventions.md`, which must be applied first. -->
+<!-- 2026-07-31 (task 03): reviewing-sessions "create new skills" now states the project-vs-user decision rule explicitly rather than naming one path. A blind substitution would have sent every newly-harvested skill into ~/.claude/skills/, making it apply in every project. -->
+<!-- 2026-07-31 (wave 1): 38 assertions green — 18 for the settings merge, 20 for hook paths. Test scripts live in the session scratchpad, not the repo; if they should be permanent, they need a home under .mallet/ or a test/ directory. -->
+
+## Follow-ups
+<!-- - [ ] Wave 1 test scripts are in the session scratchpad and will be lost. Decide whether Mallet should carry a test suite for its own hooks. -->
+<!-- - [ ] `.claude/skills/update/SKILL.md:13` still lists the old wholesale-overwrite path set; task 08 rewrites it. Task 03's regression greps exclude that file deliberately. -->
+
 ## Open questions
 <!-- - [ ] Task 10: exocortex and Cludo/ai have git-tracked CLAUDE.md files. Cludo/ai's is a pure Mallet payload (29 identical headings, no project content) so it is a clean removal; exocortex's carries `## Vault Context` and must be stripped to that section only. Both need explicit per-repo confirmation before any write. -->
 <!-- - [ ] Task 10: `.mallet/` in a work repo that should stay untracked still needs one `.git/info/exclude` line. The friction halves but does not vanish — confirm per repo during migration. -->

@@ -56,7 +56,7 @@ When authoring Workflow scripts, bind agents to existing mallet personas via `ag
 | `scope-validator` | Sylvie | Verifies final implementation against spec |
 | `test-runner` | Tobias | Runs tests, returns signal only |
 
-All workflow agents must follow the output contract in `.claude/agents/_contract.md`.
+All workflow agents must follow the output contract in `~/.claude/agents/_contract.md`.
 
 ### Subagent model selection
 

@@ -7,7 +7,12 @@
 #   2. snapshot file — read by session-start.sh when a NEW session begins
 #                after a compaction, restoring continuity across restarts.
 
-SNAPSHOT_FILE="${CLAUDE_PROJECT_DIR}/.claude/project/compact-snapshot.md"
+SNAPSHOT_FILE="${CLAUDE_PROJECT_DIR}/.mallet/compact-snapshot.md"
+
+# .mallet/ may not exist yet in a project that has never stored Mallet state.
+# If it cannot be created, still emit the snapshot to stdout (output 1 of 2) and
+# drop only the file write — a PreCompact hook must never block compaction.
+mkdir -p "$(dirname "$SNAPSHOT_FILE")" 2>/dev/null || SNAPSHOT_FILE=/dev/null
 
 {
   echo "<pre-compact-snapshot>"
@@ -33,7 +38,7 @@ SNAPSHOT_FILE="${CLAUDE_PROJECT_DIR}/.claude/project/compact-snapshot.md"
 
   # ── Active mission ─────────────────────────────────────────────────────────
 
-  MISSION_FILE="${CLAUDE_PROJECT_DIR}/.claude/project/missions/active.md"
+  MISSION_FILE="${CLAUDE_PROJECT_DIR}/.mallet/missions/active.md"
   if [ -f "$MISSION_FILE" ]; then
     echo ""
     echo "Active mission:"

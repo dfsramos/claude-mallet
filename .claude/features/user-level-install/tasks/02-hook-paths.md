@@ -1,5 +1,5 @@
 # Task: hook-paths
-Status: pending
+Status: done
 Deps: —
 
 ## Goal
@@ -40,13 +40,13 @@ One bug the move introduces: `pre-compact.sh` *writes* its snapshot. Today `.cla
 6. Confirm `.claude/hooks/user-prompt-submit.sh` and `.claude/hooks/write-guard.sh` need no edits (neither references a `.claude/` path).
 
 ## TDD Checklist
-- [ ] Write failing test: create `<scratchpad>/fixture-repo/.mallet/` containing `memory.md` and `missions/active.md`; run each hook with `CLAUDE_PROJECT_DIR=<scratchpad>/fixture-repo` and assert the content is picked up
-- [ ] Confirm tests fail (red) against the current `.claude/project/` paths
-- [ ] Apply steps 1–6
-- [ ] Confirm tests pass (green)
-- [ ] Assert `pre-compact.sh` creates `.mallet/` when absent and still exits 0 when the directory cannot be created (test with a read-only fixture dir)
-- [ ] Assert `session-start.sh` and `explore-redirect.sh` exit 0 and emit nothing when `.mallet/` is absent entirely
-- [ ] Regression: `grep -rn '\.claude/project' .claude/hooks/ .claude/statusline.sh` returns no matches
+- [x] Write failing test: create `<scratchpad>/fixture-repo/.mallet/` containing `memory.md` and `missions/active.md`; run each hook with `CLAUDE_PROJECT_DIR=<scratchpad>/fixture-repo` and assert the content is picked up
+- [x] Confirm tests fail (red) against the current `.claude/project/` paths
+- [x] Apply steps 1–6
+- [x] Confirm tests pass (green)
+- [x] Assert `pre-compact.sh` creates `.mallet/` when absent and still exits 0 when the directory cannot be created (test with a read-only fixture dir)
+- [x] Assert `session-start.sh` and `explore-redirect.sh` exit 0 and emit nothing when `.mallet/` is absent entirely
+- [x] Regression: `grep -rn '\.claude/project' .claude/hooks/ .claude/statusline.sh` returns no matches
 
 ## Notes
 Task 04 makes further changes to `session-start.sh` and `statusline.sh`; it depends on this task to avoid edit conflicts.

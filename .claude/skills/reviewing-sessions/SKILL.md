@@ -52,12 +52,12 @@ If any of these occurred and there is no CLAUDE.md directive already covering it
 Based on what went poorly and what was learned:
 
 - **Update existing skills**: fix missing commands, outdated instructions, or unclear steps that caused issues during the session. Apply the changes — do not just list them.
-- **Create new skills**: if a knowledge gap came up repeatedly or a new reusable pattern emerged, create the skill file now at `.claude/skills/<skill-name>/SKILL.md`.
+- **Create new skills**: if a knowledge gap came up repeatedly or a new reusable pattern emerged, create the skill file now. Project-specific skills go to `.mallet/skills/<skill-name>/SKILL.md`; skills useful across every project go to `~/.claude/skills/<skill-name>/SKILL.md`. When unsure, prefer project-specific — promoting later is cheap, and a half-general skill in the user-level install applies everywhere.
 - **Update CLAUDE.md**: if a behavioural rule was missing, ambiguous, or not followed correctly, fix it at `CLAUDE.md` at the project root directly.
 
 If any changes were made to framework files with corresponding docs (`docs/`), verify those docs are up to date before considering the work complete. Check that new features have dedicated sections, tables are updated, and examples reflect the current behaviour.
 
-Then open `.claude/project/skill-backlog.md`. For each item logged during this session:
+Then open `.mallet/skill-backlog.md`. For each item logged during this session:
 - Evaluate whether it is still relevant given what was actually done
 - If yes, action it: create the skill or apply the improvement
 - Remove actioned items from the backlog
@@ -67,7 +67,7 @@ Then open `.claude/project/skill-backlog.md`. For each item logged during this s
 
 ## 4a. Review Memory Entries
 
-If `.claude/project/memory.md` exists, open it. For any entries added or modified during this session:
+If `.mallet/memory.md` exists, open it. For any entries added or modified during this session:
 - Confirm they are accurate based on what was actually observed
 - Rewrite any that are vague or poorly phrased
 - Remove any that turned out to be wrong or are already covered by CLAUDE.md or a skill
@@ -81,10 +81,10 @@ Do not add new entries here unless something significant was missed during the s
 Assess whether work from this session is part of a larger mission that will continue in a future session.
 
 **If the mission is complete** (all tasks done, goal achieved):
-- If `.claude/project/missions/active.md` exists, read it, write the contents to `.claude/project/missions/archive/<session-id>.md`, then delete the original.
+- If `.mallet/missions/active.md` exists, read it, write the contents to `.mallet/missions/archive/<session-id>.md`, then delete the original.
 
 **If work is ongoing** (3+ steps total, or clearly unfinished):
-- Write or update `.claude/project/missions/active.md` using the format below.
+- Write or update `.mallet/missions/active.md` using the format below.
 - If the file already exists, overwrite it with the current state — do not append.
 
 ```markdown
@@ -118,7 +118,7 @@ Keep entries terse. The next session reads this cold — each pending task must 
 
 ## 5. Close Out
 
-- If `.claude/project/task-notes.md` exists and was used during this session, clear its contents — the scratchpad is no longer needed.
+- If `.mallet/task-notes.md` exists and was used during this session, clear its contents — the scratchpad is no longer needed.
 - Confirm you are on the correct working branch (not a feature branch left over from this session).
 - Present the completed wrap-up (sections 1–4b) to the user as a single formatted response.
 

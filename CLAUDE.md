@@ -75,7 +75,7 @@ In production:
 ## Git Workflow
 
 - Create a new branch off `master` per session/task, or use a git worktree for isolated work — never commit to `master` directly
-- **Exception:** `.claude/features/` is always committed directly to `master` via git worktree so feature plans are visible across all branches. See the `plan-feature` skill.
+- **Exception:** `.mallet/features/` is always committed directly to `master` via git worktree so feature plans are visible across all branches. See the `plan-feature` skill.
 - Branch naming: `b/<description>` for bug fixes, `f/<description>` for everything else (e.g., `b/fix-auth-bug`, `f/add-discover-skill`)
 - Never reuse branches from previous sessions
 - Commit changes to the branch, open a PR, then switch back to `master`
@@ -85,13 +85,13 @@ Commit format: one line, imperative verb, capital first letter, ends with period
 
 ## Self-Improvement Loop
 
-After any correction from the user, silently append to `.claude/project/lessons.md`:
+After any correction from the user, silently append to `.mallet/lessons.md`:
 - What went wrong
 - The rule to prevent it from recurring
 
-Review `.claude/project/lessons.md` at session start if it exists. Apply those rules throughout the session.
+Review `.mallet/lessons.md` at session start if it exists. Apply those rules throughout the session.
 
-When a constraint or workaround in place for a previous model limitation appears no longer necessary, note it in `.claude/project/lessons.md` with the label `[re-evaluate]` so it can be reviewed for removal. Do not remove it unilaterally.
+When a constraint or workaround in place for a previous model limitation appears no longer necessary, note it in `.mallet/lessons.md` with the label `[re-evaluate]` so it can be reviewed for removal. Do not remove it unilaterally.
 
 ## Skill Invocation
 
@@ -125,15 +125,15 @@ When creating or editing skills:
 - The `description` field must state **trigger conditions only** — when to invoke the skill, not what it does. Claude uses this field to decide whether to activate a skill; a workflow summary doesn't serve that purpose.
 - Good: `"Invoke when the user runs /discover, or says 'analyze the codebase'..."`
 - Bad: `"Performs structured project discovery and generates recommendations."`
-- The template for knowledge skills lives at `.claude/templates/knowledge-skill/SKILL.md`.
+- The template for knowledge skills lives at `~/.claude/templates/knowledge-skill/SKILL.md`.
 
 ## Skill Backlog
 
-Actively watch for patterns worth capturing as skills. When identified, silently append to `.claude/project/skill-backlog.md` with: title, what triggered it, brief description. Do not interrupt the session.
+Actively watch for patterns worth capturing as skills. When identified, silently append to `.mallet/skill-backlog.md` with: title, what triggered it, brief description. Do not interrupt the session.
 
 ## Project Memory
 
-`.claude/project/memory.md` stores persistent project facts. Injected at session start — keep it lean.
+`.mallet/memory.md` stores persistent project facts. Injected at session start — keep it lean.
 
 Add: preferred commands, non-obvious behaviours, consistent conventions, better-than-obvious tools.
 Do not add: session outcomes, per-run state, anything already in CLAUDE.md or a skill.
@@ -144,7 +144,7 @@ Before adding a new entry, grep existing memory for related content. Update rath
 
 ## Mission Continuity
 
-If `.claude/project/missions/active.md` exists at session start, read it before responding to the user. Surface the pending tasks and ask whether to resume or start fresh.
+If `.mallet/missions/active.md` exists at session start, read it before responding to the user. Surface the pending tasks and ask whether to resume or start fresh.
 
 For work spanning 3+ tasks or likely to continue across sessions, write a mission file (handled by the `reviewing-sessions` skill). Do not create missions for contained, single-session work.
 
@@ -169,7 +169,7 @@ When the UserPromptSubmit hook emits an `[ultracode]` reminder, or the user's pr
 When authoring Workflow scripts under ultracode:
 - Use existing agent personas via `agentType` wherever the role maps to a defined agent: `code-analyst` (Callum), `code-reviewer` (Clifford), `feature-analyst` (Frida), `implementer` (Ingrid), `plan-critic` (Percy), `scope-validator` (Sylvie), `test-runner` (Tobias).
 - For novel roles not covered by existing agents, describe the persona inline in the agent prompt using the named-persona style: a name, a narrowly scoped role, a single job.
-- All workflow agents must follow the output contract in `.claude/agents/_contract.md`.
+- All workflow agents must follow the output contract in `~/.claude/agents/_contract.md`.
 
 ## Project Discovery
 
@@ -185,14 +185,14 @@ When a significant architectural choice is made — database selection, framewor
 
 ## Project Context
 
-If `.claude/project/CLAUDE.md` exists, read it at session start.
-If `.claude/project/skills/` exists, treat it as an additional skills directory alongside `.claude/skills/`.
+If `.mallet/conventions.md` exists, read it at session start.
+If `.mallet/skills/` exists, treat it as an additional skills directory alongside `~/.claude/skills/`.
 
 ## Skill Overrides
 
-`.claude/project/CLAUDE.md` may contain a "Skill Overrides" section listing base skills with project-specific amendments. Before executing a skill that appears in that list, read `.claude/project/overrides/<skill-name>.md` and apply its contents as amendments to the base skill — the override wins wherever it conflicts.
+`.mallet/conventions.md` may contain a "Skill Overrides" section listing base skills with project-specific amendments. Before executing a skill that appears in that list, read `.mallet/overrides/<skill-name>.md` and apply its contents as amendments to the base skill — the override wins wherever it conflicts.
 
-When the user asks to override part of a base skill, create or update `.claude/project/overrides/<skill-name>.md` with the project-specific content, then add (or confirm) the skill's entry under "Skill Overrides" in `.claude/project/CLAUDE.md`. Always keep the list and the override files in sync.
+When the user asks to override part of a base skill, create or update `.mallet/overrides/<skill-name>.md` with the project-specific content, then add (or confirm) the skill's entry under "Skill Overrides" in `.mallet/conventions.md`. Always keep the list and the override files in sync.
 
 ---
 
