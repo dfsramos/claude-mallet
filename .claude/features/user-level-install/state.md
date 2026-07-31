@@ -1,0 +1,24 @@
+# State: user-level-install
+
+## Decisions
+<!-- 2026-07-31: Directives are always-on globally via ~/.claude/CLAUDE.md — no marker file, no gate. Per-repo opt-in was rejected because it would force the directives out of CLAUDE.md into conditional session-start injection (15KB into the message stream every session). `.mallet/conventions.md` remains the escape hatch, the mechanism this repo already uses for its own git-workflow exception. -->
+<!-- 2026-07-31: Per-repo state lives at <root>/.mallet/, not .claude/.mallet/ — nesting inside .claude/ sits inside the very namespace the isolation is meant to escape. -->
+<!-- 2026-07-31: .claude/project/CLAUDE.md renamed to .mallet/conventions.md — two files named CLAUDE.md meaning different things (harness-loaded vs directive-loaded) is the exact ambiguity this feature removes. -->
+<!-- 2026-07-31: User-level-only; per-project mode dropped. Dual mode would double the install/update/migrate surface and need precedence rules for which framework.json /update reads and which statusline renders. -->
+<!-- 2026-07-31: ~/.claude/settings.json is jq-merged, never overwritten — it holds the user's model, effortLevel, enabledPlugins, and notify hooks. The current install/update `rm -rf .claude/settings.json` would destroy personal config at user level. -->
+<!-- 2026-07-31: Base hooks register globally; the three opt-in hooks (typecheck, push-confirm, explore-redirect) keep per-repo registration in .claude/settings.json. Script global, choice local — typecheck is language-specific. -->
+<!-- 2026-07-31: Mallet's statusline.sh supersedes the user's inline statusLine with no feature loss — statusline.sh:72-124 already renders repo/branch, cost, context %, 7d/5h rate limits, turns, and a token breakdown; the inline version (branch|tokens|cost) is a strict subset. -->
+<!-- 2026-07-31: Legacy installs are detected by file presence, not schema. exocortex's framework.json is {"commit": ...} with no `repo` or `version` key and fails any schema check; the SHA parser must accept both `version` and `commit`. -->
+<!-- 2026-07-31: CLAUDE.md is stripped by diffing against the exact historical payload at the recorded SHA (raw.githubusercontent.com/{owner}/{repo}/{sha}/CLAUDE.md), not by heuristics. Verified: `git show 2ae59d1:CLAUDE.md | diff - exocortex/CLAUDE.md` returns exactly the 16-line `## Vault Context` delta. -->
+<!-- 2026-07-31: Cleanup deletes untracked files only. Tracked files are reported with the exact git command; the CLAUDE.md strip writes only on explicit per-repo confirmation. Never modify another repo's index or history unprompted. -->
+<!-- 2026-07-31: .mallet/ ships its own .gitignore covering the transient subset, so no shared repo file (root .gitignore) is ever edited. -->
+<!-- 2026-07-31: Repo discovery reads the `cwd` field from session transcripts under ~/.claude/projects/*/*.jsonl, not the encoded directory names. Decoding is ambiguous: /mnt/c/Repositories/Cludo/cludo-lambdas encodes to -mnt-c-Repositories-Cludo-cludo-lambdas, where `-` is both separator and literal. Verified the transcript cwd returns the exact path. -->
+<!-- 2026-07-31: Install/update replace payload PER ENTRY, never per directory. `rm -rf ~/.claude/skills` would destroy the user-authored `backburner` skill already living there. This forced framework.json to carry a `manifest` — without a record of what Mallet owns, a skill dropped from a later release would linger in ~/.claude/skills/ forever. -->
+<!-- 2026-07-31: `.claude/project/skills/` is NOT harness-discovered — `harvest` exists at .claude/project/skills/harvest/SKILL.md but is absent from the session's registered skill list. It works only because CLAUDE.md instructs Claude to read it. This is what makes the .mallet/ move safe; only settings.json and settings.local.json are harness-pinned. -->
+
+## Blockers
+<!-- none -->
+
+## Open questions
+<!-- - [ ] Task 10: exocortex and Cludo/ai have git-tracked CLAUDE.md files. Cludo/ai's is a pure Mallet payload (29 identical headings, no project content) so it is a clean removal; exocortex's carries `## Vault Context` and must be stripped to that section only. Both need explicit per-repo confirmation before any write. -->
+<!-- - [ ] Task 10: `.mallet/` in a work repo that should stay untracked still needs one `.git/info/exclude` line. The friction halves but does not vanish — confirm per repo during migration. -->
