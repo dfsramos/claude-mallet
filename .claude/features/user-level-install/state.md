@@ -26,7 +26,7 @@
 <!-- 2026-07-31 (wave 1): 38 assertions green — 18 for the settings merge, 20 for hook paths. Test scripts live in the session scratchpad, not the repo; if they should be permanent, they need a home under .mallet/ or a test/ directory. -->
 
 ## Follow-ups
-<!-- - [ ] Wave 1 test scripts are in the session scratchpad and will be lost. Decide whether Mallet should carry a test suite for its own hooks. -->
+<!-- 2026-07-31: Wave 1 test scripts preserved at .claude/features/user-level-install/tests/ and made machine-portable (repo path derived from BASH_SOURCE, mktemp scratch, synthetic settings fixture). Whether Mallet should carry a permanent test suite for its own hooks is still open — task 10 or a follow-up feature. -->
 <!-- - [ ] `.claude/skills/update/SKILL.md:13` still lists the old wholesale-overwrite path set; task 08 rewrites it. Task 03's regression greps exclude that file deliberately. -->
 
 ## Open questions
