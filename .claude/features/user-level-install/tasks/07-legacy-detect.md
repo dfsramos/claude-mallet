@@ -1,5 +1,5 @@
 # Task: legacy-detect
-Status: pending
+Status: done
 Deps: 02, 05
 
 ## Goal
@@ -39,15 +39,15 @@ It must stay quiet. `session-start.sh` output is injected into every session in 
 4. Document the suppression file in `docs/hooks.md` as part of task 09.
 
 ## TDD Checklist
-- [ ] Write failing test: fixture repo containing `.claude/framework.json`; run `session-start.sh` with `CLAUDE_PROJECT_DIR` set to it, assert the notice is emitted
-- [ ] Confirm it fails (red)
-- [ ] Apply step 1
-- [ ] Confirm it passes (green)
-- [ ] Assert a fixture with only `.claude/settings.local.json` and `.mallet/` emits nothing
-- [ ] Assert the payload-pair predicate fires when `framework.json` is absent but both `skills/update/SKILL.md` and `agents/_contract.md` are present
-- [ ] Assert creating `.mallet/.migration-declined` suppresses the notice
-- [ ] Assert the hook still exits 0 when `CLAUDE_PROJECT_DIR` is unset
-- [ ] Regression: project memory injection and the update check still behave as before
+- [x] Write failing test: fixture repo containing `.claude/framework.json`; run `session-start.sh` with `CLAUDE_PROJECT_DIR` set to it, assert the notice is emitted
+- [x] Confirm it fails (red)
+- [x] Apply step 1
+- [x] Confirm it passes (green)
+- [x] Assert a fixture with only `.claude/settings.local.json` and `.mallet/` emits nothing
+- [x] Assert the payload-pair predicate fires when `framework.json` is absent but both `skills/update/SKILL.md` and `agents/_contract.md` are present
+- [x] Assert creating `.mallet/.migration-declined` suppresses the notice
+- [x] Assert the hook still exits 0 when `CLAUDE_PROJECT_DIR` is unset
+- [x] Regression: project memory injection and the update check still behave as before
 
 ## Notes
 The notice instructs Claude rather than the user directly, matching the existing `--- Framework Update Available ---` block's style at `session-start.sh:46`.

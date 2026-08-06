@@ -1,5 +1,5 @@
 # Task: install-rewrite
-Status: pending
+Status: done
 Deps: 01, 05
 
 ## Goal
@@ -82,16 +82,16 @@ Rewrite `install.md` end to end with these sections:
 15. **Summary** — adapt the current step 10 block: report the install target as `~/.claude/`, the version, the count of legacy repos migrated, and next steps. Replace "Customise `.claude/project/CLAUDE.md`" with "Create `.mallet/conventions.md` in a project to add project-specific conventions".
 
 ## TDD Checklist
-- [ ] Write failing test: seed `<scratchpad>/fake-home/.claude/` with a `settings.json` carrying `model`/`effortLevel`/notify hooks, a user-authored `skills/backburner/SKILL.md`, and a personal `CLAUDE.md`; run the install flow with `HOME` pointed there
-- [ ] Confirm the current instructions destroy `skills/backburner/` (red)
-- [ ] Rewrite `install.md` per the steps above
-- [ ] Assert `skills/backburner/SKILL.md` survives untouched
-- [ ] Assert `settings.json` retains `model`, `effortLevel`, and the notify hooks, and gains the 4 base hooks plus `statusLine`
-- [ ] Assert the personal `CLAUDE.md` was copied to `CLAUDE.md.pre-mallet-<date>` before being replaced
-- [ ] Assert `framework.json` contains a populated `manifest` for all four kinds
-- [ ] Orphan removal: add a fake `skills/removed-skill/` recorded in a prior manifest but absent from the payload, re-run, assert it is deleted while `backburner` is not
-- [ ] Assert `chmod +x` leaves every hook and `statusline.sh` executable
-- [ ] Idempotency: run twice, assert the second run produces the same tree and does not duplicate hook entries
+- [x] Write failing test: seed `<scratchpad>/fake-home/.claude/` with a `settings.json` carrying `model`/`effortLevel`/notify hooks, a user-authored `skills/backburner/SKILL.md`, and a personal `CLAUDE.md`; run the install flow with `HOME` pointed there
+- [x] Confirm the current instructions destroy `skills/backburner/` (red)
+- [x] Rewrite `install.md` per the steps above
+- [x] Assert `skills/backburner/SKILL.md` survives untouched
+- [x] Assert `settings.json` retains `model`, `effortLevel`, and the notify hooks, and gains the 4 base hooks plus `statusLine`
+- [x] Assert the personal `CLAUDE.md` was copied to `CLAUDE.md.pre-mallet-<date>` before being replaced
+- [x] Assert `framework.json` contains a populated `manifest` for all four kinds
+- [x] Orphan removal: add a fake `skills/removed-skill/` recorded in a prior manifest but absent from the payload, re-run, assert it is deleted while `backburner` is not
+- [x] Assert `chmod +x` leaves every hook and `statusline.sh` executable
+- [x] Idempotency: run twice, assert the second run produces the same tree and does not duplicate hook entries
 
 ## Notes
 Steps 5, 6, and 12 are the only points that require user interaction. Everything else must be safe to run unattended once confirmed.

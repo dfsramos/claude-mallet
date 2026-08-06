@@ -78,4 +78,25 @@ if [ -f "$FRAMEWORK_JSON" ] && command -v jq >/dev/null; then
   fi
 fi
 
+# ── Legacy per-project install detection ────────────────────────────────────
+# Mallet installs once at ~/.claude/. A framework payload inside the project
+# means a pre-migration per-project install is still sitting there. The
+# installer's scan catches most of these; this catches the ones it could not
+# reach — a repo cloned later, or a scan the user declined.
+#
+# Deliberately cheap: three -f tests, no traversal and no network. This runs in
+# every session in every directory.
+
+if [ -n "${CLAUDE_PROJECT_DIR:-}" ] && [ ! -f "${CLAUDE_PROJECT_DIR}/.mallet/.migration-declined" ]; then
+  if [ -f "${CLAUDE_PROJECT_DIR}/.claude/framework.json" ] \
+     || { [ -f "${CLAUDE_PROJECT_DIR}/.claude/skills/update/SKILL.md" ] \
+          && [ -f "${CLAUDE_PROJECT_DIR}/.claude/agents/_contract.md" ]; }; then
+    echo "--- Legacy Mallet Install Detected ---"
+    echo "This project contains a per-project Mallet payload; Mallet is now installed at ~/.claude/."
+    echo "Offer to run the migrate skill to clean it up. If the user declines, create"
+    echo "${CLAUDE_PROJECT_DIR}/.mallet/.migration-declined so this notice stops."
+    echo "--- End Legacy Mallet Install Detected ---"
+  fi
+fi
+
 exit 0
