@@ -61,7 +61,7 @@ Git-tracked `CLAUDE.md` files are left completely alone — no strip, no diff, n
 - [x] 05-migrate-skill — Author the `migrate` skill: detection, backup, CLAUDE.md strip, settings pruning, state move [deps: 01] [parallel: yes]
 - [ ] 06-install-rewrite — Rewrite `install.md` for user-level install with scan-and-clean [deps: 01, 05] [parallel: yes]
 - [ ] 07-legacy-detect — Add legacy-payload detection to `session-start.sh` [deps: 02, 05] [parallel: yes]
-- [ ] 08-update-skill — Rewrite the `update` skill for user-level with jq merge [deps: 01] [parallel: yes]
+- [x] 08-update-skill — Rewrite the `update` skill for user-level with jq merge [deps: 01] [parallel: yes]
 - [ ] 09-docs — Update `docs/` and `README.md` for parity [deps: 01, 02, 03, 04, 05, 06, 07, 08] [parallel: no]
 - [ ] 10-self-migrate — Migrate this repo to `.mallet/`, then run migration across the 8 installs as live validation [deps: 09] [parallel: no]
 

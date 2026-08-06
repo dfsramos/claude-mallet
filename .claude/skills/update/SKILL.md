@@ -1,99 +1,112 @@
 ---
 name: update
-description: Invoke when the user says "update the framework", "update from <url>", or asks to upgrade Claude Mallet to the latest version. Requires a GitHub URL to the framework repository.
+description: Invoke when the user says "update the framework", "update Mallet", "upgrade Claude Mallet", or "update from <url>". Also invoke when a session-start notice reports that a framework update is available.
 ---
 # Framework Update
 
-Replace framework-managed files with the latest version from the remote repository. This is a **source-of-truth update** — local edits to framework files are discarded. User content is preserved in:
+Mallet is installed once at `~/.claude/`. This updates that single install — there is nothing per-repo to update, which is the whole point of the user-level layout.
 
-- `.claude/project/**` — all project-scoped context, skills, memory, missions
-- `.claude/settings.local.json` — user permissions and local overrides
-- `.claude/framework.json` — updated at the end with the new version
+## What this touches
 
-Everything else framework-owned (`.claude/agents/`, `.claude/hooks/`, `.claude/skills/`, `.claude/templates/`, `.claude/statusline.sh`, `.claude/settings.json`, root `CLAUDE.md`) is overwritten wholesale.
+| Path | Treatment |
+|---|---|
+| `~/.claude/skills/*`, `agents/*`, `templates/*`, `hooks/*` | replaced **per entry** |
+| `~/.claude/statusline.sh`, `~/.claude/CLAUDE.md` | replaced |
+| `~/.claude/settings.json` | **merged**, never replaced |
+| `~/.claude/framework.json` | rewritten, including its `manifest` |
+| Any entry under `~/.claude/skills\|agents\|templates\|hooks` the manifest does not claim | left alone, reported as preserved |
+| Every `<repo>/.mallet/` | never touched |
+| Every `<repo>/.claude/settings.json` and `settings.local.json` | never touched |
+
+Two rules the mechanics enforce, both learned the hard way:
+
+- **Never `rm -rf` a container directory.** `~/.claude/skills/` holds user-authored skills next to Mallet's. Removing the directory destroys them.
+- **Never overwrite `~/.claude/settings.json`.** It holds `model`, `effortLevel`, `enabledPlugins`, and the user's own hooks.
 
 ---
 
-## 1. Resolve the Repo
+## 1. Resolve the source
 
-If the user provided a GitHub URL (`https://github.com/{owner}/{repo}`), extract `owner` and `repo`.
+If the user supplied a GitHub URL, extract `owner` and `repo`. Otherwise read `~/.claude/framework.json` and use `.repo`.
 
-Otherwise, read `.claude/framework.json` and use its `repo` field (format `{owner}/{repo}`). If the file does not exist, stop:
+If that file does not exist, stop:
 
-> "No framework installation found here. Run a fresh install instead."
+> "No user-level Mallet install found at `~/.claude/`. Run a fresh install from `install.md` instead."
 
-If a URL was provided and it does not match `framework.json.repo`, warn and wait for confirmation before continuing.
+If a supplied URL disagrees with the recorded repo, warn and wait for confirmation. A recorded pre-rename name still resolves — GitHub redirects renamed repositories.
 
 ---
 
-## 2. Check Latest Version
-
-Query the default branch and its HEAD commit via the GitHub API:
+## 2. Check the latest version
 
 ```bash
 BRANCH=$(curl -sf "https://api.github.com/repos/{owner}/{repo}" | jq -r '.default_branch')
 NEW_SHA=$(curl -sf "https://api.github.com/repos/{owner}/{repo}/commits/${BRANCH}" | jq -r '.sha')
 ```
 
-Compare `NEW_SHA` against `framework.json.version`. If they match, stop:
+Compare against `.version` in `~/.claude/framework.json`. If equal, stop without writing anything:
 
 > "Already up to date (version: {short_sha}). No changes made."
 
+If either call fails, stop and report. Never proceed to the payload steps on a failed version check.
+
 ---
 
-## 3. Download and Extract
+## 3. Download and extract
 
 ```bash
 WORK=/tmp/claude-mallet-update
-rm -rf "$WORK"
-mkdir -p "$WORK"
+rm -rf "$WORK"; mkdir -p "$WORK"
 curl -sfL "https://github.com/{owner}/{repo}/archive/${NEW_SHA}.tar.gz" -o "$WORK/tarball.tar.gz"
 tar -xzf "$WORK/tarball.tar.gz" -C "$WORK" --strip-components=1
 ```
 
-After extraction, `$WORK/.claude/` and `$WORK/CLAUDE.md` contain the new framework payload. If either is missing, stop and report the download failure.
+If `$WORK/.claude/` or `$WORK/CLAUDE.md` is missing, stop and report the download failure.
 
 ---
 
-## 4. Replace Framework-Managed Files
-
-From the project root:
+## 4. Back up
 
 ```bash
-rm -rf .claude/agents .claude/hooks .claude/skills .claude/templates .claude/statusline.sh .claude/settings.json CLAUDE.md
-
-cp -r "$WORK/.claude/agents" "$WORK/.claude/hooks" "$WORK/.claude/skills" "$WORK/.claude/templates" .claude/
-cp "$WORK/.claude/statusline.sh" "$WORK/.claude/settings.json" .claude/
-cp "$WORK/CLAUDE.md" ./CLAUDE.md
+tar -czf "$HOME/.claude/mallet-preupdate-backup-$(date +%Y%m%d%H%M%S).tar.gz" \
+  -C "$HOME/.claude" settings.json CLAUDE.md skills agents templates hooks statusline.sh framework.json 2>/dev/null
 ```
 
-`.claude/project/**`, `.claude/settings.local.json`, and `.claude/framework.json` are untouched.
+Missing members are fine. Report the path.
 
 ---
 
-## 5. Restore Hook Permissions
+## 5. Install the payload
 
 ```bash
-chmod +x .claude/hooks/*.sh
+bash "$WORK/.claude/install-payload.sh" --from "$WORK" --repo "{owner}/{repo}" --sha "$NEW_SHA"
 ```
+
+This performs per-entry replacement, reconciles the previous manifest (removing only what this release dropped), restores executable bits, and rewrites `framework.json` with a fresh manifest. Relay its `removed:` and `preserved:` lines verbatim — the preserved list is how the user confirms their own skills survived.
 
 ---
 
-## 6. Update Metadata
+## 6. Merge settings
 
-Overwrite `.claude/framework.json`:
-
-```json
-{
-  "repo": "{owner}/{repo}",
-  "version": "<NEW_SHA>",
-  "installed_at": "<today as YYYY-MM-DD>"
-}
+```bash
+bash "$WORK/.claude/merge-settings.sh" "$WORK/.claude/settings.fragment.json"
 ```
+
+Only Mallet-owned hook entries and `statusLine` are touched. The script backs up `settings.json` first and refuses to run against a corrupt one.
 
 ---
 
-## 7. Cleanup and Summary
+## 7. Legacy sweep
+
+```bash
+bash "$HOME/.claude/skills/migrate/detect.sh"
+```
+
+If any legacy per-project install is reported, list them and note that `/migrate` will clean them up. Do not act unless the user asks.
+
+---
+
+## 8. Cleanup and summary
 
 ```bash
 rm -rf /tmp/claude-mallet-update
@@ -104,7 +117,14 @@ Print:
 ```
 ── Update complete ──────────────────────────────────────────
 
-  Version:  {old_short_sha} → {new_short_sha}
+  Version:    {old_short_sha} → {new_short_sha}
+  Replaced:   {n} entries
+  Removed:    {names, or none}
+  Preserved:  {names, or none}
+  Backup:     {path}
+  Legacy:     {n} per-project installs still present, or none
 
 ────────────────────────────────────────────────────────────
 ```
+
+If any step failed, say which and stop. Do not report a partial update as complete.

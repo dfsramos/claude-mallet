@@ -1,5 +1,5 @@
 # Task: update-skill
-Status: pending
+Status: done
 Deps: 01
 
 ## Goal
@@ -45,16 +45,16 @@ Rewrite `.claude/skills/update/SKILL.md`:
 13. **Summary** — old and new short SHAs, counts of entries replaced/removed/preserved, the backup path, and any legacy repos still outstanding.
 
 ## TDD Checklist
-- [ ] Write failing test: fake `HOME` holding a Mallet install at an older SHA, a user-authored `skills/backburner/`, a `settings.json` with personal keys, and a manifest listing a skill absent from the new payload
-- [ ] Confirm the current instructions delete `skills/backburner/` (red)
-- [ ] Rewrite the skill
-- [ ] Assert `backburner` survives and is reported as preserved-unlisted
-- [ ] Assert the manifest-listed orphan is removed
-- [ ] Assert `settings.json` keeps `model`, `effortLevel`, `enabledPlugins`, and notify hooks
-- [ ] Assert `framework.json` carries the new SHA and a regenerated manifest
-- [ ] Assert the version check short-circuits with no writes when the SHA already matches
-- [ ] Assert a mid-run `curl` failure leaves the existing install intact
-- [ ] Idempotency: run twice at the same SHA, assert the second run is a no-op
+- [x] Write failing test: fake `HOME` holding a Mallet install at an older SHA, a user-authored `skills/backburner/`, a `settings.json` with personal keys, and a manifest listing a skill absent from the new payload
+- [x] Confirm the current instructions delete `skills/backburner/` (red)
+- [x] Rewrite the skill
+- [x] Assert `backburner` survives and is reported as preserved-unlisted
+- [x] Assert the manifest-listed orphan is removed
+- [x] Assert `settings.json` keeps `model`, `effortLevel`, `enabledPlugins`, and notify hooks
+- [x] Assert `framework.json` carries the new SHA and a regenerated manifest
+- [x] Assert the version check short-circuits with no writes when the SHA already matches
+- [x] Assert a mid-run `curl` failure leaves the existing install intact
+- [x] Idempotency: run twice at the same SHA, assert the second run is a no-op
 
 ## Notes
 Steps 6 and 7 are shared with `install.md`. If the loop is edited in one place, edit both — or extract it to `.claude/install-payload.sh` and have both documents call it, which is the preferred outcome if the duplication survives review.
