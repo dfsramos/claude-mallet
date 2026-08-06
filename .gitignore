@@ -1,4 +1,11 @@
 ﻿*Zone.Identifier
 .claude/settings.local.json
-.claude/framework.json
-.claude/project/memory.md
+
+# .mallet/ is ignored machine-wide via core.excludesFile on some machines, but
+# THIS repo commits its feature plans and project state deliberately — plans
+# must stay visible across every branch. Re-include the directory, then ignore
+# only the genuinely transient parts.
+!.mallet/
+.mallet/memory.md
+.mallet/compact-snapshot.md
+.mallet/pipeline-state/

@@ -1,7 +1,7 @@
 # Feature: user-level-install
 Status: in-progress
 Created: 2026-07-31
-Branch: — (this repo commits directly to master per `.claude/project/CLAUDE.md`)
+Branch: — (this repo commits directly to master per `.mallet/conventions.md`)
 
 ## Goal
 Move the Mallet core to a single user-level install at `~/.claude/`, relocate all per-repo state to `<root>/.mallet/`, and ship a migration that surgically cleans the existing per-project installs.

@@ -6,7 +6,7 @@ Deps: 01, 02, 03, 04, 05, 06, 07, 08
 Bring `docs/` and `README.md` in line with the user-level install and the `.mallet/` layout.
 
 ## Context
-This repo's `.claude/project/CLAUDE.md` requires docs parity: skill changes update `docs/skills.md`, hook changes `docs/hooks.md`, structural changes `docs/structure.md`, directive changes `docs/directives.md`. This feature touches all four plus `README.md`. Reference counts from the audit: `docs/skills.md` 20, `docs/directives.md` 13, `docs/hooks.md` 5, `docs/structure.md` 3, `README.md` 2.
+This repo's `.mallet/conventions.md` requires docs parity: skill changes update `docs/skills.md`, hook changes `docs/hooks.md`, structural changes `docs/structure.md`, directive changes `docs/directives.md`. This feature touches all four plus `README.md`. Reference counts from the audit: `docs/skills.md` 20, `docs/directives.md` 13, `docs/hooks.md` 5, `docs/structure.md` 3, `README.md` 2.
 
 ## Steps
 
