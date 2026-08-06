@@ -54,8 +54,17 @@ roots_of() {
 }
 
 # ── Classify ────────────────────────────────────────────────────────────────
+HOME_REAL=$(cd "$HOME" 2>/dev/null && pwd -P)
+
 for repo in $(candidates | sort -u | roots_of); do
   fj="$repo/.claude/framework.json"
+
+  # Never treat the install itself as a legacy install.
+  [ "$(cd "$repo" 2>/dev/null && pwd -P)" = "$HOME_REAL" ] && continue
+  # Never treat the framework source repo as one either — its .claude/ IS the
+  # payload. Only the source carries these two files.
+  [ -f "$repo/.claude/settings.fragment.json" ] && continue
+  [ -f "$repo/.claude/install-payload.sh" ] && continue
 
   is_legacy=0
   [ -f "$fj" ] && is_legacy=1

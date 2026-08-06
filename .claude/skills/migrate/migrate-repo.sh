@@ -35,6 +35,17 @@ say() { echo "[$NAME] $*"; }
 tracked() { git -C "$REPO" ls-files --error-unmatch "$1" >/dev/null 2>&1; }
 
 # ── Is there anything to do? ────────────────────────────────────────────────
+# Refuse the install dir and the framework source repo outright — migrating
+# either would delete a working install or the payload source.
+if [ "$REPO" = "$(cd "$HOME" 2>/dev/null && pwd -P)" ]; then
+  say "REFUSING: this is the Mallet install directory, not a legacy per-project install"
+  exit 1
+fi
+if [ -f "$REPO/.claude/settings.fragment.json" ] || [ -f "$REPO/.claude/install-payload.sh" ]; then
+  say "REFUSING: this is the Mallet source repo — its .claude/ is the payload, not a legacy install"
+  exit 1
+fi
+
 LEGACY=0
 [ -f "$REPO/.claude/framework.json" ] && LEGACY=1
 [ -f "$REPO/.claude/skills/update/SKILL.md" ] && [ -f "$REPO/.claude/agents/_contract.md" ] && LEGACY=1

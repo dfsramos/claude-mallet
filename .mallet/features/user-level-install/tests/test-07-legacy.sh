@@ -50,6 +50,26 @@ touch "$CLAUDE_PROJECT_DIR/.mallet/.migration-declined"
 OUT=$(bash "$SS" 2>&1)
 hasnt "suppressed" "$OUT" "Legacy Mallet Install Detected"
 
+echo "== the install dir itself is not a legacy install =="
+# A session whose project dir IS $HOME would otherwise see ~/.claude/skills/update
+# and ~/.claude/agents/_contract.md and nag forever.
+export CLAUDE_PROJECT_DIR="$HOME"
+mkdir -p "$HOME/.claude/skills/update" "$HOME/.claude/agents"
+echo x > "$HOME/.claude/skills/update/SKILL.md"
+echo x > "$HOME/.claude/agents/_contract.md"
+echo '{"repo":"o/r","version":"x"}' > "$HOME/.claude/framework.json"
+OUT=$(bash "$SS" 2>&1)
+hasnt "install dir exempt" "$OUT" "Legacy Mallet Install Detected"
+
+echo "== the framework source repo is not a legacy install =="
+export CLAUDE_PROJECT_DIR="$SCRATCH/src"
+mkdir -p "$CLAUDE_PROJECT_DIR/.claude/skills/update" "$CLAUDE_PROJECT_DIR/.claude/agents"
+echo x > "$CLAUDE_PROJECT_DIR/.claude/skills/update/SKILL.md"
+echo x > "$CLAUDE_PROJECT_DIR/.claude/agents/_contract.md"
+echo '{}' > "$CLAUDE_PROJECT_DIR/.claude/settings.fragment.json"
+OUT=$(bash "$SS" 2>&1)
+hasnt "source repo exempt" "$OUT" "Legacy Mallet Install Detected"
+
 echo "== unset CLAUDE_PROJECT_DIR is safe =="
 unset CLAUDE_PROJECT_DIR
 OUT=$(bash "$SS" 2>&1); ck "exit 0" "$?" "0"

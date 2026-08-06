@@ -87,7 +87,16 @@ fi
 # Deliberately cheap: three -f tests, no traversal and no network. This runs in
 # every session in every directory.
 
-if [ -n "${CLAUDE_PROJECT_DIR:-}" ] && [ ! -f "${CLAUDE_PROJECT_DIR}/.mallet/.migration-declined" ]; then
+# Two exemptions, both of which otherwise nag forever:
+#   1. The install itself — a session rooted at $HOME would see ~/.claude/ as a
+#      per-project payload.
+#   2. The framework source repo — its .claude/ IS the payload. Identified by
+#      settings.fragment.json / install-payload.sh, which only the source has.
+if [ -n "${CLAUDE_PROJECT_DIR:-}" ] \
+   && [ "$(cd "${CLAUDE_PROJECT_DIR}" 2>/dev/null && pwd -P)" != "$(cd "${HOME}" 2>/dev/null && pwd -P)" ] \
+   && [ ! -f "${CLAUDE_PROJECT_DIR}/.claude/settings.fragment.json" ] \
+   && [ ! -f "${CLAUDE_PROJECT_DIR}/.claude/install-payload.sh" ] \
+   && [ ! -f "${CLAUDE_PROJECT_DIR}/.mallet/.migration-declined" ]; then
   if [ -f "${CLAUDE_PROJECT_DIR}/.claude/framework.json" ] \
      || { [ -f "${CLAUDE_PROJECT_DIR}/.claude/skills/update/SKILL.md" ] \
           && [ -f "${CLAUDE_PROJECT_DIR}/.claude/agents/_contract.md" ]; }; then
