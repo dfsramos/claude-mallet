@@ -27,25 +27,53 @@ fi
 # ── Framework update check ──────────────────────────────────────────────────
 
 FRAMEWORK_JSON="${HOME}/.claude/framework.json"
-if [ -f "$FRAMEWORK_JSON" ] && command -v curl >/dev/null && command -v jq >/dev/null; then
-  LOCAL_HASH=$(jq -r '.version // empty' "$FRAMEWORK_JSON")
-  REPO=$(jq -r '.repo // empty' "$FRAMEWORK_JSON")
+CACHE_FILE="${HOME}/.claude/.mallet-update-check"
+CACHE_TTL=86400
+
+if [ -f "$FRAMEWORK_JSON" ] && command -v jq >/dev/null; then
+  LOCAL_HASH=$(jq -r '.version // empty' "$FRAMEWORK_JSON" 2>/dev/null)
+  REPO=$(jq -r '.repo // empty' "$FRAMEWORK_JSON" 2>/dev/null)
 
   if [ -n "$LOCAL_HASH" ] && [ -n "$REPO" ]; then
-    BRANCH=$(curl -sf --max-time 3 "https://api.github.com/repos/${REPO}" | jq -r '.default_branch // empty')
+    LATEST_HASH=""
+    LATEST_DATE=""
 
-    if [ -n "$BRANCH" ]; then
-      LATEST=$(curl -sf --max-time 3 "https://api.github.com/repos/${REPO}/commits/${BRANCH}")
-      LATEST_HASH=$(echo "$LATEST" | jq -r '.sha // empty')
-      LATEST_DATE=$(echo "$LATEST" | jq -r '.commit.committer.date // empty' | cut -c1-10)
-
-      if [ -n "$LATEST_HASH" ] && [ "$LOCAL_HASH" != "$LATEST_HASH" ]; then
-        echo "--- Framework Update Available ---"
-        echo "Current: ${LOCAL_HASH:0:7}"
-        echo "Latest:  ${LATEST_HASH:0:7} (${LATEST_DATE})"
-        echo "Mention this to the user and offer to run the update skill."
-        echo "--- End Framework Update Available ---"
+    # Reuse a fresh cached result. Mallet is installed once at ~/.claude/, so
+    # this hook now runs in every session in every directory — querying the
+    # GitHub API each time would exhaust the 60 req/hr unauthenticated limit
+    # and silently disable update notices for the rest of the hour.
+    if [ -f "$CACHE_FILE" ]; then
+      read -r CACHED_AT CACHED_HASH CACHED_DATE < "$CACHE_FILE" 2>/dev/null
+      case "$CACHED_AT" in ''|*[!0-9]*) CACHED_AT=0 ;; esac
+      if [ $(( $(date +%s) - CACHED_AT )) -lt "$CACHE_TTL" ]; then
+        LATEST_HASH="$CACHED_HASH"
+        LATEST_DATE="$CACHED_DATE"
       fi
+    fi
+
+    # Cache miss or stale entry: query the API. A failed query is never cached,
+    # so a transient outage is not recorded as "up to date" for 24 hours.
+    if [ -z "$LATEST_HASH" ] && command -v curl >/dev/null; then
+      BRANCH=$(curl -sf --max-time 3 "https://api.github.com/repos/${REPO}" | jq -r '.default_branch // empty')
+
+      if [ -n "$BRANCH" ]; then
+        LATEST=$(curl -sf --max-time 3 "https://api.github.com/repos/${REPO}/commits/${BRANCH}")
+        LATEST_HASH=$(echo "$LATEST" | jq -r '.sha // empty')
+        LATEST_DATE=$(echo "$LATEST" | jq -r '.commit.committer.date // empty' | cut -c1-10)
+
+        # Cache the up-to-date case too, or every session re-checks.
+        if [ -n "$LATEST_HASH" ]; then
+          echo "$(date +%s) ${LATEST_HASH} ${LATEST_DATE}" > "$CACHE_FILE" 2>/dev/null
+        fi
+      fi
+    fi
+
+    if [ -n "$LATEST_HASH" ] && [ "$LOCAL_HASH" != "$LATEST_HASH" ]; then
+      echo "--- Framework Update Available ---"
+      echo "Current: ${LOCAL_HASH:0:7}"
+      echo "Latest:  ${LATEST_HASH:0:7} (${LATEST_DATE})"
+      echo "Mention this to the user and offer to run the update skill."
+      echo "--- End Framework Update Available ---"
     fi
   fi
 fi

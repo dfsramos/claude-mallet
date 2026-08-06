@@ -10,13 +10,17 @@ input=$(cat)
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(echo "$input" | jq -r '.workspace.project_dir // empty' 2>/dev/null)}"
 FRAMEWORK_JSON="${HOME}/.claude/framework.json"
 
-[ ! -f "$FRAMEWORK_JSON" ] && exit 0
+# jq is required by every segment below, not only the version one.
 command -v jq &>/dev/null || exit 0
 
-LOCAL_HASH=$(jq -r '.version // empty' "$FRAMEWORK_JSON")
-INSTALLED_AT=$(jq -r '.installed_at // empty' "$FRAMEWORK_JSON")
-
-[ -z "$LOCAL_HASH" ] && exit 0
+# The version segment is optional. A missing, empty, or malformed
+# framework.json must not suppress cost, context, rate limits, or token totals.
+LOCAL_HASH=""
+INSTALLED_AT=""
+if [ -f "$FRAMEWORK_JSON" ]; then
+  LOCAL_HASH=$(jq -r '.version // empty' "$FRAMEWORK_JSON" 2>/dev/null)
+  INSTALLED_AT=$(jq -r '.installed_at // empty' "$FRAMEWORK_JSON" 2>/dev/null)
+fi
 
 # Helpers ────────────────────────────────────────────────────────────────────
 
@@ -71,7 +75,8 @@ fi
 tok_total=$(( tok_in + tok_cw + tok_cr + tok_out ))
 
 # Line 1: framework version · installed_at · branch ──────────────────────────
-line1_parts=("Claude Mallet ${LOCAL_HASH:0:7}")
+line1_parts=()
+[ -n "$LOCAL_HASH" ] && line1_parts+=("Claude Mallet ${LOCAL_HASH:0:7}")
 [ -n "$INSTALLED_AT" ] && line1_parts+=("$INSTALLED_AT")
 if [ -n "$PROJECT_DIR" ] && command -v git &>/dev/null; then
   branch=$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null)

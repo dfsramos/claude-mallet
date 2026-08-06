@@ -1,5 +1,5 @@
 # Task: hook-hardening
-Status: pending
+Status: done
 Deps: 02
 
 ## Goal
@@ -45,17 +45,17 @@ Both are pre-existing bugs that only become material at global scope.
 3. Keep `exit 0` as the final line of `session-start.sh`.
 
 ## TDD Checklist
-- [ ] Write failing test: run `statusline.sh` with a session JSON containing `cost` and `context_window` but with `HOME` pointed at a directory holding no `framework.json`; assert cost and context output still appear
-- [ ] Confirm it fails (red) — current behaviour emits nothing
-- [ ] Apply step 1
-- [ ] Confirm it passes (green), and that a *present* `framework.json` still renders `Claude Mallet <sha>` as the first segment
-- [ ] Write failing test for the cache: run `session-start.sh` twice with a fresh `HOME`, counting `curl` invocations via a stub `curl` earlier on `PATH`; assert exactly one network attempt across both runs
-- [ ] Confirm it fails (red)
-- [ ] Apply step 2
-- [ ] Confirm it passes (green)
-- [ ] Assert a stub `curl` that exits non-zero leaves no cache file behind and the hook still exits 0
-- [ ] Assert a cache entry older than 86400s triggers a fresh check
-- [ ] Regression: with an update genuinely available, the `--- Framework Update Available ---` block is still emitted
+- [x] Write failing test: run `statusline.sh` with a session JSON containing `cost` and `context_window` but with `HOME` pointed at a directory holding no `framework.json`; assert cost and context output still appear
+- [x] Confirm it fails (red) — current behaviour emits nothing
+- [x] Apply step 1
+- [x] Confirm it passes (green), and that a *present* `framework.json` still renders `Claude Mallet <sha>` as the first segment
+- [x] Write failing test for the cache: run `session-start.sh` twice with a fresh `HOME`, counting `curl` invocations via a stub `curl` earlier on `PATH`; assert exactly one network attempt across both runs
+- [x] Confirm it fails (red)
+- [x] Apply step 2
+- [x] Confirm it passes (green)
+- [x] Assert a stub `curl` that exits non-zero leaves no cache file behind and the hook still exits 0
+- [x] Assert a cache entry older than 86400s triggers a fresh check
+- [x] Regression: with an update genuinely available, the `--- Framework Update Available ---` block is still emitted
 
 ## Notes
 `date +%s` is used directly; this is a shell hook, not a workflow script, so there is no restriction on it.
