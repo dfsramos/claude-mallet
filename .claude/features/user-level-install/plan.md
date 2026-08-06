@@ -58,7 +58,7 @@ Git-tracked `CLAUDE.md` files are left completely alone — no strip, no diff, n
 - [x] 02-hook-paths — Repoint hook data paths to `.mallet/` and `framework.json` to `~/.claude/` [deps: —] [parallel: yes]
 - [x] 03-skill-paths — Rewrite the 110 `.claude/project|features|pipeline-state` references across CLAUDE.md, skills, and agents [deps: —] [parallel: yes]
 - [x] 04-hook-hardening — Fix `statusline.sh` hard-exit and add update-check caching [deps: 02] [parallel: no]
-- [ ] 05-migrate-skill — Author the `migrate` skill: detection, backup, CLAUDE.md strip, settings pruning, state move [deps: 01] [parallel: yes]
+- [x] 05-migrate-skill — Author the `migrate` skill: detection, backup, CLAUDE.md strip, settings pruning, state move [deps: 01] [parallel: yes]
 - [ ] 06-install-rewrite — Rewrite `install.md` for user-level install with scan-and-clean [deps: 01, 05] [parallel: yes]
 - [ ] 07-legacy-detect — Add legacy-payload detection to `session-start.sh` [deps: 02, 05] [parallel: yes]
 - [ ] 08-update-skill — Rewrite the `update` skill for user-level with jq merge [deps: 01] [parallel: yes]

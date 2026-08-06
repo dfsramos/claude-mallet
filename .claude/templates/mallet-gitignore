@@ -1,0 +1,29 @@
+# Optional .gitignore for .mallet/ — copy to <repo>/.mallet/.gitignore by hand.
+#
+# Mallet does NOT install this. Whether .mallet/ is tracked at all is your
+# decision; this template only helps if you have decided to COMMIT .mallet/ and
+# want the transient parts left out of history.
+#
+# If instead you want .mallet/ ignored everywhere on this machine, add
+# `.mallet/` to ~/.config/git/ignore (or whatever core.excludesFile points at)
+# and do not use this file.
+
+# Transient — regenerated on demand, no value in history
+pipeline-state/
+compact-snapshot.md
+
+# Point-in-time snapshots — commit deliberately with `git add -f` if wanted
+discovery-*.md
+
+# Session-scoped working state
+missions/
+task-notes.md
+
+# Durable and worth committing, listed here only as documentation:
+#   conventions.md      project conventions
+#   memory.md           persistent project facts
+#   lessons.md          recorded corrections
+#   skill-backlog.md    candidate skills
+#   overrides/          per-skill amendments
+#   skills/             project-specific skills
+#   features/           feature plans

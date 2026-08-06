@@ -1,5 +1,5 @@
 # Task: migrate-skill
-Status: pending
+Status: done
 Deps: 01
 
 ## Goal
@@ -93,22 +93,22 @@ In this order:
 Per repo: what was moved, deleted, pruned, stripped, and skipped; the backup path; and any `git` commands the user must run themselves. End with the count of repos migrated versus skipped.
 
 ## TDD Checklist
-- [ ] Build a fixture tree of six real git repos: (a) untracked payload plus project state, (b) untracked `CLAUDE.md` that is pure Mallet payload, (c) untracked `CLAUDE.md` with extra project sections, (d) **tracked** `CLAUDE.md` with extra project sections, (e) broken `framework.json` using the `commit` key, (f) already-migrated repo with `.mallet/` and no payload
-- [ ] Write failing assertions for each fixture's expected end state
-- [ ] Confirm they fail (red)
-- [ ] Implement the skill and run it against the fixtures
-- [ ] Assert (a) is fully cleaned with all project state present under `.mallet/` and nothing lost
-- [ ] Assert (b) has its `CLAUDE.md` deleted
-- [ ] Assert (c) yields a `CLAUDE.md` containing exactly the project-authored sections
-- [ ] Assert (d) is **byte-identical** to its starting state and `git status` in it is clean — no strip, no stage, no index change
-- [ ] Assert (e) is detected and migrated despite the schema variant
-- [ ] Assert (f) is skipped, not re-migrated
-- [ ] Assert no fixture gained a `.mallet/.gitignore` and no fixture's `.gitignore` or `.git/info/exclude` was modified when the user declines the ignore prompt
-- [ ] Assert choosing the machine-wide ignore option appends exactly one `.mallet/` line and is idempotent on a second run
-- [ ] Idempotency: run twice over all fixtures, assert the second run reports every repo as already migrated and changes nothing
-- [ ] Assert a `tar` failure aborts that repo before any deletion
-- [ ] Assert `.claude/settings.local.json` is byte-identical in every fixture afterwards
-- [ ] Assert an opt-in hook registration survives with a rewritten `$HOME` path
+- [x] Build a fixture tree of six real git repos: (a) untracked payload plus project state, (b) untracked `CLAUDE.md` that is pure Mallet payload, (c) untracked `CLAUDE.md` with extra project sections, (d) **tracked** `CLAUDE.md` with extra project sections, (e) broken `framework.json` using the `commit` key, (f) already-migrated repo with `.mallet/` and no payload
+- [x] Write failing assertions for each fixture's expected end state
+- [x] Confirm they fail (red)
+- [x] Implement the skill and run it against the fixtures
+- [x] Assert (a) is fully cleaned with all project state present under `.mallet/` and nothing lost
+- [x] Assert (b) has its `CLAUDE.md` deleted
+- [x] Assert (c) yields a `CLAUDE.md` containing exactly the project-authored sections
+- [x] Assert (d) is **byte-identical** to its starting state and `git status` in it is clean — no strip, no stage, no index change
+- [x] Assert (e) is detected and migrated despite the schema variant
+- [x] Assert (f) is skipped, not re-migrated
+- [x] Assert no fixture gained a `.mallet/.gitignore` and no fixture's `.gitignore` or `.git/info/exclude` was modified when the user declines the ignore prompt
+- [x] Assert choosing the machine-wide ignore option appends exactly one `.mallet/` line and is idempotent on a second run
+- [x] Idempotency: run twice over all fixtures, assert the second run reports every repo as already migrated and changes nothing
+- [x] Assert a `tar` failure aborts that repo before any deletion
+- [x] Assert `.claude/settings.local.json` is byte-identical in every fixture afterwards
+- [x] Assert an opt-in hook registration survives with a rewritten `$HOME` path
 
 ## Notes
 Fixture (d) mirrors both real tracked cases — exocortex (carries a 16-line `## Vault Context` section) and Cludo/ai (29 headings matching the payload exactly). Both are now left alone by explicit decision, so (d) is the fixture that proves the migration keeps its hands off committed files.
