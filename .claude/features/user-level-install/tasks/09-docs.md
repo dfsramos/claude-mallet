@@ -1,5 +1,5 @@
 # Task: docs
-Status: pending
+Status: done
 Deps: 01, 02, 03, 04, 05, 06, 07, 08
 
 ## Goal
@@ -38,12 +38,12 @@ This repo's `.claude/project/CLAUDE.md` requires docs parity: skill changes upda
 
 ## TDD Checklist
 _(Documentation only — no runtime behaviour. Verification is by assertion, not test.)_
-- [ ] `grep -rn '\.claude/\(project\|features\|pipeline-state\)' docs/ README.md` returns zero matches
-- [ ] `grep -rn 'settings\.json' docs/` describes merging, never overwriting
-- [ ] Every path in the `docs/structure.md` trees exists in the repo or is explicitly marked created-on-demand
-- [ ] Every skill in `.claude/skills/` has a `docs/skills.md` entry, and every entry names a skill that exists
-- [ ] Every hook in `.claude/hooks/` has a `docs/hooks.md` entry, with default-versus-opt-in stated correctly
-- [ ] `README.md` install instructions, followed literally against a scratch `HOME`, produce a working install
+- [x] `grep -rn '\.claude/\(project\|features\|pipeline-state\)' docs/ README.md` returns zero matches
+- [x] `grep -rn 'settings\.json' docs/` describes merging, never overwriting
+- [x] Every path in the `docs/structure.md` trees exists in the repo or is explicitly marked created-on-demand
+- [x] Every skill in `.claude/skills/` has a `docs/skills.md` entry, and every entry names a skill that exists
+- [x] Every hook in `.claude/hooks/` has a `docs/hooks.md` entry, with default-versus-opt-in stated correctly
+- [x] `README.md` install instructions, followed literally against a scratch `HOME`, produce a working install
 
 ## Notes
 Item 6 is the cheapest guard against the mapping table being applied inconsistently across 110 sites.

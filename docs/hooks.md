@@ -1,21 +1,36 @@
 # Hooks
 
-Hooks are shell scripts that run automatically in response to Claude Code events. They are registered in `.claude/settings.json`.
+Hooks are shell scripts that run automatically in response to Claude Code events.
+
+The scripts live at `~/.claude/hooks/` and are shared by every project. Each one locates its *data* through `$CLAUDE_PROJECT_DIR`, so a single global script reads the current project's `.mallet/` state — which is what made moving the framework to a machine-wide install a path change rather than a behaviour change.
+
+Registration is split by tier:
+
+| Tier | Registered in | Why |
+|---|---|---|
+| Default (`session-start`, `user-prompt-submit`, `write-guard`, `pre-compact`) | `~/.claude/settings.json`, merged at install | Universally applicable |
+| Opt-in (`typecheck`, `push-confirm`, `explore-redirect`) | the **project's** `.claude/settings.json`, via `/hooks-setup` | `typecheck` is language-specific — the script is global, the choice is local |
 
 ## Session Start Hook
 
-**File:** `.claude/hooks/session-start.sh`
+**File:** `~/.claude/hooks/session-start.sh`
 **Trigger:** Claude Code session startup (`matcher: "startup"`)
 
 Injects project memory and a framework update notice (when available) at session start.
 
 ### What it does
 
-1. **Project memory injection.** If `.claude/project/memory.md` exists, echoes its contents wrapped in `--- Project Memory ---` markers so project facts are in context from turn one.
-2. **Compact snapshot restore.** If `.claude/project/compact-snapshot.md` exists (written by the PreCompact hook before the last compaction), injects its contents then deletes the file. This restores branch, uncommitted changes, and active mission context in sessions that start after a compaction.
-3. **Framework update check.** If `.claude/framework.json` exists and `curl` + `jq` are available, queries the GitHub API for the repo's default branch HEAD. If the local hash differs, emits a `--- Framework Update Available ---` notice instructing Claude to surface it to the user and offer to run the update skill.
+1. **Project memory injection.** If `.mallet/memory.md` exists, echoes its contents wrapped in `--- Project Memory ---` markers so project facts are in context from turn one.
+2. **Compact snapshot restore.** If `.mallet/compact-snapshot.md` exists (written by the PreCompact hook before the last compaction), injects its contents then deletes the file. This restores branch, uncommitted changes, and active mission context in sessions that start after a compaction.
+3. **Framework update check.** If `~/.claude/framework.json` exists, resolves the latest HEAD SHA and emits a `--- Framework Update Available ---` notice when it differs from the local one, instructing Claude to offer the update skill.
 
-Both steps fail silently on any error (missing tools, network failure, unparseable JSON) — a hook failure never disrupts session start.
+   The result is cached for 24 hours at `~/.claude/.mallet-update-check` (format: `<epoch> <sha> <date>`). The cache exists because Mallet is now installed once at `~/.claude/`, so this hook fires in every session in every directory — an uncached check would exhaust the 60 req/hr unauthenticated GitHub limit and silently disable update notices for the rest of the hour. The up-to-date result is cached too, or every session would re-check. A **failed** lookup is never cached, so a transient outage is not recorded as "up to date" for a day.
+
+4. **Legacy install detection.** If the current project contains `.claude/framework.json`, or both `.claude/skills/update/SKILL.md` and `.claude/agents/_contract.md`, emits a `--- Legacy Mallet Install Detected ---` notice offering the `migrate` skill. This is the self-healing half of migration: the installer's scan catches most repos, and this catches the ones it could not reach.
+
+   Suppress it by creating `<project>/.mallet/.migration-declined`. The check is deliberately three `-f` tests — no traversal, no network — because it runs everywhere.
+
+Every step fails silently on any error (missing tools, network failure, unparseable JSON) — a hook failure never disrupts session start.
 
 ### Why it exists
 
@@ -25,7 +40,7 @@ The update check moved from the statusline to this hook because the statusline r
 
 ## UserPromptSubmit Hook
 
-**File:** `.claude/hooks/user-prompt-submit.sh`
+**File:** `~/.claude/hooks/user-prompt-submit.sh`
 **Trigger:** Every user message submitted to Claude
 
 Runs two independent checks on every prompt: a session turn counter and a complexity scorer. Designed to be silent for routine work and only speak up when session length or task complexity warrants it.
@@ -69,7 +84,7 @@ The ultracode scorer detects tasks where parallel multi-agent execution would pr
 
 ## PreCompact Hook
 
-**File:** `.claude/hooks/pre-compact.sh`
+**File:** `~/.claude/hooks/pre-compact.sh`
 **Trigger:** `PreCompact` — fires before Claude Code compacts the conversation
 
 Captures in-progress state before compaction so critical context survives both within the current session and across restarts.
@@ -79,14 +94,14 @@ Captures in-progress state before compaction so critical context survives both w
 Two outputs simultaneously via `tee`:
 
 1. **stdout** — injected into the compaction context so the summariser has branch, uncommitted changes, recent commits, and any active mission to preserve in its summary.
-2. **`.claude/project/compact-snapshot.md`** — a snapshot file read by `session-start.sh` when a _new_ session begins after a compaction. `session-start.sh` injects it then deletes it, so it never accumulates.
+2. **`.mallet/compact-snapshot.md`** — a snapshot file read by `session-start.sh` when a _new_ session begins after a compaction. `session-start.sh` injects it then deletes it, so it never accumulates.
 
 Captured state:
 - Timestamp
 - Current git branch
 - Uncommitted changes (`git status --short`, up to 15 lines)
 - Last 5 commits (`git log --oneline`)
-- Full contents of `.claude/project/missions/active.md` (if present)
+- Full contents of `.mallet/missions/active.md` (if present)
 
 ### Why it exists
 
@@ -94,7 +109,7 @@ Context compaction discards conversation history to free the window. Without int
 
 ## Write Guard Hook
 
-**File:** `.claude/hooks/write-guard.sh`
+**File:** `~/.claude/hooks/write-guard.sh`
 **Trigger:** `PreToolUse` — fires before every `Write` tool call (`matcher: "Write"`)
 
 Blocks `Write` calls on files that already exist. CLAUDE.md requires `Edit` for existing files; `Write` is reserved for new files only. This hook enforces that rule at the tooling level.
@@ -114,7 +129,7 @@ The hook only fires on `PreToolUse` for `Write`, so it adds zero overhead to all
 
 ## Typecheck Hook
 
-**File:** `.claude/hooks/typecheck.sh`
+**File:** `~/.claude/hooks/typecheck.sh`
 **Trigger:** `PostToolUse` — fires after every `Edit` tool call (`matcher: "Edit"`)
 **Activation:** opt-in via `/hooks-setup` — not registered by default
 
@@ -137,7 +152,7 @@ Linter errors that surface only after a multi-file session require backtracking.
 
 ## Push-Confirm Hook
 
-**File:** `.claude/hooks/push-confirm.sh`
+**File:** `~/.claude/hooks/push-confirm.sh`
 **Trigger:** `PreToolUse` — fires before every `Bash` tool call (`matcher: "Bash"`)
 **Activation:** opt-in via `/hooks-setup` — not registered by default
 
@@ -157,7 +172,7 @@ A blocking hook (exit 2) creates an infinite retry loop: after the user confirms
 
 ## Explore Redirect Hook
 
-**File:** `.claude/hooks/explore-redirect.sh`
+**File:** `~/.claude/hooks/explore-redirect.sh`
 **Trigger:** `PreToolUse` on `Bash` — fires before Bash commands matching broad search patterns
 **Activation:** opt-in via `/hooks-setup`
 
@@ -168,7 +183,7 @@ When Claude runs a broad recursive search (`grep -r`, `find .`, `rg`, `ag`), che
 | Resource found | Suggestion |
 |---|---|
 | `graphify-out/graph.json` | Use `/graphify query`, `/graphify path`, or `/graphify explain` for semantic search |
-| `.claude/project/discovery-*.md` | Check the Critical Files section before grepping broadly |
+| `.mallet/discovery-*.md` | Check the Critical Files section before grepping broadly |
 
 Only fires when the resource actually exists — silent on projects that have neither.
 
@@ -180,8 +195,8 @@ Broad searches are often intentional (writing tests, auditing for a pattern). Th
 
 The framework ships hooks in two tiers:
 
-**Default hooks** — registered in `settings.json` at install time, active in every project:
-- `session-start.sh` — memory injection, compact-snapshot restore, and update check
+**Default hooks** — registered in `~/.claude/settings.json` at install time, active in every project:
+- `session-start.sh` — memory injection, compact-snapshot restore, cached update check, legacy-install detection
 - `user-prompt-submit.sh` — complexity scorer and turn counter
 - `write-guard.sh` — blocks Write on existing files
 - `pre-compact.sh` — captures git state and active mission before compaction
@@ -193,9 +208,19 @@ The framework ships hooks in two tiers:
 
 ## Adding New Hooks
 
-1. Create a script in `.claude/hooks/`
-2. Register it in `.claude/settings.json` under the appropriate event matcher using `bash "..."` invocation:
+1. Create a script in `~/.claude/hooks/` — or, to ship it with the framework, in this repo's `.claude/hooks/`
+2. Register it under the appropriate event matcher using an explicit `bash "..."` invocation. **The script path is always `$HOME`**, since the payload is machine-wide; only the file you register it *in* varies by tier:
+
+   Universally applicable — add to `.claude/settings.fragment.json` in this repo so it merges into `~/.claude/settings.json` at install:
    ```json
-   { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/my-hook.sh\"" }
+   { "type": "command", "command": "bash \"$HOME/.claude/hooks/my-hook.sh\"" }
    ```
+
+   Project-specific — register in that project's `.claude/settings.json`, which is what `/hooks-setup` does:
+   ```json
+   { "type": "command", "command": "bash \"$HOME/.claude/hooks/my-hook.sh\"" }
+   ```
+
+   Do not use `$CLAUDE_PROJECT_DIR` for the script path — it resolves to the project, not the install, and the script does not live there any more. Use `$CLAUDE_PROJECT_DIR` *inside* the script to locate that project's data.
+
    Using `bash` explicitly avoids relying on the hook script having the execute bit set on disk. This matters because (a) git may not preserve the bit across platforms (e.g., with `core.fileMode = false`), and (b) tarball extraction and fresh copies can drop permissions until `chmod +x` runs.

@@ -11,9 +11,28 @@ A portable configuration framework for [Claude Code](https://docs.anthropic.com/
 
 ## Overview
 
-A reusable set of configuration files (`CLAUDE.md` and `.claude/`) that shape how Claude Code operates within any repository. When Claude Code opens a project containing these files, it automatically adopts the defined persona, enforces the specified rules, and gains access to registered hooks and skills.
+A configuration framework installed **once per machine** at `~/.claude/`. Every Claude Code session, in every project, adopts the defined persona, enforces the specified rules, and gains access to the registered hooks and skills.
+
+Nothing is written into your repositories. A project gains a `.mallet/` directory only when Mallet has something project-specific to store there — conventions, memory, lessons, feature plans. Your repo's own `CLAUDE.md`, if it has one, is never touched.
 
 It is not application code — it is a scaffold for standardising Claude Code behavior.
+
+```
+~/.claude/                     installed once, applies everywhere
+├── CLAUDE.md                  directives and persona
+├── skills/  agents/  hooks/  templates/
+├── statusline.sh
+├── settings.json              merged, never overwritten
+└── framework.json             single source of version truth
+
+<any-repo>/                    only what that project needs
+├── CLAUDE.md                  yours, untouched
+├── .claude/settings.local.json    permissions, untouched
+└── .mallet/                   Mallet's project state
+    ├── conventions.md  memory.md  lessons.md
+    ├── missions/  overrides/  skills/
+    └── features/
+```
 
 Three workflows anchor the framework and return the most value per session:
 
@@ -29,19 +48,52 @@ Open any project in Claude Code and say:
 install the framework from https://github.com/dfsramos/claude-mallet
 ```
 
-Claude will download the latest release tarball, copy the framework files into the target project, preserve any existing `.claude/project/**` content, and write `.claude/framework.json` with the commit hash.
+Claude installs into `~/.claude/`, taking a backup first. The install is machine-wide, so the directives apply in every project you open — including ones unrelated to this install.
+
+Existing config is preserved, not clobbered:
+
+- `~/.claude/settings.json` is **merged** — your `model`, `effortLevel`, `enabledPlugins`, and your own hooks survive.
+- Skills, agents, templates, and hooks are replaced **per entry**. Anything you authored yourself stays, and is reported back to you as preserved.
+- An existing `~/.claude/CLAUDE.md` is backed up to `CLAUDE.md.pre-mallet-<date>` and you are asked before it is replaced.
+
+The installer then offers to clean up any older per-project installs it finds (see below) and asks how you want `.mallet/` treated by git.
 
 ### Manual
 
 ```bash
 curl -sfL https://github.com/dfsramos/claude-mallet/archive/refs/heads/master.tar.gz | tar -xz -C /tmp
-cp -r /tmp/claude-mallet-master/.claude/hooks /tmp/claude-mallet-master/.claude/skills /tmp/claude-mallet-master/.claude/templates /path/to/project/.claude/
-cp /tmp/claude-mallet-master/.claude/statusline.sh /tmp/claude-mallet-master/.claude/settings.json /path/to/project/.claude/
-cp /tmp/claude-mallet-master/CLAUDE.md /path/to/project/
-chmod +x /path/to/project/.claude/hooks/*.sh
+bash /tmp/claude-mallet-master/.claude/install-payload.sh \
+  --from /tmp/claude-mallet-master --repo dfsramos/claude-mallet --sha "$(git ls-remote https://github.com/dfsramos/claude-mallet master | cut -f1)"
+bash /tmp/claude-mallet-master/.claude/merge-settings.sh \
+  /tmp/claude-mallet-master/.claude/settings.fragment.json
 ```
 
-Note: manual copy does not write `.claude/framework.json`, so the session-start update check will not run.
+Both scripts are idempotent and take backups. `install-payload.sh` writes `~/.claude/framework.json` including the manifest, so the session-start update check works after a manual install.
+
+## Migrating from a per-project install
+
+Mallet used to install into each repository. If you have those, say:
+
+```
+clean up the old Mallet installs
+```
+
+Per repo, the `migrate` skill:
+
+- **moves** `.claude/project/`, `.claude/features/`, and `.claude/pipeline-state/` into `.mallet/` — nothing is discarded, including files it does not recognise
+- renames `.claude/project/CLAUDE.md` to `.mallet/conventions.md`, ending the two-files-called-CLAUDE.md ambiguity
+- **deletes** the old framework payload, but **only files git does not track**
+- prunes the base-hook registrations out of `.claude/settings.json`, keeping your per-project opt-in hooks and repointing them at `~/.claude/hooks/`
+- strips Mallet's directives out of an **untracked** `CLAUDE.md`, keeping whatever you added, by diffing against the exact historical payload for the version that repo recorded
+
+What it will not do:
+
+- **touch a git-tracked file.** A committed `CLAUDE.md` is left exactly as it is — reported, never modified.
+- **touch `.claude/settings.local.json`.**
+- **decide your VCS policy.** Mallet ships no `.gitignore` into `.mallet/` and never edits yours. You are asked once whether to ignore `.mallet/` machine-wide, per repo, or not at all.
+- **delete anything without a backup.** Each repo is tarred to `~/.claude/mallet-migration-backup-<timestamp>-<repo>.tar.gz` first; a repo whose backup fails is skipped whole.
+
+Repos the installer cannot reach are caught later: the session-start hook notices a leftover payload and offers cleanup the next time you open that project.
 
 ## Updating
 
@@ -51,9 +103,9 @@ With the framework installed, say:
 update the framework
 ```
 
-The update skill fetches the latest commit via the GitHub API, downloads the tarball, overwrites framework-managed files (preserving `.claude/project/**` and `.claude/settings.local.json`), and updates `.claude/framework.json` with the new version hash.
+One install means one update. The skill fetches the latest commit, replaces each payload entry, merges settings, and reconciles the manifest — removing only what the new release dropped, and leaving anything you authored yourself alone.
 
-The session-start hook also checks for updates automatically on each session start and surfaces them to Claude so you can accept or defer the upgrade inline.
+The session-start hook checks for updates and surfaces them inline so you can accept or defer. The result is cached for 24 hours at `~/.claude/.mallet-update-check`, because the hook now runs in every session in every directory and the unauthenticated GitHub API allows 60 requests an hour. A failed check is never cached as "up to date".
 
 ## What's Included
 
@@ -72,14 +124,17 @@ The session-start hook also checks for updates automatically on each session sta
 | `receiving-code-review` | Code review returned and needs actioning |
 | `dispatching-parallel-agents` | 3+ independent failures or workstreams |
 | `update` | "update the framework" |
+| `migrate` | "clean up the old Mallet installs", `/migrate` |
 
 ## Hooks
 
-Hooks run automatically in response to Claude Code events. The framework ships a default set (always active) and an opt-in set activated per project via `/hooks-setup`.
+Hooks run automatically in response to Claude Code events. The scripts live at `~/.claude/hooks/` and are shared by every project; each one locates its *data* through `$CLAUDE_PROJECT_DIR`, so it reads the current project's `.mallet/` state.
+
+The default set is registered globally in `~/.claude/settings.json` at install. The opt-in set is registered **per project** via `/hooks-setup` — the script is global, the choice is local, because `typecheck.sh` is language-specific.
 
 | Hook | Event | Tier | What it does |
 |---|---|---|---|
-| `session-start.sh` | SessionStart | Default | Injects project memory, restores compact snapshot, checks for framework updates |
+| `session-start.sh` | SessionStart | Default | Injects project memory, restores compact snapshot, checks for framework updates (24h cache), flags a leftover per-project install |
 | `user-prompt-submit.sh` | UserPromptSubmit | Default | Complexity scorer (triggers `task-calibrate`) and turn counter |
 | `write-guard.sh` | PreToolUse `Write` | Default | Blocks `Write` on existing files — enforces `Edit` |
 | `pre-compact.sh` | PreCompact | Default | Captures git state and active mission before compaction; restores on next session start |
