@@ -65,13 +65,13 @@ In this order:
    - `.claude/pipeline-state/` → `.mallet/pipeline-state/`
    - Anything else under `.claude/project/` → `.mallet/`, reported by name; never discarded
    - `rmdir .claude/project` only once empty
-2. **Write `.mallet/.gitignore`:**
-   ```gitignore
-   pipeline-state/
-   compact-snapshot.md
-   discovery-*.md
-   missions/
-   ```
+2. **Do not write any ignore file.** Whether `.mallet/` is tracked is the user's call, not Mallet's — see the VCS policy section in `plan.md`. Offer the four options once per migration run (not per repo), and act only on an explicit answer:
+   - Machine-wide: append `.mallet/` to `git config --global core.excludesFile`, defaulting to `~/.config/git/ignore` when unset — git reads that path automatically. Check for an existing entry first; never duplicate.
+   - Single repo: append `.mallet/` to `<repo>/.git/info/exclude`.
+   - Commit it: write nothing. Mention that `~/.claude/templates/mallet-gitignore` holds a transient-split template they can copy in by hand if they want pipeline state and discovery reports excluded.
+   - Decide later: write nothing.
+
+   Never edit a repo's tracked `.gitignore`. Report which option was applied.
 3. **Delete the framework payload — untracked only.** For each of `.claude/agents/`, `.claude/hooks/`, `.claude/skills/`, `.claude/templates/`, `.claude/statusline.sh`, `.claude/framework.json`: check `git ls-files --error-unmatch <path>`; delete when untracked, and when tracked leave it and add to the report with the exact `git rm -r --cached <path>` command.
 4. **Prune `.claude/settings.json`:**
    - Remove hook entries whose command references `session-start.sh`, `user-prompt-submit.sh`, `pre-compact.sh`, `write-guard.sh`, or `statusline.sh` — these are global now.
@@ -79,12 +79,13 @@ In this order:
    - Remove Mallet's `statusLine` if it points at `.claude/statusline.sh`.
    - Drop event keys left with no hooks. Delete the file only if it reduces to `{}`; otherwise write back the pruned object.
    - Never touch `.claude/settings.local.json`.
-5. **Strip `CLAUDE.md`:**
-   - Fetch the exact historical payload: `curl -sfL "https://raw.githubusercontent.com/<repo>/<sha>/CLAUDE.md"`.
-   - `diff` it against the repo's `CLAUDE.md`. Lines present only in the repo's copy are project-authored and must survive; a clean match means the file is pure Mallet payload.
-   - If the delta is empty: delete the file when untracked; when tracked, report with `git rm CLAUDE.md`.
-   - If the delta is non-empty: write the delta only, preserving its original heading order, and show the user the resulting diff. When the file is tracked, **write only on explicit per-repo confirmation**.
-   - Fallback when the fetch fails or the SHA is `unknown`: strip whole `##` sections matching the known Mallet heading set, keep unknown sections, and require confirmation on the diff before writing.
+5. **Strip `CLAUDE.md` — untracked only.**
+   - First: `git ls-files --error-unmatch CLAUDE.md`. **If tracked, skip entirely** — no fetch, no diff, no write, no suggested git command. Record it in the summary as `skipped (tracked)` and move on. Modifying a file the repo has committed is the user's decision, not the migration's.
+   - For an untracked `CLAUDE.md`, fetch the exact historical payload: `curl -sfL "https://raw.githubusercontent.com/<repo>/<sha>/CLAUDE.md"`.
+   - `diff` it against the repo's copy. Lines present only in the repo's copy are project-authored and must survive; a clean match means the file is pure Mallet payload.
+   - If the delta is empty: delete the file.
+   - If the delta is non-empty: write the delta only, preserving its original heading order, and show the user the resulting diff before writing.
+   - Fallback when the fetch fails or the SHA is `unknown`: strip whole `##` sections matching the known Mallet heading set, keep unknown sections, and require confirmation on the diff before writing. If the user declines, leave the file untouched.
    - After stripping, rewrite any `.claude/project/` references inside the surviving content per the mapping table, and report them.
 
 ### Phase 6 — Summary
@@ -92,19 +93,24 @@ In this order:
 Per repo: what was moved, deleted, pruned, stripped, and skipped; the backup path; and any `git` commands the user must run themselves. End with the count of repos migrated versus skipped.
 
 ## TDD Checklist
-- [ ] Build a fixture tree under `<scratchpad>/migrate-fixtures/` with five repos: (a) untracked payload plus project state, (b) tracked `CLAUDE.md` that is pure Mallet payload, (c) tracked `CLAUDE.md` with extra project sections, (d) broken `framework.json` using the `commit` key, (e) already-migrated repo with `.mallet/` and no payload
+- [ ] Build a fixture tree of six real git repos: (a) untracked payload plus project state, (b) untracked `CLAUDE.md` that is pure Mallet payload, (c) untracked `CLAUDE.md` with extra project sections, (d) **tracked** `CLAUDE.md` with extra project sections, (e) broken `framework.json` using the `commit` key, (f) already-migrated repo with `.mallet/` and no payload
 - [ ] Write failing assertions for each fixture's expected end state
 - [ ] Confirm they fail (red)
 - [ ] Implement the skill and run it against the fixtures
 - [ ] Assert (a) is fully cleaned with all project state present under `.mallet/` and nothing lost
-- [ ] Assert (b) leaves the tracked file on disk, unmodified, and reports the `git rm` command
+- [ ] Assert (b) has its `CLAUDE.md` deleted
 - [ ] Assert (c) yields a `CLAUDE.md` containing exactly the project-authored sections
-- [ ] Assert (d) is detected and migrated despite the schema variant
-- [ ] Assert (e) is skipped, not re-migrated
+- [ ] Assert (d) is **byte-identical** to its starting state and `git status` in it is clean — no strip, no stage, no index change
+- [ ] Assert (e) is detected and migrated despite the schema variant
+- [ ] Assert (f) is skipped, not re-migrated
+- [ ] Assert no fixture gained a `.mallet/.gitignore` and no fixture's `.gitignore` or `.git/info/exclude` was modified when the user declines the ignore prompt
+- [ ] Assert choosing the machine-wide ignore option appends exactly one `.mallet/` line and is idempotent on a second run
 - [ ] Idempotency: run twice over all fixtures, assert the second run reports every repo as already migrated and changes nothing
 - [ ] Assert a `tar` failure aborts that repo before any deletion
 - [ ] Assert `.claude/settings.local.json` is byte-identical in every fixture afterwards
 - [ ] Assert an opt-in hook registration survives with a rewritten `$HOME` path
 
 ## Notes
-Fixture (c) mirrors exocortex, whose real delta is a 16-line `## Vault Context` section — the concrete case proving the strip works. Fixture (b) mirrors Cludo/ai, whose 29 headings match the payload exactly with no project content.
+Fixture (d) mirrors both real tracked cases — exocortex (carries a 16-line `## Vault Context` section) and Cludo/ai (29 headings matching the payload exactly). Both are now left alone by explicit decision, so (d) is the fixture that proves the migration keeps its hands off committed files.
+
+Fixtures (b) and (c) mirror the untracked majority of the fleet — cludo-lambdas, App.Backend, PuppeteerService, WebRenderService, gitops — which is where the strip actually runs. They must be real git repos (`git init` plus a commit), not bare directories, or `git ls-files` cannot distinguish tracked from untracked and the central safety check goes untested.

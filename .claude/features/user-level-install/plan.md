@@ -36,6 +36,23 @@ Used by tasks 02, 03, 05, 09, 10. Any reference not in this table stays unchange
 | `.claude/settings.json` (opt-in hook registrations) | unchanged — stays per repo |
 | `.claude/settings.local.json` | unchanged — never touched |
 
+## VCS policy: not Mallet's call
+
+Mallet ships no `.gitignore` into `.mallet/` and never edits a repo's `.gitignore` or `.git/info/exclude`. Install and migrate **present** the options and act only on an explicit answer:
+
+| Option | Mechanism |
+|---|---|
+| Ignore on this machine, every repo | add `.mallet/` to `~/.config/git/ignore` (or whatever `core.excludesFile` points at) |
+| Ignore in one repo only | add `.mallet/` to that repo's `.git/info/exclude` |
+| Commit it | do nothing; optionally copy the transient-split template from `~/.claude/templates/mallet-gitignore` |
+| Decide later | do nothing |
+
+Absent an answer, nothing is written. An AI framework should not impose a VCS policy on the repos it is installed into.
+
+## Tracked files are never modified
+
+Git-tracked `CLAUDE.md` files are left completely alone — no strip, no diff, no suggested command. The surgical strip applies only to **untracked** `CLAUDE.md`, which covers most of the fleet.
+
 ## Tasks
 - [x] 01-settings-fragment — Convert `.claude/settings.json` to a `$HOME`-pathed merge fragment and define the jq merge routine [deps: —] [parallel: yes]
 - [x] 02-hook-paths — Repoint hook data paths to `.mallet/` and `framework.json` to `~/.claude/` [deps: —] [parallel: yes]

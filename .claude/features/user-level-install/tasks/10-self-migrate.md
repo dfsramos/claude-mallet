@@ -20,8 +20,8 @@ Fixtures proved the mechanism in task 05. This proves it against the real varian
 4. `git mv .claude/project/skills .mallet/skills` and `git mv .claude/project/missions .mallet/missions`
 5. `git mv .claude/features .mallet/features`
 6. `rmdir .claude/project` — confirm it is empty first; if not, move the remainder and report each file by name
-7. Write `.mallet/.gitignore` with `pipeline-state/`, `compact-snapshot.md`, `discovery-*.md`, `missions/`
-   - The two existing `discovery-*.md` files are already tracked. Keep them tracked: add `!discovery-2026-03-20.md` and `!discovery-2026-06-04.md` negations, or `git add -f`. Do not let this task silently untrack committed history.
+7. Write no ignore file. `.mallet/` is already ignored machine-wide via `~/.config/git/ignore:5` (added 2026-08-06, verified with `git check-ignore -v` in Cludo/gitops).
+   - **This repo is the exception that needs handling.** Its `.mallet/features/` and the two `discovery-*.md` files are tracked *and must stay tracked* — feature plans are committed to master by design so they are visible across branches. The machine-wide `.mallet/` ignore does not untrack already-tracked files, but it will hide new ones. Add a negation to this repo's own `.gitignore` (`!.mallet/`) or use `git add -f` for new files under `.mallet/`. Verify with `git check-ignore -v .mallet/features/<slug>/plan.md` and `git status` after the move that plan.md, state.md, and every task file are still visible to git.
 8. `git rm .claude/framework.json` — the version now lives at `~/.claude/framework.json`
 9. Read `.gitignore` and update any `.claude/pipeline-state/` or `.claude/framework.json` entry to its `.mallet/` equivalent
 10. Confirm what remains in this repo's `.claude/`: `agents/`, `hooks/`, `skills/`, `templates/`, `statusline.sh`, `settings.fragment.json`, `merge-settings.sh`, `settings.local.json`. These are payload source of truth and this repo's permissions — they stay.
@@ -61,7 +61,7 @@ Fixtures proved the mechanism in task 05. This proves it against the real varian
 
 ### E. Close out
 
-24. For each repo whose `.mallet/` should stay untracked, replace the `.claude/`+`CLAUDE.md` lines in `.git/info/exclude` with a single `.mallet/` line. Ask per repo — some may now want `.mallet/` committed.
+24. `.mallet/` is already ignored machine-wide, so no per-repo exclude is needed. Instead, clean up the stale workarounds: the `.claude/` and `CLAUDE.md` lines in `.git/info/exclude` for `ai` (21 claude lines), `Cludo.App.Backend` (12), `Cludo.PuppeteerService` (11), and `cludo-lambdas` (1) refer to a payload that no longer exists there. Remove only the lines that named the Mallet payload, leaving every unrelated entry intact. Show the diff per repo before writing — these are local files the user hand-edited.
 25. Set `plan.md` `Status: done`, record outcomes in `state.md`, and commit directly to master per this repo's git-workflow override.
 26. Spawn a subagent to independently verify the work per the base Verification Before Done directive: confirm no repo lost project state, no tracked file was modified without confirmation, and `~/.claude/` is internally consistent with its manifest.
 
