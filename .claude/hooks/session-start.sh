@@ -1,7 +1,10 @@
 #!/bin/bash
 # Session startup hook:
 #   1. Injects project memory into context (if present).
-#   2. Checks for a framework update and surfaces it as a notice (if available).
+#   2. Injects lessons.md and conventions.md (if present) — these carry binding
+#      rules (e.g. git workflow overrides) that must be applied from turn one,
+#      not just when Claude happens to remember to read them.
+#   3. Checks for a framework update and surfaces it as a notice (if available).
 
 # ── Project memory ──────────────────────────────────────────────────────────
 
@@ -10,6 +13,33 @@ if [ -f "$MEMORY_FILE" ]; then
   echo "--- Project Memory ---"
   cat "$MEMORY_FILE"
   echo "--- End Project Memory ---"
+fi
+
+# ── Lessons ──────────────────────────────────────────────────────────────────
+# Past corrections and their rules. Must be applied throughout the session,
+# not just acknowledged at startup — this is what memory.md/CLAUDE.md already
+# instruct, but relying on Claude to separately open the file has failed
+# before (a rule sat in this file, unread, while the mistake it describes was
+# repeated). Auto-inject so the rules are in context unconditionally.
+
+LESSONS_FILE="${CLAUDE_PROJECT_DIR}/.mallet/lessons.md"
+if [ -f "$LESSONS_FILE" ]; then
+  echo "--- Lessons (apply these rules throughout the session) ---"
+  cat "$LESSONS_FILE"
+  echo "--- End Lessons ---"
+fi
+
+# ── Conventions ──────────────────────────────────────────────────────────────
+# Project-specific overrides of the base framework's default behavior (e.g.
+# git workflow). These take precedence over CLAUDE.md's general rules for
+# this project and must be checked before applying any base-framework
+# directive, not just consulted after a mistake surfaces the gap.
+
+CONVENTIONS_FILE="${CLAUDE_PROJECT_DIR}/.mallet/conventions.md"
+if [ -f "$CONVENTIONS_FILE" ]; then
+  echo "--- Project Conventions (overrides take precedence over base CLAUDE.md) ---"
+  cat "$CONVENTIONS_FILE"
+  echo "--- End Project Conventions ---"
 fi
 
 # ── Post-compaction snapshot ────────────────────────────────────────────────

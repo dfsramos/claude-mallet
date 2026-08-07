@@ -16,17 +16,18 @@ Registration is split by tier:
 **File:** `~/.claude/hooks/session-start.sh`
 **Trigger:** Claude Code session startup (`matcher: "startup"`)
 
-Injects project memory and a framework update notice (when available) at session start.
+Injects project memory, lessons, conventions, and a framework update notice (when available) at session start.
 
 ### What it does
 
 1. **Project memory injection.** If `.mallet/memory.md` exists, echoes its contents wrapped in `--- Project Memory ---` markers so project facts are in context from turn one.
-2. **Compact snapshot restore.** If `.mallet/compact-snapshot.md` exists (written by the PreCompact hook before the last compaction), injects its contents then deletes the file. This restores branch, uncommitted changes, and active mission context in sessions that start after a compaction.
-3. **Framework update check.** If `~/.claude/framework.json` exists, resolves the latest HEAD SHA and emits a `--- Framework Update Available ---` notice when it differs from the local one, instructing Claude to offer the update skill.
+2. **Lessons and conventions injection.** If `.mallet/lessons.md` exists, echoes its contents wrapped in `--- Lessons ---` markers. If `.mallet/conventions.md` exists, echoes its contents wrapped in `--- Project Conventions ---` markers. Both carry rules that must be applied unconditionally — a project-specific git workflow override, a past correction that must not repeat — and previously depended on Claude remembering to open the files itself. In practice that manual read was skipped, most visibly when a project's git-workflow override sat unread in `conventions.md` while Claude applied the base CLAUDE.md's generic branch policy instead, executing a git write command the override explicitly reserves for the user.
+3. **Compact snapshot restore.** If `.mallet/compact-snapshot.md` exists (written by the PreCompact hook before the last compaction), injects its contents then deletes the file. This restores branch, uncommitted changes, and active mission context in sessions that start after a compaction.
+4. **Framework update check.** If `~/.claude/framework.json` exists, resolves the latest HEAD SHA and emits a `--- Framework Update Available ---` notice when it differs from the local one, instructing Claude to offer the update skill.
 
    The result is cached for 24 hours at `~/.claude/.mallet-update-check` (format: `<epoch> <sha> <date>`). The cache exists because Mallet is now installed once at `~/.claude/`, so this hook fires in every session in every directory — an uncached check would exhaust the 60 req/hr unauthenticated GitHub limit and silently disable update notices for the rest of the hour. The up-to-date result is cached too, or every session would re-check. A **failed** lookup is never cached, so a transient outage is not recorded as "up to date" for a day.
 
-4. **Legacy install detection.** If the current project contains `.claude/framework.json`, or both `.claude/skills/update/SKILL.md` and `.claude/agents/_contract.md`, emits a `--- Legacy Mallet Install Detected ---` notice offering the `migrate` skill. This is the self-healing half of migration: the installer's scan catches most repos, and this catches the ones it could not reach.
+5. **Legacy install detection.** If the current project contains `.claude/framework.json`, or both `.claude/skills/update/SKILL.md` and `.claude/agents/_contract.md`, emits a `--- Legacy Mallet Install Detected ---` notice offering the `migrate` skill. This is the self-healing half of migration: the installer's scan catches most repos, and this catches the ones it could not reach.
 
    Suppress it by creating `<project>/.mallet/.migration-declined`. The check is deliberately three `-f` tests — no traversal, no network — because it runs everywhere.
 
@@ -34,7 +35,7 @@ Every step fails silently on any error (missing tools, network failure, unparsea
 
 ### Why it exists
 
-Project memory — persistent facts about commands, conventions, and non-obvious behaviours — needs to be in context from turn one, not discovered lazily.
+Project memory, lessons, and conventions — persistent facts, past corrections, and project-specific overrides of the base framework's defaults — need to be in context from turn one, not discovered lazily or, worse, only after the gap causes a repeat mistake.
 
 The update check moved from the statusline to this hook because the statusline re-renders continuously (forcing a 5-minute cache to avoid API spam), while session start fires exactly once. Moving the check removes the cache, and delivering the notice via context rather than statusline text means Claude can proactively offer to run the update instead of the user having to notice the tiny status string.
 
@@ -196,7 +197,7 @@ Broad searches are often intentional (writing tests, auditing for a pattern). Th
 The framework ships hooks in two tiers:
 
 **Default hooks** — registered in `~/.claude/settings.json` at install time, active in every project:
-- `session-start.sh` — memory injection, compact-snapshot restore, cached update check, legacy-install detection
+- `session-start.sh` — memory/lessons/conventions injection, compact-snapshot restore, cached update check, legacy-install detection
 - `user-prompt-submit.sh` — complexity scorer and turn counter
 - `write-guard.sh` — blocks Write on existing files
 - `pre-compact.sh` — captures git state and active mission before compaction
