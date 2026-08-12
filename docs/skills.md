@@ -201,6 +201,20 @@ Structured end-of-session retrospective. No session record files are written —
 4b. **Mission state** — if work continues beyond this session, write `.mallet/missions/active.md`; if the mission completed, move `active.md` to `.mallet/missions/archive/<session-id>.md`
 5. **Close out** — clear task-notes scratchpad if used; confirm correct working branch; present the full wrap-up to the user
 
+## Next Steps
+
+**Directory:** `~/.claude/skills/next-steps/`
+**Triggered by:** "what's pending", "what's left", "what's next", "next steps", `/next-steps`, or a request for the remaining work as a referenceable list
+
+Reports outstanding work as a numbered table the user can refer to by number. Read-only except for step 6 — `checkpoint` writes state and `reviewing-sessions` reflects on the session, this one only reports what remains. Tracker-agnostic: it discovers what the environment has rather than assuming one exists, and degrades to mission files alone when a project has no tracker.
+
+1. **Discover sources** — `.mallet/missions/*.md` (all of them, not just `active.md`), the session, `skill-backlog.md`, `memory.md`; then whatever exists: a tracker MCP, `gh` issues and PRs, or a board named in `CLAUDE.md`/`conventions.md`
+2. **Collect** — pending mission items, work agreed but never written down, open tracker items belonging to the thread; excludes completed work and anything already in a `## Cleared` section
+3. **Verify** — re-check each referenced tracker item's real status and search for items covering work recorded as untracked; mission files record what was true when written. Cost-capped: never query for item bodies, batch by identifier, `jq` the overflow file rather than reading it back
+4. **Table** — `# | What | Why | Effort | Relevant repo(s) | Tracked as`, ordered by readiness so dependencies stay visible. `Effort` is `Quick`/`Medium`/`Long`/`Unclear`, inferred only from signals already collected, never from fresh investigation. Untracked items say `None`, never blank and never invented
+5. **Report coverage** — which sources were consulted, and which were unavailable, so the table's limits are visible
+6. **Persist pruning** — when the user replies by number, pruned items move to a `## Cleared <date>` section of their mission file rather than being deleted, and the table is reissued renumbered
+
 ## Task Calibration
 
 **Directory:** `~/.claude/skills/task-calibrate/`
