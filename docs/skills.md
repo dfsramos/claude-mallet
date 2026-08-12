@@ -182,7 +182,7 @@ Persists in-progress session state to disk so it survives compaction or a restar
 
 1. **Lessons** — appends new corrections/rules to `.mallet/lessons.md` using the standard dated format; skips if nothing new
 2. **Memory** — adds new facts to `.mallet/memory.md` (non-obvious commands, confirmed conventions, tool quirks); skips anything already in CLAUDE.md or a skill
-3. **Mission state** — writes or overwrites `.mallet/missions/active.md` if work is ongoing and multi-step; skips for single-session or complete work
+3. **Mission state** — writes `.mallet/missions/active.md` if work is ongoing and multi-step; skips for single-session or complete work. Reads the file first: if it holds a *different* mission that is still open, writes to `.mallet/missions/<short-name>.md` instead and reports that both are live, rather than overwriting
 4. **Confirm** — one-line report of what was written, e.g. `Checkpoint complete: lessons.md (+1), missions/active.md (updated)`
 
 ## Session Wrap-Up
@@ -198,7 +198,7 @@ Structured end-of-session retrospective. No session record files are written —
 3a. **Token efficiency** — flags patterns that drove unnecessary cost (long sessions without compaction, Write on existing files, verbose post-Bash responses, oversized subagents); adds CLAUDE.md directives for any gaps found
 4. **Applied improvements** — updates to skills or directives based on session observations; skill backlog reviewed and actioned; **docs parity check** — any change to a skill, hook, or directive must reflect in the corresponding `docs/` section before the work counts as done
 4a. **Memory audit** — review and revise `.mallet/memory.md` entries added during the session
-4b. **Mission state** — if work continues beyond this session, write `.mallet/missions/active.md`; if the mission completed, move `active.md` to `.mallet/missions/archive/<session-id>.md`
+4b. **Mission state** — if work continues beyond this session, write `.mallet/missions/active.md`; if the mission completed, move `active.md` to `.mallet/missions/archive/<session-id>.md`. Reads the file first: if it holds a *different* mission that is still open, either consolidates deliberately or leaves this session's mission in its own `.mallet/missions/<short-name>.md` with a cross-reference, and says which — a single `active.md` does not model two concurrent missions
 5. **Close out** — clear task-notes scratchpad if used; confirm correct working branch; present the full wrap-up to the user
 
 ## Next Steps
