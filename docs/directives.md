@@ -27,6 +27,7 @@ The root `CLAUDE.md` defines behavioral rules that Claude Code follows for every
 | Context Cache Design | Inject dynamic content via hooks; never edit the system prompt mid-session |
 | Task Calibration | Mandatory invocation of `task-calibrate` on UserPromptSubmit complexity reminder |
 | Ultracode Mode | Use Workflow tool when `[ultracode]` fires or prompt contains explicit ultracode signal; bind agents to existing mallet personas |
+| Session Checkpoint | Offer a checkpoint when a session runs long; act on the `session-watch` cost warning once |
 | Session Closure | Proactively offer a wrap-up when a task concludes |
 
 ## Details
@@ -164,6 +165,12 @@ If the prompt already contains an explicit ultracode signal (`ultracode`, `ultra
 If the reminder was hook-triggered only (no explicit keyword), Claude surfaces the recommendation and waits for the user to confirm before invoking Workflow.
 
 In all Workflow scripts authored under ultracode, Claude binds agents to existing mallet personas via `agentType` wherever the role matches — `code-analyst` (Callum), `code-reviewer` (Clifford), `feature-analyst` (Frida), `implementer` (Ingrid), `plan-critic` (Percy), `scope-validator` (Sylvie), `test-runner` (Tobias). Novel roles get an inline persona using the same named-persona style, and all agents follow the output contract in `~/.claude/agents/_contract.md`.
+
+### Session Checkpoint
+
+When a session runs long — many tool calls, large accumulated output, or the user about to run `/compact` — Claude offers to run `checkpoint` first, so lessons, memory and mission state survive the summarisation pass.
+
+When the `session-watch` hook reports a prompt count and a high-cost zone, Claude treats it as an instruction rather than background noise: it makes the case once, in that turn, with a concrete reason such as the next piece of work pulling a large volume of fresh data. It does not repeat on later firings of the same hook unless the situation has changed materially, since repeating it every few turns is its own waste.
 
 ### Session Closure
 

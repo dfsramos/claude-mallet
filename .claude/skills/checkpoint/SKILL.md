@@ -37,7 +37,8 @@ Skip if nothing new to record.
 Assess whether this session's work is part of an ongoing mission that will need to continue.
 
 **If work is clearly ongoing** (multi-step task not yet complete):
-- Write or overwrite `.mallet/missions/active.md` with the current state:
+- Read `.mallet/missions/active.md` first if it exists. If it holds a *different* mission that is still open, do not overwrite it — write this session's mission to `.mallet/missions/<short-name>.md` instead and tell the user both are live so they can decide which is active. This is not hypothetical: a checkpoint run has already attempted exactly that overwrite against a mission holding thirteen open items, and only the `write-guard` hook refusing `Write` on an existing file stopped it.
+- Otherwise write or overwrite `.mallet/missions/active.md` with the current state:
 
 ```markdown
 # Mission: <name>

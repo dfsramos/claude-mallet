@@ -211,6 +211,10 @@ When a session is running long — many tool calls, large outputs accumulated, o
 
 If the user agrees, follow the `checkpoint` skill. This persists lessons, memory, and mission state to disk so nothing is lost in the summarisation pass.
 
+When the `session-watch` hook reports a prompt count and a high-cost zone, treat it as an instruction rather than background noise. Say once, in that turn, that compacting is worth doing and why — typically that the next piece of work will pull a large volume of fresh data. Do not mention it again on later firings of the same hook unless the situation has changed materially; repeating it every few turns is its own waste. If the user declines or ignores it, carry on without raising it again.
+
+Before compacting, run `checkpoint` so state survives the summarisation pass.
+
 ## Session Closure
 
 When a task reaches a natural conclusion, proactively offer a wrap-up: "Want me to do a quick session wrap-up?"

@@ -84,8 +84,8 @@ Assess whether work from this session is part of a larger mission that will cont
 - If `.mallet/missions/active.md` exists, read it, write the contents to `.mallet/missions/archive/<session-id>.md`, then delete the original.
 
 **If work is ongoing** (3+ steps total, or clearly unfinished):
-- Write or update `.mallet/missions/active.md` using the format below.
-- If the file already exists, overwrite it with the current state — do not append.
+- Read `.mallet/missions/active.md` first if it exists. If it holds a *different* mission that is still open, do not overwrite it. Either consolidate the two deliberately, or leave this session's mission in its own `.mallet/missions/<short-name>.md` and cross-reference them, then tell the user which you did. Two concurrent missions is a normal state that a single `active.md` does not model well.
+- Otherwise write or update `.mallet/missions/active.md` using the format below, overwriting rather than appending.
 
 ```markdown
 # Mission: <name>
