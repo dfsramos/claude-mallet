@@ -134,7 +134,7 @@ The default set is registered globally in `~/.claude/settings.json` at install. 
 
 | Hook | Event | Tier | What it does |
 |---|---|---|---|
-| `session-start.sh` | SessionStart | Default | Injects project memory, restores compact snapshot, checks for framework updates (24h cache), flags a leftover per-project install |
+| `session-start.sh` | SessionStart | Default | Injects project memory, lessons, and conventions; restores compact snapshot; checks for framework updates (24h cache); flags a leftover per-project install |
 | `user-prompt-submit.sh` | UserPromptSubmit | Default | Complexity scorer (triggers `task-calibrate`) and turn counter |
 | `write-guard.sh` | PreToolUse `Write` | Default | Blocks `Write` on existing files — enforces `Edit` |
 | `pre-compact.sh` | PreCompact | Default | Captures git state and active mission before compaction; restores on next session start |

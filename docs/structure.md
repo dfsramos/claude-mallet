@@ -15,7 +15,7 @@ Three trees matter: this source repo, the machine-wide install it produces, and 
 │   ├── install-payload.sh             # Per-entry payload install + manifest reconciliation
 │   ├── statusline.sh                  # Statusline renderer
 │   ├── hooks/
-│   │   ├── session-start.sh           # Memory, snapshot restore, update check, legacy detect
+│   │   ├── session-start.sh           # Memory/lessons/conventions, snapshot restore, update check, legacy detect
 │   │   ├── user-prompt-submit.sh      # Complexity scoring and turn tracking
 │   │   ├── write-guard.sh             # Blocks Write on existing files (default)
 │   │   ├── pre-compact.sh             # Captures state before compaction (default)
