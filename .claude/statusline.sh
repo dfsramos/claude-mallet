@@ -69,7 +69,7 @@ if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
       ([$u[].cache_read_input_tokens // 0]       | add // 0),
       ([$u[].output_tokens // 0]                 | add // 0)
     ] | @tsv
-  ' "$transcript_path" 2>/dev/null)
+  ' "$transcript_path" 2>/dev/null | tr -d '\r')
   tok_in=${tok_in:-0}; tok_cw=${tok_cw:-0}; tok_cr=${tok_cr:-0}; tok_out=${tok_out:-0}
 fi
 tok_total=$(( tok_in + tok_cw + tok_cr + tok_out ))
