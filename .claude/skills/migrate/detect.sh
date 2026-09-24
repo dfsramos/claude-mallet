@@ -46,8 +46,17 @@ candidates() {
 
 # Resolve to repository roots and deduplicate — transcripts record
 # subdirectories and worktrees as separate cwd values.
+#
+# On Windows, transcripts record `cwd` with backslashes (e.g.
+# `C:\Projects\repo`), which POSIX `-d`/`-f` tests under git-bash silently
+# reject rather than error on — the whole scan looks empty instead of
+# failing loud. The native Windows `jq.exe` also emits CRLF line endings,
+# so a trailing \r survives `read -r` and breaks the same tests even after
+# the backslash swap. Strip the \r, then normalize to forward slashes.
 roots_of() {
   while read -r p; do
+    p="${p%$'\r'}"
+    p=${p//'\'/'/'}
     [ -n "$p" ] && [ -d "$p" ] || continue
     git -C "$p" rev-parse --show-toplevel 2>/dev/null
   done | sort -u
