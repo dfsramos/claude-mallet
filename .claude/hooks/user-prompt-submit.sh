@@ -1,10 +1,9 @@
 #!/bin/bash
-# UserPromptSubmit hook: scores prompt complexity and tracks session turn count.
-# - Injects a task-calibrate reminder when high-complexity signals are detected.
-# - Injects a compaction reminder when the session exceeds turn thresholds.
+# UserPromptSubmit hook:
+# - Injects a compaction reminder when the session exceeds prompt thresholds.
+# - Injects the active model and effort level when they change (calibrate).
 
 INPUT=$(cat)
-PROMPT=$(echo "$INPUT" | jq -r '.prompt // empty' 2>/dev/null)
 TRANSCRIPT_PATH=$(echo "$INPUT" | jq -r '.transcript_path // empty' 2>/dev/null)
 
 # --- Turn counter (derived from transcript) ---
@@ -31,36 +30,43 @@ elif [ "$TURN_COUNT" -ge 80 ] && [ $(( (TURN_COUNT - 80) % 20 )) -eq 0 ]; then
   echo "[session-watch] ${TURN_COUNT} prompts — high-cost zone. Run /compact now to reduce output tokens for the remainder of this session."
 fi
 
-if [ -z "$PROMPT" ]; then
-  exit 0
-fi
+# --- Calibrate: active model and effort ---
+# Whether a prompt warrants a different model or effort is judged by the model
+# itself (see the Task Calibration directive). Hook input carries neither value,
+# so this supplies them: from the state file statusline.sh writes on every
+# render (live, including mid-session /effort and /model changes), else from
+# settings. Emitted only when the values change, so it costs nothing per turn.
 
-# --- Scoring ---
+SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null | tr -cd 'A-Za-z0-9_-')
+if [ -n "$SESSION_ID" ]; then
+  STATE="${TMPDIR:-/tmp}/mallet-calibrate-${SESSION_ID}.json"
+  LAST="${TMPDIR:-/tmp}/mallet-calibrate-${SESSION_ID}.last"
 
-SCORE=0
+  MODEL=""; EFFORT=""; SOURCE=""
+  if [ -f "$STATE" ]; then
+    MODEL=$(jq -r '.model // empty' "$STATE" 2>/dev/null)
+    EFFORT=$(jq -r '.effort // empty' "$STATE" 2>/dev/null)
+  fi
+  if [ ! -f "$STATE" ]; then
+    # No Mallet statusline in use. A state file with no effort means the model
+    # has no effort parameter, so settings must not be consulted in that case.
+    # Most specific settings file wins, matching Claude Code's precedence.
+    for f in "${CLAUDE_PROJECT_DIR}/.claude/settings.local.json" \
+             "${CLAUDE_PROJECT_DIR}/.claude/settings.json" \
+             "${HOME}/.claude/settings.json"; do
+      [ -f "$f" ] || continue
+      EFFORT=$(jq -r '.effortLevel // empty' "$f" 2>/dev/null)
+      if [ -n "$EFFORT" ]; then SOURCE=" (from settings; /effort changes not visible)"; break; fi
+    done
+  fi
 
-# Architectural / design signals (+2 each)
-ARCH_PATTERN="(architect|redesign|rethink|overhaul|refactor|strategy|tradeoff|trade-off|migrate|migration|from scratch|evaluate|pros and cons|which approach|compare.*approach|approach.*compare)"
-if echo "$PROMPT" | grep -qiE "$ARCH_PATTERN"; then
-  SCORE=$((SCORE + 2))
-fi
-
-# Planning / multi-system signals (+2)
-PLAN_PATTERN="(should (i|we)|plan (the|a|this)|design (the|a|this)|how (should|do) (i|we) (structure|organise|organize|build|implement)|cross.cutting|the whole|system.wide)"
-if echo "$PROMPT" | grep -qiE "$PLAN_PATTERN"; then
-  SCORE=$((SCORE + 2))
-fi
-
-# Long prompt (+1 if > 80 words)
-WORD_COUNT=$(echo "$PROMPT" | wc -w)
-if [ "$WORD_COUNT" -gt 80 ]; then
-  SCORE=$((SCORE + 1))
-fi
-
-# --- Output ---
-
-if [ "$SCORE" -ge 3 ]; then
-  echo "[task-calibrate] High-complexity task detected (score=${SCORE}). Invoke the task-calibrate skill now, before responding, to check whether a different model would better fit this task."
+  if [ -n "$MODEL" ] || [ -n "$EFFORT" ]; then
+    LINE="[calibrate] active model: ${MODEL:-unknown}; effort: ${EFFORT:-unknown}${SOURCE}"
+    if [ "$LINE" != "$(cat "$LAST" 2>/dev/null)" ]; then
+      echo "$LINE"
+      echo "$LINE" > "$LAST" 2>/dev/null
+    fi
+  fi
 fi
 
 exit 0

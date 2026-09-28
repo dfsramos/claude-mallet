@@ -20,7 +20,7 @@ A 2026-09-28 review against current Claude Code docs found three hooks whose out
 - [x] 02-compact-continuity — replace pre-compact snapshot with a SessionStart `compact` hook [deps: —] [parallel: no]
 - [x] 03-prompt-counter — count only human prompts in user-prompt-submit.sh and statusline.sh [deps: —] [parallel: no]
 - [x] 04-remove-redundant — remove memory.md/lessons.md machinery, push-confirm, explore-redirect, dispatching-parallel-agents, ultracode scoring [deps: 01, 02, 03] [parallel: no]
-- [ ] 05-calibrate-rework — statusline records effort, hook injects it, directive replaces regex scoring, skill becomes manual [deps: 03, 04] [parallel: no]
+- [x] 05-calibrate-rework — statusline records effort, hook injects it, directive replaces regex scoring, skill becomes manual [deps: 03, 04] [parallel: no]
 - [ ] 06-persona-trim — cut CLAUDE.md to Mallet-specific directives, under 9,000 characters [deps: 04, 05] [parallel: no]
 - [ ] 07-frontmatter — read-only review agents, effort fields, manual-only skills, contract and template relocated [deps: 04] [parallel: no]
 - [ ] 08-pipeline-workflow — implement-feature becomes workflows/implement-feature.js [deps: 07] [parallel: no]

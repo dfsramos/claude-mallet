@@ -13,6 +13,15 @@ FRAMEWORK_JSON="${HOME}/.claude/framework.json"
 # jq is required by every segment below, not only the version one.
 command -v jq &>/dev/null || exit 0
 
+# Calibrate: record the live model and effort for user-prompt-submit.sh, which
+# cannot see either in its own hook input. effort.level tracks mid-session
+# /effort changes; it is absent when the model has no effort parameter.
+cal_sid=$(echo "$input" | jq -r '.session_id // empty' 2>/dev/null | tr -cd 'A-Za-z0-9_-')
+if [ -n "$cal_sid" ]; then
+  echo "$input" | jq -c '{model: (.model.id // null), effort: (.effort.level // null)}' \
+    > "${TMPDIR:-/tmp}/mallet-calibrate-${cal_sid}.json" 2>/dev/null
+fi
+
 # The version segment is optional. A missing, empty, or malformed
 # framework.json must not suppress cost, context, rate limits, or token totals.
 LOCAL_HASH=""

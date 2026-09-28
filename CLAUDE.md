@@ -154,7 +154,14 @@ This keeps the main context window focused on the current decision rather than a
 
 ## Task Calibration
 
-When the UserPromptSubmit hook emits a `[task-calibrate]` reminder, invoke the `task-calibrate` skill before responding. This is mandatory, not a suggestion — the reminder only fires on high-complexity prompts where model choice materially affects cost or quality.
+A `[calibrate]` line from the UserPromptSubmit hook states the active model and effort level; it appears only when they change. Your own model is also named in the environment section.
+
+Before responding to a prompt the user typed, judge whether it clearly warrants a different setting than the active one:
+- deeper reasoning than the active effort gives: architecture, cross-cutting tradeoffs, hard debugging, security-sensitive changes
+- a more capable model than the active one, when the task is at the edge of what it handles well
+- less: a mechanical or single-file task running at `max` effort or on the most capable model
+
+If it does, open the reply with one line naming the switch, e.g. `Calibrate: /effort max suits this architectural change (active: high).`, then proceed on the current setting. Name models relative to the active one and only from the environment's current model list; never from memory. Do not repeat the note for the same task, and never raise it for subagent reports, task notifications, or other messages the user did not type. When the fit is fine or unclear, say nothing. `/calibrate` gives the full reasoning on request.
 
 ## Workflow Agents
 

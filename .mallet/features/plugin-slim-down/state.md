@@ -9,5 +9,7 @@
 
 <!-- 2026-09-28 (task 03): transcripts mark typed prompts with origin.kind == "human" (promptSource typed / suggestion_accepted); agent hand-backs are isMeta with origin.kind "peer"; skill expansions are isMeta with no origin. Review session: new filter 4 = 4 typed prompts. -->
 
+<!-- 2026-09-28 (task 05 spike): statusline docs list `effort.level` ("Reflects the live session value, including mid-session /effort changes"; absent when the model has no effort parameter) and `model.id`. No live probe needed. Settings fallback runs only when no statusline state exists. -->
+
 ## Blockers
 <!-- - [ ] <description> (check off when resolved) -->
