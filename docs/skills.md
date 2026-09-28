@@ -93,9 +93,9 @@ Structured analysis of a project's codebase to identify setup opportunities:
 **Directory:** `plugin/skills/plan-feature/`
 **Triggered by:** "plan a feature", "I want to build X", or "continue the Y feature"
 
-Intake-to-execution pipeline. Supports resumption across sessions. All planning files are committed directly to `master` via a git worktree so plans remain visible regardless of the active branch.
+Intake-to-execution pipeline. Supports resumption across sessions. All planning files are committed directly to the default branch so plans remain visible regardless of the active branch. `plans-worktree.sh` (next to the skill) resolves where: the current checkout when already on the default branch, otherwise a per-repository worktree inside `.git/mallet-plans` (or an existing worktree of the default branch). When `.mallet/` is ignored, plans stay local and nothing is committed. Commits always name their paths, so unrelated staged changes are never included.
 
-1. **Pre-check** — reads existing plans from master; surfaces overlaps before creating anything new
+1. **Pre-check** — reads existing plans from the default branch; surfaces overlaps before creating anything new
 2. **Intake** — broad questions (problem, users, success criteria, constraints, remote system involvement)
 3. **Design approval gate** — a one-paragraph design summary must be explicitly approved before decomposition begins
 4. **Knowledge skill assessment** — if the feature touches a domain with strong conventions (API design, auth, data modelling, security, accessibility, performance, domain rules), offers to scaffold a knowledge skill by copying `${CLAUDE_SKILL_DIR}/knowledge-skill-template.md` to `.mallet/skills/<domain>-knowledge/SKILL.md`

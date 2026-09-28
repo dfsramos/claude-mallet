@@ -1,30 +1,32 @@
 ---
 name: plan-feature
 description: Invoke when the user wants to plan a new feature, build something new, or continue work on an existing feature plan.
+allowed-tools: Bash(bash ${CLAUDE_SKILL_DIR}/plans-worktree.sh)
 ---
 # Feature Planning
 
 ## Setup
 
-Feature plans live in `.mallet/features/` on master so they're visible across branches.
-
-- **If already on master**: work in the current directory. No worktree needed.
-- **Otherwise**: open a master worktree:
+Feature plans live in `.mallet/features/` on the default branch so they're visible across branches. Resolve where to write them:
 
 ```bash
-git worktree list | grep -q /tmp/feature-planning || git worktree add /tmp/feature-planning master
-git -C /tmp/feature-planning pull --ff-only
+bash ${CLAUDE_SKILL_DIR}/plans-worktree.sh
 ```
 
-Cleanup on completion: `git worktree remove --force /tmp/feature-planning`.
+It prints `DEFAULT=<branch>`, `PLANS_DIR=<path>`, and `COMMIT=yes|no`. Below, `<plans>` means `PLANS_DIR`.
 
-Below, paths prefixed `/tmp/feature-planning/` apply to the worktree case — drop the prefix when working directly on master, and use plain `git` instead of `git -C /tmp/feature-planning`.
+- On the default branch, `<plans>` is the current checkout.
+- On any other branch, `<plans>` is a worktree of the default branch that belongs to this repository alone (inside its `.git` directory, or an existing worktree that already has the default branch). Leave it in place between sessions; it is reused.
+- `COMMIT=no` means `.mallet/` is ignored in this repository — the user's choice not to track it. Write plans in `<plans>` and skip every commit step below; say so once.
+- If the script fails, report its error and stop. Do not fall back to a hand-made worktree.
+
+Every commit below names its paths, so nothing else staged in `<plans>` is swept in: `git -C <plans> commit -m "<message>" -- .mallet/features/<slug>/`.
 
 ---
 
 ## 1. Pre-Check
 
-Read all `plan.md` files under `/tmp/feature-planning/.mallet/features/`. If any overlap with what the user is describing, surface them and ask: extend an existing feature or create a new one?
+Read all `plan.md` files under `<plans>/.mallet/features/`. If any overlap with what the user is describing, surface them and ask: extend an existing feature or create a new one?
 
 ---
 
@@ -74,7 +76,7 @@ If yes:
 
 Confirm a slug with the user (lowercase, hyphenated).
 
-Create `/tmp/feature-planning/.mallet/features/<slug>/plan.md`:
+Create `<plans>/.mallet/features/<slug>/plan.md`:
 
 ```markdown
 # Feature: <name>
@@ -93,7 +95,7 @@ Branch: —
 - [ ] 02-<name> — <description> [deps: 01] [parallel: yes/no]
 ```
 
-Create `/tmp/feature-planning/.mallet/features/<slug>/state.md`:
+Create `<plans>/.mallet/features/<slug>/state.md`:
 
 ```markdown
 # State: <feature-name>
@@ -134,20 +136,18 @@ _(Omit if the task has no testable behaviour.)_
 - The TDD checklist is present for any task with testable behaviour
 - The goal is one sentence that could be copy-pasted into a commit message
 
-Commit to master:
+Commit to the default branch (skip when `COMMIT=no`):
 
 ```bash
-git -C /tmp/feature-planning add .mallet/features/<slug>/
-git -C /tmp/feature-planning commit -m "Add feature plan: <slug>."
+git -C <plans> add .mallet/features/<slug>/
+git -C <plans> commit -m "Add feature plan: <slug>." -- .mallet/features/<slug>/
 ```
-
-
 
 ---
 
 ## 4. Execute
 
-Create a feature branch off master: `git checkout -b <slug>`. Update the Branch field in `plan.md` and commit via the master worktree.
+Create the feature branch from the default branch, following the persona's branch naming: `git checkout -b f/<slug> <DEFAULT>` (`b/<slug>` for a bug fix). Update the Branch field in `plan.md` and commit it in `<plans>`.
 
 For each wave:
 
@@ -158,13 +158,13 @@ For each wave:
    - *Parallel:* dispatch each task to its own subagent (one tool call per task, all in a single message). Each subagent reads its task file and executes autonomously; only results surface to the main context.
    - Parallel only when tasks are genuinely independent — no shared files, no sequential dependencies, no mid-task interactive decisions. Otherwise run sequentially.
 4. **Autonomy:** follow base `CLAUDE.md` — Destructive Operations and Production Awareness apply.
-5. **After each task completes:** mark `done` in the task file and in `plan.md`, commit both via the master worktree; log any decisions made or blockers encountered to `state.md`
+5. **After each task completes:** mark `done` in the task file and in `plan.md`, commit both in `<plans>`; log any decisions made or blockers encountered to `state.md`
 6. **After the wave completes:** reassess — identify the next wave and repeat
 
-When all tasks are done: set feature `Status: done`, commit, remove worktree.
+When all tasks are done: set feature `Status: done` and commit in `<plans>`. The plans worktree stays for the next feature; remove it only if the user asks (`git worktree remove <plans>`, which refuses if it has uncommitted changes).
 
 ---
 
 ## Resume
 
-If the user references an existing feature, load its `plan.md` and `state.md` from the master worktree. Read `state.md` first — it captures decisions made and open blockers from prior sessions. Identify incomplete tasks and proceed from step 4 — skip intake and decomposition.
+If the user references an existing feature, run the Setup script, then load its `plan.md` and `state.md` from `<plans>`. Read `state.md` first — it captures decisions made and open blockers from prior sessions. Identify incomplete tasks and proceed from step 4 — skip intake and decomposition.
