@@ -16,7 +16,7 @@ TARGET="$HOME/.claude/settings.json"
 # opt-in hooks (typecheck, push-confirm, explore-redirect): those register per
 # repo, and stripping them here would silently drop a user's manual global
 # registration that the fragment would not re-add.
-OWNED='statusline\.sh|session-start\.sh|user-prompt-submit\.sh|pre-compact\.sh|write-guard\.sh'
+OWNED='statusline\.sh|session-start\.sh|user-prompt-submit\.sh|pre-compact\.sh|post-compact\.sh|write-guard\.sh'
 
 [ -n "$FRAGMENT" ] || { echo "usage: merge-settings.sh <fragment.json>" >&2; exit 1; }
 [ -f "$FRAGMENT" ] || { echo "fragment not found: $FRAGMENT" >&2; exit 1; }

@@ -1,5 +1,5 @@
 # Task: compact-continuity
-Status: pending
+Status: done
 Deps: —
 
 ## Goal

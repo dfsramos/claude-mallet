@@ -42,7 +42,7 @@ ck "Stop hook survives"     "$(jq '[.hooks.Stop[]?.hooks[]? | select(.command|te
 ck "Notification survives"  "$(jq '[.hooks.Notification[]?.hooks[]? | select(.command|test("notify.sh"))] | length' "$S" 2>/dev/null)" "1"
 ck "SessionStart added"     "$(jq '[.hooks.SessionStart[]?.hooks[]? | select(.command|test("session-start.sh"))] | length' "$S" 2>/dev/null)" "1"
 ck "UserPromptSubmit added" "$(jq '[.hooks.UserPromptSubmit[]?.hooks[]? | select(.command|test("user-prompt-submit.sh"))] | length' "$S" 2>/dev/null)" "1"
-ck "PreCompact added"       "$(jq '[.hooks.PreCompact[]?.hooks[]? | select(.command|test("pre-compact.sh"))] | length' "$S" 2>/dev/null)" "1"
+ck "post-compact added"     "$(jq '[.hooks.SessionStart[]? | select(.matcher=="compact") | .hooks[]? | select(.command|test("post-compact.sh"))] | length' "$S" 2>/dev/null)" "1"
 ck "PreToolUse added"       "$(jq '[.hooks.PreToolUse[]?.hooks[]? | select(.command|test("write-guard.sh"))] | length' "$S" 2>/dev/null)" "1"
 ck "statusLine is Mallet"   "$(jq -r '.statusLine.command // "MISSING" | test("statusline.sh") | tostring' "$S" 2>/dev/null)" "true"
 ck "hook paths use HOME"    "$(jq '[.. | objects | select(.command?) | .command | select(test("CLAUDE_PROJECT_DIR"))] | length' "$S" 2>/dev/null)" "0"
@@ -56,7 +56,7 @@ if diff -q "$SCRATCH/after1.json" "$SCRATCH/after2.json" >/dev/null 2>&1; then
 else
   echo "  FAIL idempotent"; diff "$SCRATCH/after1.json" "$SCRATCH/after2.json" | head -20; fail=$((fail+1))
 fi
-ck "no duplicate SessionStart" "$(jq '[.hooks.SessionStart[]?.hooks[]?] | length' "$S" 2>/dev/null)" "1"
+ck "no duplicate SessionStart" "$(jq '[.hooks.SessionStart[]?.hooks[]?] | length' "$S" 2>/dev/null)" "2"
 
 echo "== corrupt-input guard =="
 printf '{invalid' > "$HOME/.claude/settings.json"
@@ -68,7 +68,7 @@ echo "== empty-target case =="
 rm -rf "$HOME"; mkdir -p "$HOME/.claude"
 bash "$MERGE" "$FRAG" >/dev/null 2>&1
 ck "created valid json" "$(jq -e . "$HOME/.claude/settings.json" >/dev/null 2>&1 && echo ok)" "ok"
-ck "fresh has 4 hook events" "$(jq '.hooks | keys | length' "$HOME/.claude/settings.json" 2>/dev/null)" "4"
+ck "fresh has 3 hook events" "$(jq '.hooks | keys | length' "$HOME/.claude/settings.json" 2>/dev/null)" "3"
 
 echo
 echo "pass=$pass fail=$fail"

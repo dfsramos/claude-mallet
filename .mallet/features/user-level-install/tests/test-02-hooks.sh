@@ -18,7 +18,6 @@ export CLAUDE_PROJECT_DIR="$FIX/repo"
 rm -rf "$FIX"; mkdir -p "$HOME/.claude" "$CLAUDE_PROJECT_DIR/.mallet/missions"
 
 echo "MEMORY-SENTINEL" > "$CLAUDE_PROJECT_DIR/.mallet/memory.md"
-echo "SNAPSHOT-SENTINEL" > "$CLAUDE_PROJECT_DIR/.mallet/compact-snapshot.md"
 echo "MISSION-SENTINEL" > "$CLAUDE_PROJECT_DIR/.mallet/missions/active.md"
 echo "report" > "$CLAUDE_PROJECT_DIR/.mallet/discovery-2026-01-01.md"
 # No repo/version keys -> session-start must not attempt any network call.
@@ -27,20 +26,6 @@ echo '{"installed_at":"2026-01-01"}' > "$HOME/.claude/framework.json"
 echo "== session-start.sh =="
 OUT=$(bash "$H/session-start.sh" 2>&1); ck "exit 0" "$?" "0"
 has  "injects .mallet/memory.md"   "$OUT" "MEMORY-SENTINEL"
-has  "injects compact snapshot"    "$OUT" "SNAPSHOT-SENTINEL"
-ck   "snapshot consumed (deleted)" "$([ -f "$CLAUDE_PROJECT_DIR/.mallet/compact-snapshot.md" ] && echo present || echo gone)" "gone"
-
-echo "== pre-compact.sh =="
-OUT=$(bash "$H/pre-compact.sh" 2>&1); ck "exit 0" "$?" "0"
-has "stdout has mission" "$OUT" "MISSION-SENTINEL"
-ck  "writes to .mallet/" "$([ -f "$CLAUDE_PROJECT_DIR/.mallet/compact-snapshot.md" ] && echo yes || echo no)" "yes"
-hasnt "no stderr noise" "$OUT" "No such file"
-
-echo "== pre-compact.sh with .mallet absent (mkdir -p) =="
-rm -rf "$CLAUDE_PROJECT_DIR/.mallet"
-OUT=$(bash "$H/pre-compact.sh" 2>&1); ck "exit 0" "$?" "0"
-ck  "created .mallet/ and wrote" "$([ -f "$CLAUDE_PROJECT_DIR/.mallet/compact-snapshot.md" ] && echo yes || echo no)" "yes"
-hasnt "no tee error" "$OUT" "No such file"
 
 echo "== session-start.sh with .mallet absent =="
 rm -rf "$CLAUDE_PROJECT_DIR/.mallet"

@@ -12,18 +12,6 @@ if [ -f "$MEMORY_FILE" ]; then
   echo "--- End Project Memory ---"
 fi
 
-# ── Post-compaction snapshot ────────────────────────────────────────────────
-# If a compact snapshot was written before the last compaction, inject it so
-# Claude can restore continuity without re-reading the full conversation.
-
-SNAPSHOT_FILE="${CLAUDE_PROJECT_DIR}/.mallet/compact-snapshot.md"
-if [ -f "$SNAPSHOT_FILE" ]; then
-  echo "--- Compact Snapshot (from last compaction) ---"
-  cat "$SNAPSHOT_FILE"
-  echo "--- End Compact Snapshot ---"
-  rm -f "$SNAPSHOT_FILE"
-fi
-
 # ── Framework update check ──────────────────────────────────────────────────
 
 FRAMEWORK_JSON="${HOME}/.claude/framework.json"

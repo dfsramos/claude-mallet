@@ -13,6 +13,15 @@
             "command": "bash \"$HOME/.claude/hooks/session-start.sh\""
           }
         ]
+      },
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/post-compact.sh\""
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
@@ -22,17 +31,6 @@
           {
             "type": "command",
             "command": "bash \"$HOME/.claude/hooks/user-prompt-submit.sh\""
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$HOME/.claude/hooks/pre-compact.sh\""
           }
         ]
       }
