@@ -17,5 +17,7 @@
 
 <!-- 2026-09-28 (task 08): kept mallet:code-reviewer as the review stage — workflow agent() cannot invoke slash commands, so /code-review is not reachable from a script. Blocked results end the run and return to the launcher skill, since workflow agents cannot ask the user. Routing covered by test-14 (22 assertions, stubbed agent()). -->
 
+<!-- 2026-09-28 (task 09): plugin lives in plugin/ (marketplace source "./plugin") rather than the repo root, so .mallet/, docs/, and tests/ stay out of the plugin cache and the root CLAUDE.md (kept: pre-plugin update skills abort without it) is not at the plugin root. Marketplace "claude-mallet", plugin "mallet". No version field: users track commits; auto-update is off by default for third-party marketplaces and must be enabled per user in /plugin. Hook output cap is 10,000 chars (hooks.md); persona 8,654. typecheck is registered by the plugin and gated on .mallet/typecheck.enabled, because project settings cannot reference the versioned plugin cache. Live probe (claude -p --plugin-dir): agents resolve as mallet:<name>; calibrate and hooks-setup absent from the model-visible skill list; persona present. Tests moved to tests/. update skill removed from the plugin. -->
+
 ## Blockers
 <!-- - [ ] <description> (check off when resolved) -->

@@ -1,10 +1,10 @@
 #!/bin/bash
 # Test: compaction continuity comes from a SessionStart `compact` hook, and the
 # old PreCompact snapshot mechanism is gone from payload and merged settings.
-REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)
+REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SCRATCH=$(mktemp -d)
 trap 'rm -rf "$SCRATCH"' EXIT
-H="$REPO/.claude/hooks"
+H="$REPO/plugin/hooks"
 
 pass=0; fail=0
 ck() { if [ "$2" = "$3" ]; then echo "  PASS $1"; pass=$((pass+1)); else echo "  FAIL $1 (got '$2' want '$3')"; fail=$((fail+1)); fi; }

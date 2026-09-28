@@ -1,10 +1,10 @@
 #!/bin/bash
 # Test: hooks resolve state from .mallet/ and framework.json from $HOME.
 # Portable: resolves the repo from this script's location and uses a temp dir.
-REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)
+REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SCRATCH=$(mktemp -d)
 trap 'rm -rf "$SCRATCH"' EXIT
-H="$REPO/.claude/hooks"
+H="$REPO/plugin/hooks"
 FIX="$SCRATCH/fix02"
 
 pass=0; fail=0
@@ -39,11 +39,11 @@ ck "removed hooks gone" "$(ls "$H" | grep -cE 'push-confirm|explore-redirect')" 
 
 echo "== statusline.sh reads \$HOME/framework.json =="
 echo '{"repo":"a/b","version":"deadbeefcafe1234","installed_at":"2026-01-01"}' > "$HOME/.claude/framework.json"
-OUT=$(printf '{"workspace":{"project_dir":"%s"},"cost":{"total_cost_usd":0.5}}' "$CLAUDE_PROJECT_DIR" | bash "$H/../statusline.sh" 2>&1)
+OUT=$(printf '{"workspace":{"project_dir":"%s"},"cost":{"total_cost_usd":0.5}}' "$CLAUDE_PROJECT_DIR" | bash "$REPO/plugin/statusline/statusline.sh" 2>&1)
 has "renders version from HOME" "$OUT" "deadbee"
 
 echo "== no stale path references =="
-ck "hooks clean" "$(grep -rln '\.claude/project' "$H" "$REPO/.claude/statusline.sh" 2>/dev/null | wc -l)" "0"
+ck "hooks clean" "$(grep -rln '\.claude/project' "$H" "$REPO/plugin/statusline/statusline.sh" 2>/dev/null | wc -l)" "0"
 ck "user-prompt-submit reads no payload paths" "$(grep -cE '\.claude/(skills|agents|hooks|templates)' "$H/user-prompt-submit.sh" 2>/dev/null | head -1)" "0"
 ck "write-guard unchanged" "$(grep -c '\.claude/' "$H/write-guard.sh" 2>/dev/null | head -1)" "0"
 

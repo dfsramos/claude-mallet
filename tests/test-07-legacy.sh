@@ -1,9 +1,9 @@
 #!/bin/bash
 # Test: session-start.sh notices a leftover per-project payload, quietly and suppressibly.
-REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)
+REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SCRATCH=$(mktemp -d)
 trap 'rm -rf "$SCRATCH"' EXIT
-SS="$REPO/.claude/hooks/session-start.sh"
+SS="$REPO/plugin/hooks/session-start.sh"
 
 pass=0; fail=0
 ck()   { if [ "$2" = "$3" ]; then echo "  PASS $1"; pass=$((pass+1)); else echo "  FAIL $1 (got '$2' want '$3')"; fail=$((fail+1)); fi; }

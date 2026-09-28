@@ -1,0 +1,8 @@
+{
+  "name": "mallet",
+  "description": "Personal engineering standards for Claude Code: an evidence-first persona, feature planning, missions, a spec-to-review agent pipeline, and hooks that keep sessions honest.",
+  "author": { "name": "Daniel Ramos" },
+  "homepage": "https://github.com/dfsramos/claude-mallet",
+  "repository": "https://github.com/dfsramos/claude-mallet",
+  "license": "MIT"
+}

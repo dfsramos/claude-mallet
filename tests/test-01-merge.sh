@@ -2,7 +2,7 @@
 # Test: merge-settings.sh preserves personal config and is idempotent.
 # Portable: resolves the repo from this script's location and uses a temp dir.
 # The real $HOME is never read or written.
-REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)
+REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SCRATCH=$(mktemp -d)
 trap 'rm -rf "$SCRATCH"' EXIT
 MERGE="$REPO/.claude/merge-settings.sh"

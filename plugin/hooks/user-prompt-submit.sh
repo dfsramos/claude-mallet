@@ -61,7 +61,12 @@ if [ -n "$SESSION_ID" ]; then
   fi
 
   if [ -n "$MODEL" ] || [ -n "$EFFORT" ]; then
-    LINE="[calibrate] active model: ${MODEL:-unknown}; effort: ${EFFORT:-unknown}${SOURCE}"
+    # The model knows its own name; state it only when the statusline supplied it.
+    if [ -n "$MODEL" ]; then
+      LINE="[calibrate] active model: ${MODEL}; effort: ${EFFORT:-unknown}${SOURCE}"
+    else
+      LINE="[calibrate] active effort: ${EFFORT}${SOURCE}"
+    fi
     if [ "$LINE" != "$(cat "$LAST" 2>/dev/null)" ]; then
       echo "$LINE"
       echo "$LINE" > "$LAST" 2>/dev/null

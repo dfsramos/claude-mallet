@@ -2,7 +2,7 @@
 # Test: calibrate — the statusline records the live model and effort per
 # session; user-prompt-submit injects them only when they change; the old
 # regex complexity scoring is gone.
-REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)
+REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SCRATCH=$(mktemp -d)
 trap 'rm -rf "$SCRATCH"' EXIT
 
@@ -18,10 +18,10 @@ export CLAUDE_PROJECT_DIR="$SCRATCH/repo"; mkdir -p "$CLAUDE_PROJECT_DIR/.claude
 render() { # $1 model id, $2 effort level (empty = field absent)
   local e=""; [ -n "$2" ] && e=',"effort":{"level":"'"$2"'"}'
   echo '{"session_id":"sess-1","model":{"id":"'"$1"'","display_name":"X"},"workspace":{"project_dir":"'"$CLAUDE_PROJECT_DIR"'"}'"$e"'}' \
-    | bash "$REPO/.claude/statusline.sh" >/dev/null
+    | bash "$REPO/plugin/statusline/statusline.sh" >/dev/null
 }
 prompt() { # $1 prompt text, $2 session id
-  jq -n --arg p "$1" --arg s "${2:-sess-1}" '{prompt:$p, session_id:$s}' | bash "$REPO/.claude/hooks/user-prompt-submit.sh"
+  jq -n --arg p "$1" --arg s "${2:-sess-1}" '{prompt:$p, session_id:$s}' | bash "$REPO/plugin/hooks/user-prompt-submit.sh"
 }
 
 echo "== statusline records state =="
@@ -45,6 +45,7 @@ OUT=$(prompt "next");       has "emits model, effort unknown" "$OUT" "claude-hai
 echo "== fallback to settings when the statusline is not Mallet's =="
 echo '{"effortLevel":"high"}' > "$HOME/.claude/settings.json"
 OUT=$(prompt "hi" "sess-2"); has "settings fallback" "$OUT" "effort: high (from settings; /effort changes not visible)"
+hasnt "no unknown model placeholder" "$OUT" "model: unknown"
 OUT=$(prompt "hi" "sess-2"); ck  "fallback silent when unchanged" "$OUT" ""
 echo '{"effortLevel":"max"}' > "$CLAUDE_PROJECT_DIR/.claude/settings.local.json"
 OUT=$(prompt "hi" "sess-2"); has "project local settings win" "$OUT" "effort: max"

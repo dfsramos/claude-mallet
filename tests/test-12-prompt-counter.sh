@@ -1,7 +1,7 @@
 #!/bin/bash
 # Test: the session-watch counter and the statusline turn segment count only
 # human-typed prompts — not tool results, agent hand-backs, or skill expansions.
-REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)
+REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SCRATCH=$(mktemp -d)
 trap 'rm -rf "$SCRATCH"' EXIT
 
@@ -35,7 +35,7 @@ L="$SCRATCH/legacy.jsonl"
 
 run_hook() { # $1 transcript
   jq -n --arg t "$1" '{prompt:"hello", transcript_path:$t, session_id:"s1"}' \
-    | bash "$REPO/.claude/hooks/user-prompt-submit.sh"
+    | bash "$REPO/plugin/hooks/user-prompt-submit.sh"
 }
 
 # Pad a transcript with N-1 human prompts so the next prompt is the Nth.
@@ -51,7 +51,7 @@ pad "$SCRATCH/p10.jsonl" 10
 hasnt "silent at prompt 11 despite 200 tool results" "$(run_hook "$SCRATCH/p10.jsonl")" "session-watch"
 
 echo "== statusline.sh =="
-SL() { jq -n --arg t "$1" '{transcript_path:$t, workspace:{project_dir:"'"$CLAUDE_PROJECT_DIR"'"}}' | bash "$REPO/.claude/statusline.sh" | sed 's/\x1b\[[0-9;]*m//g'; }
+SL() { jq -n --arg t "$1" '{transcript_path:$t, workspace:{project_dir:"'"$CLAUDE_PROJECT_DIR"'"}}' | bash "$REPO/plugin/statusline/statusline.sh" | sed 's/\x1b\[[0-9;]*m//g'; }
 OUT=$(SL "$T");  has "counts 2 human prompts" "$OUT" "T:2"
 OUT=$(SL "$L");  has "legacy: counts 1"       "$OUT" "T:1"
 

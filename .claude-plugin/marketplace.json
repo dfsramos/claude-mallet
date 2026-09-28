@@ -1,0 +1,14 @@
+{
+  "name": "claude-mallet",
+  "owner": {
+    "name": "Daniel Ramos"
+  },
+  "description": "Claude Mallet: personal engineering standards for Claude Code, packaged as one plugin.",
+  "plugins": [
+    {
+      "name": "mallet",
+      "source": "./plugin",
+      "description": "Evidence-first persona, feature planning, missions, and a spec-to-review agent pipeline."
+    }
+  ]
+}

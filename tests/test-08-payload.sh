@@ -1,7 +1,7 @@
 #!/bin/bash
 # Test: install-payload.sh replaces per entry, never per directory, and
 # reconciles the manifest so removed skills do not linger forever.
-REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)
+REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SCRATCH=$(mktemp -d)
 trap 'rm -rf "$SCRATCH"' EXIT
 IP="$REPO/.claude/install-payload.sh"

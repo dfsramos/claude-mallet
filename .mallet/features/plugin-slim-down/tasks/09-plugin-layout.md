@@ -1,5 +1,5 @@
 # Task: plugin-layout
-Status: pending
+Status: done
 Deps: 06, 07, 08
 
 ## Goal

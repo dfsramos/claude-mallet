@@ -1,11 +1,11 @@
 #!/bin/bash
 # Test: the migrate mechanics — detection, state move, settings prune, CLAUDE.md strip.
 # Builds six real git repos so `git ls-files` can distinguish tracked from untracked.
-REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)
+REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SCRATCH=$(mktemp -d)
 trap 'rm -rf "$SCRATCH"' EXIT
-DETECT="$REPO/.claude/skills/migrate/detect.sh"
-MIG="$REPO/.claude/skills/migrate/migrate-repo.sh"
+DETECT="$REPO/plugin/skills/migrate/detect.sh"
+MIG="$REPO/plugin/skills/migrate/migrate-repo.sh"
 
 pass=0; fail=0
 ck()   { if [ "$2" = "$3" ]; then echo "  PASS $1"; pass=$((pass+1)); else echo "  FAIL $1 (got '$2' want '$3')"; fail=$((fail+1)); fi; }

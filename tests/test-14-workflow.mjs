@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const repo = join(dirname(fileURLToPath(import.meta.url)), '../../../..')
-const src = readFileSync(join(repo, 'workflows/implement-feature.js'), 'utf8')
+const repo = join(dirname(fileURLToPath(import.meta.url)), '..')
+const src = readFileSync(join(repo, 'plugin/workflows/implement-feature.js'), 'utf8')
   .replace(/^export const meta/m, 'const meta')
 const AsyncFunction = (async () => {}).constructor
 const body = new AsyncFunction('args', 'agent', 'phase', 'log', src)
