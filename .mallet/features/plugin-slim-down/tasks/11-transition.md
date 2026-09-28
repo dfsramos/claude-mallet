@@ -1,5 +1,5 @@
 # Task: transition
-Status: pending
+Status: done
 Deps: 09
 
 ## Goal

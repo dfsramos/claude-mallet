@@ -1,6 +1,6 @@
 #!/bin/bash
-# Test: merge-settings.sh preserves personal config and is idempotent.
-# Portable: resolves the repo from this script's location and uses a temp dir.
+# Test: merge-settings.sh with the shipped (empty) fragment removes what the
+# user-level install registered and nothing else, and is idempotent.
 # The real $HOME is never read or written.
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SCRATCH=$(mktemp -d)
@@ -12,63 +12,69 @@ pass=0; fail=0
 ck() { if [ "$2" = "$3" ]; then echo "  PASS $1"; pass=$((pass+1)); else echo "  FAIL $1 (got '$2' want '$3')"; fail=$((fail+1)); fi; }
 
 export HOME="$SCRATCH/fake-home"
-rm -rf "$HOME"; mkdir -p "$HOME/.claude"
+mkdir -p "$HOME/.claude"
+S="$HOME/.claude/settings.json"
 
-# Synthetic fixture mirroring the shape of a real user settings.json: personal
-# scalars, a plugin map, and two non-Mallet hooks that must survive the merge.
-cat > "$HOME/.claude/settings.json" <<'JSON'
+ck "shipped fragment is empty" "$(jq -c . "$FRAG")" "{}"
+
+# Shape of a real user-level install: Mallet registrations alongside personal
+# config, a user hook, and a user script that merely shares a Mallet file name.
+cat > "$S" <<'JSON'
 {
   "model": "opus",
   "effortLevel": "xhigh",
   "enabledPlugins": { "slack@claude-plugins-official": true },
-  "skipWorkflowUsageWarning": true,
-  "statusLine": { "type": "command", "command": "echo user-custom-statusline" },
+  "permissions": { "ask": ["Bash(git push *)"] },
+  "statusLine": { "type": "command", "command": "bash \"$HOME/.claude/statusline.sh\"" },
   "hooks": {
-    "Stop": [{ "hooks": [{ "type": "command", "command": "~/.claude/notify.sh done", "async": true }] }],
-    "Notification": [{ "hooks": [{ "type": "command", "command": "~/.claude/notify.sh alert", "async": true }] }]
+    "SessionStart": [
+      { "matcher": "startup", "hooks": [{ "type": "command", "command": "bash \"$HOME/.claude/hooks/session-start.sh\"" }] },
+      { "matcher": "compact", "hooks": [{ "type": "command", "command": "bash \"$HOME/.claude/hooks/post-compact.sh\"" }] },
+      { "matcher": "startup", "hooks": [{ "type": "command", "command": "bash ~/scripts/session-start.sh" }] }
+    ],
+    "UserPromptSubmit": [{ "matcher": "", "hooks": [{ "type": "command", "command": "bash \"$HOME/.claude/hooks/user-prompt-submit.sh\"" }] }],
+    "PreToolUse": [{ "matcher": "Write", "hooks": [{ "type": "command", "command": "bash \"$HOME/.claude/hooks/write-guard.sh\"" }] }],
+    "PostToolUse": [{ "matcher": "Edit", "hooks": [{ "type": "command", "command": "bash \"$HOME/.claude/hooks/typecheck.sh\"" }] }],
+    "Stop": [{ "hooks": [{ "type": "command", "command": "~/.claude/notify.sh done", "async": true }] }]
   }
 }
 JSON
 
-echo "== run 1 =="
-bash "$MERGE" "$FRAG" >/dev/null 2>&1 || { echo "  merge-settings.sh failed/absent"; }
-S="$HOME/.claude/settings.json"
+echo "== transition cleanup =="
+bash "$MERGE" "$FRAG" >/dev/null 2>&1; ck "exit 0" "$?" "0"
+ck "model preserved"          "$(jq -r .model "$S")" "opus"
+ck "effortLevel preserved"    "$(jq -r .effortLevel "$S")" "xhigh"
+ck "plugins preserved"        "$(jq -r '.enabledPlugins["slack@claude-plugins-official"]' "$S")" "true"
+ck "permissions preserved"    "$(jq -r '.permissions.ask[0]' "$S")" "Bash(git push *)"
+ck "Mallet hooks removed"     "$(jq '[.. | objects | select(.command?) | .command | select(test("\\.claude/hooks/"))] | length' "$S")" "0"
+ck "same-named user hook kept" "$(jq -r '.hooks.SessionStart[0].hooks[0].command' "$S")" "bash ~/scripts/session-start.sh"
+ck "Stop hook kept"           "$(jq -r '.hooks.Stop[0].hooks[0].command' "$S")" "~/.claude/notify.sh done"
+ck "emptied events dropped"   "$(jq -r '.hooks | keys | join(",")' "$S")" "SessionStart,Stop"
+ck "stale statusLine dropped" "$(jq -r '.statusLine // "none"' "$S")" "none"
+ck "backup written"           "$(ls "$HOME/.claude/" | grep -c '^settings.json.bak-')" "1"
 
-ck "model preserved"        "$(jq -r '.model // "MISSING"' "$S" 2>/dev/null)" "opus"
-ck "effortLevel preserved"  "$(jq -r '.effortLevel // "MISSING"' "$S" 2>/dev/null)" "xhigh"
-ck "enabledPlugins kept"    "$(jq -r '.enabledPlugins["slack@claude-plugins-official"] // "MISSING"' "$S" 2>/dev/null)" "true"
-ck "skipWorkflowWarn kept"  "$(jq -r '.skipWorkflowUsageWarning // "MISSING"' "$S" 2>/dev/null)" "true"
-ck "Stop hook survives"     "$(jq '[.hooks.Stop[]?.hooks[]? | select(.command|test("notify.sh"))] | length' "$S" 2>/dev/null)" "1"
-ck "Notification survives"  "$(jq '[.hooks.Notification[]?.hooks[]? | select(.command|test("notify.sh"))] | length' "$S" 2>/dev/null)" "1"
-ck "SessionStart added"     "$(jq '[.hooks.SessionStart[]?.hooks[]? | select(.command|test("session-start.sh"))] | length' "$S" 2>/dev/null)" "1"
-ck "UserPromptSubmit added" "$(jq '[.hooks.UserPromptSubmit[]?.hooks[]? | select(.command|test("user-prompt-submit.sh"))] | length' "$S" 2>/dev/null)" "1"
-ck "post-compact added"     "$(jq '[.hooks.SessionStart[]? | select(.matcher=="compact") | .hooks[]? | select(.command|test("post-compact.sh"))] | length' "$S" 2>/dev/null)" "1"
-ck "PreToolUse added"       "$(jq '[.hooks.PreToolUse[]?.hooks[]? | select(.command|test("write-guard.sh"))] | length' "$S" 2>/dev/null)" "1"
-ck "statusLine is Mallet"   "$(jq -r '.statusLine.command // "MISSING" | test("statusline.sh") | tostring' "$S" 2>/dev/null)" "true"
-ck "hook paths use HOME"    "$(jq '[.. | objects | select(.command?) | .command | select(test("CLAUDE_PROJECT_DIR"))] | length' "$S" 2>/dev/null)" "0"
+echo "== idempotency =="
+jq -S . "$S" > "$SCRATCH/a1.json"; bash "$MERGE" "$FRAG" >/dev/null 2>&1; jq -S . "$S" > "$SCRATCH/a2.json"
+ck "second run changes nothing" "$(diff -q "$SCRATCH/a1.json" "$SCRATCH/a2.json" >/dev/null && echo same)" "same"
 
-echo "== run 2 (idempotency) =="
-jq -S . "$S" > "$SCRATCH/after1.json" 2>/dev/null
+echo "== statusLine kept when the Mallet script is still present or not Mallet's =="
+echo '{"statusLine":{"type":"command","command":"bash \"$HOME/.claude/statusline.sh\""}}' > "$S"
+echo "# user-customised" > "$HOME/.claude/statusline.sh"
 bash "$MERGE" "$FRAG" >/dev/null 2>&1
-jq -S . "$S" > "$SCRATCH/after2.json" 2>/dev/null
-if diff -q "$SCRATCH/after1.json" "$SCRATCH/after2.json" >/dev/null 2>&1; then
-  echo "  PASS idempotent"; pass=$((pass+1))
-else
-  echo "  FAIL idempotent"; diff "$SCRATCH/after1.json" "$SCRATCH/after2.json" | head -20; fail=$((fail+1))
-fi
-ck "no duplicate SessionStart" "$(jq '[.hooks.SessionStart[]?.hooks[]?] | length' "$S" 2>/dev/null)" "2"
+ck "kept while script exists" "$(jq -r '.statusLine.command' "$S")" 'bash "$HOME/.claude/statusline.sh"'
+echo '{"statusLine":{"type":"command","command":"echo mine"}}' > "$S"
+bash "$MERGE" "$FRAG" >/dev/null 2>&1
+ck "user statusLine untouched" "$(jq -r '.statusLine.command' "$S")" "echo mine"
 
 echo "== corrupt-input guard =="
-printf '{invalid' > "$HOME/.claude/settings.json"
-bash "$MERGE" "$FRAG" >/dev/null 2>&1
-ck "corrupt exits nonzero" "$?" "1"
-ck "corrupt file untouched" "$(cat "$HOME/.claude/settings.json")" "{invalid"
+printf '{invalid' > "$S"
+bash "$MERGE" "$FRAG" >/dev/null 2>&1; ck "corrupt exits nonzero" "$?" "1"
+ck "corrupt file untouched" "$(cat "$S")" "{invalid"
 
-echo "== empty-target case =="
-rm -rf "$HOME"; mkdir -p "$HOME/.claude"
+echo "== empty target =="
+rm -f "$S"
 bash "$MERGE" "$FRAG" >/dev/null 2>&1
-ck "created valid json" "$(jq -e . "$HOME/.claude/settings.json" >/dev/null 2>&1 && echo ok)" "ok"
-ck "fresh has 3 hook events" "$(jq '.hooks | keys | length' "$HOME/.claude/settings.json" 2>/dev/null)" "3"
+ck "creates valid json" "$(jq -e . "$S" >/dev/null 2>&1 && echo ok)" "ok"
 
 echo
 echo "pass=$pass fail=$fail"

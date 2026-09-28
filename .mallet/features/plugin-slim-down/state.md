@@ -21,5 +21,7 @@
 
 <!-- 2026-09-28 (task 10): statusLine points at ${CLAUDE_PLUGIN_DATA}/statusline.sh, refreshed by session-start on every startup (test-16), so the statusline follows plugin updates. The setup skill is model-executed prose; its settings edit is not unit-testable and is exercised in task 13. -->
 
+<!-- 2026-09-28 (task 11): install-payload.sh is now the transition (same path/flags). merge-settings.sh OWNED regex anchored to .claude/hooks/ so a user script sharing a name (e.g. ~/scripts/session-start.sh) is never removed; typecheck added since its script is removed. test-17 (37 assertions) replaces test-08; negative control against the old installer: 26 failures. -->
+
 ## Blockers
 <!-- - [ ] <description> (check off when resolved) -->
