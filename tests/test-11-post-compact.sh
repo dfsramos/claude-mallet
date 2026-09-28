@@ -38,7 +38,7 @@ echo "== payload =="
 ck "pre-compact.sh removed" "$([ -f "$H/pre-compact.sh" ] && echo present || echo gone)" "gone"
 F="$REPO/.claude/settings.fragment.json"
 ck "no PreCompact in fragment" "$(jq -r '.hooks.PreCompact // "none"' "$F")" "none"
-ck "SessionStart compact registered" "$(jq -r '[.hooks.SessionStart[] | select(.matcher=="compact") | .hooks[].command | select(test("post-compact.sh"))] | length' "$F")" "1"
+ck "SessionStart compact registered by the plugin" "$(jq -r '[.hooks.SessionStart[] | select(.matcher | test("compact")) | .hooks[].command | select(test("post-compact.sh"))] | length' "$REPO/plugin/hooks/hooks.json")" "1"
 hasnt "session-start no snapshot" "$(cat "$H/session-start.sh")" "compact-snapshot"
 
 echo "== merge-settings drops a stale PreCompact registration =="
@@ -52,7 +52,7 @@ ck "PreCompact gone"   "$(jq -r '.hooks.PreCompact // "none"' "$S")" "none"
 ck "user Stop kept"    "$(jq -r '.hooks.Stop[0].hooks[0].command' "$S")" "notify.sh"
 ck "model kept"        "$(jq -r '.model' "$S")" "keep-me"
 bash "$REPO/.claude/merge-settings.sh" "$F" >/dev/null
-ck "idempotent: one compact entry" "$(jq '[.hooks.SessionStart[] | select(.matcher=="compact")] | length' "$S")" "1"
+ck "no compact registration added to user settings" "$(jq '[.hooks.SessionStart[]? | select(.matcher=="compact")] | length' "$S")" "0"
 
 echo "pass=$pass fail=$fail"
 [ "$fail" -eq 0 ]
