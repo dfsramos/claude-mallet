@@ -109,11 +109,11 @@ N2=$(wc -l < "$CURL_LOG")
 hasnt "no update notice when current" "$OUT" 'Framework Update Available'
 ck    "up-to-date result cached"      "$N2" "$N1"
 
-echo "== memory injection still works =="
+echo "== memory.md no longer injected (auto memory replaces it) =="
 mkdir -p "$CLAUDE_PROJECT_DIR/.mallet"
 echo "MEM-SENTINEL" > "$CLAUDE_PROJECT_DIR/.mallet/memory.md"
 OUT=$(bash "$SS" 2>&1)
-has "memory still injected" "$OUT" "MEM-SENTINEL"
+hasnt "memory not injected" "$OUT" "MEM-SENTINEL"
 
 echo
 echo "pass=$pass fail=$fail"

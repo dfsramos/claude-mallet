@@ -1,5 +1,5 @@
 # Task: remove-redundant
-Status: pending
+Status: done
 Deps: 01, 02, 03
 
 ## Goal

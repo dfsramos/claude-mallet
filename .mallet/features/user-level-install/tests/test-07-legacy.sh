@@ -34,7 +34,7 @@ echo '{"permissions":{}}' > "$CLAUDE_PROJECT_DIR/.claude/settings.local.json"
 echo "MEM" > "$CLAUDE_PROJECT_DIR/.mallet/memory.md"
 OUT=$(bash "$SS" 2>&1)
 hasnt "no false positive" "$OUT" "Legacy Mallet Install Detected"
-has   "memory still injected" "$OUT" "MEM"
+hasnt "memory not injected" "$OUT" "MEM"
 
 echo "== half-payload does not trigger =="
 export CLAUDE_PROJECT_DIR="$SCRATCH/r4"

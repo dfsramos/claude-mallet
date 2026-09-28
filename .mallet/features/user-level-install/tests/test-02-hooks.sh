@@ -25,20 +25,17 @@ echo '{"installed_at":"2026-01-01"}' > "$HOME/.claude/framework.json"
 
 echo "== session-start.sh =="
 OUT=$(bash "$H/session-start.sh" 2>&1); ck "exit 0" "$?" "0"
-has  "injects .mallet/memory.md"   "$OUT" "MEMORY-SENTINEL"
+hasnt "no .mallet/memory.md injection (auto memory replaces it)" "$OUT" "MEMORY-SENTINEL"
 
 echo "== session-start.sh with .mallet absent =="
 rm -rf "$CLAUDE_PROJECT_DIR/.mallet"
 OUT=$(bash "$H/session-start.sh" 2>&1); ck "exit 0" "$?" "0"
 ck "emits nothing" "$(echo -n "$OUT" | wc -c)" "0"
 
-echo "== explore-redirect.sh =="
-mkdir -p "$CLAUDE_PROJECT_DIR/.mallet"
-echo "report" > "$CLAUDE_PROJECT_DIR/.mallet/discovery-2026-01-01.md"
-OUT=$(printf '{"tool_name":"Bash","tool_input":{"command":"grep -rn foo ."}}' | bash "$H/explore-redirect.sh" 2>&1)
-has "finds .mallet/ discovery"  "$OUT" "discovery report exists"
-has "message says .mallet/"     "$OUT" "\.mallet/discovery-2026-01-01\.md"
-hasnt "no stale .claude/project" "$OUT" "\.claude/project"
+echo "== user-prompt-submit.sh never emits [ultracode] =="
+OUT=$(printf '{"prompt":"ultracode: do a comprehensive, thorough audit of the entire codebase"}' | bash "$H/user-prompt-submit.sh" 2>&1)
+hasnt "no ultracode scoring" "$OUT" "ultracode"
+ck "removed hooks gone" "$(ls "$H" | grep -cE 'push-confirm|explore-redirect')" "0"
 
 echo "== statusline.sh reads \$HOME/framework.json =="
 echo '{"repo":"a/b","version":"deadbeefcafe1234","installed_at":"2026-01-01"}' > "$HOME/.claude/framework.json"

@@ -12,10 +12,9 @@ set -euo pipefail
 FRAGMENT="${1:-}"
 TARGET="$HOME/.claude/settings.json"
 
-# Base hook scripts Mallet owns at user level. Deliberately excludes the three
-# opt-in hooks (typecheck, push-confirm, explore-redirect): those register per
-# repo, and stripping them here would silently drop a user's manual global
-# registration that the fragment would not re-add.
+# Base hook scripts Mallet owns at user level. Deliberately excludes the opt-in
+# typecheck hook: it registers per repo, and stripping it here would silently
+# drop a user's manual global registration that the fragment would not re-add.
 OWNED='statusline\.sh|session-start\.sh|user-prompt-submit\.sh|pre-compact\.sh|post-compact\.sh|write-guard\.sh'
 
 [ -n "$FRAGMENT" ] || { echo "usage: merge-settings.sh <fragment.json>" >&2; exit 1; }

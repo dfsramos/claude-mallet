@@ -1,16 +1,10 @@
 #!/bin/bash
 # Session startup hook:
-#   1. Injects project memory into context (if present).
-#   2. Checks for a framework update and surfaces it as a notice (if available).
-
-# ── Project memory ──────────────────────────────────────────────────────────
-
-MEMORY_FILE="${CLAUDE_PROJECT_DIR}/.mallet/memory.md"
-if [ -f "$MEMORY_FILE" ]; then
-  echo "--- Project Memory ---"
-  cat "$MEMORY_FILE"
-  echo "--- End Project Memory ---"
-fi
+#   1. Checks for a framework update and surfaces it as a notice (if available).
+#   2. Detects a legacy per-project install and offers the migrate skill.
+#
+# Project memory is not injected here: Claude Code's auto memory loads its own
+# MEMORY.md index at session start.
 
 # ── Framework update check ──────────────────────────────────────────────────
 

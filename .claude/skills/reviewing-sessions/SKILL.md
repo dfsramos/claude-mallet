@@ -67,10 +67,11 @@ Then open `.mallet/skill-backlog.md`. For each item logged during this session:
 
 ## 4a. Review Memory Entries
 
-If `.mallet/memory.md` exists, open it. For any entries added or modified during this session:
+Review the auto memory entries written or updated during this session:
 - Confirm they are accurate based on what was actually observed
 - Rewrite any that are vague or poorly phrased
-- Remove any that turned out to be wrong or are already covered by CLAUDE.md or a skill
+- Delete any that turned out to be wrong or are already covered by CLAUDE.md or a skill
+- Save any user correction from this session that is not yet a `feedback` memory
 
 Do not add new entries here unless something significant was missed during the session.
 

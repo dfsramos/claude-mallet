@@ -1,6 +1,6 @@
 ---
 name: hooks-setup
-description: Invoke when the user runs /hooks-setup, asks to "set up hooks", "enable typecheck", "enable push confirmation", or wants to activate optional hook scripts in the current project.
+description: Invoke when the user runs /hooks-setup, asks to "set up hooks", "enable typecheck", or wants to activate optional hook scripts in the current project.
 ---
 # Hooks Setup
 
@@ -12,8 +12,6 @@ Activates optional hook scripts in the current project. Run from the target proj
 
 Read `.claude/settings.json`. For each optional hook, check whether its script filename already appears in any hook command string:
 - `typecheck.sh` present → already registered
-- `push-confirm.sh` present → already registered
-- `explore-redirect.sh` present → already registered
 
 Report the current state.
 
@@ -39,13 +37,9 @@ For each optional hook not yet registered, describe it and ask the user which to
 **typecheck** _(PostToolUse on Edit)_
 Runs the type-checker after every file edit and surfaces errors directly in context. Requires TypeScript or PHP project (detected above). Skipped if neither stack is detected.
 
-**push-confirm** _(PreToolUse on Bash)_
-Warns before any `git push` and asks Claude to verify the push was explicitly requested. Works with any project.
+To confirm before `git push`, use a permission rule instead of a hook: add `"Bash(git push *)"` to `permissions.ask` in settings.
 
-**explore-redirect** _(PreToolUse on Bash)_
-When Claude runs a broad recursive search (`grep -r`, `find .`, `rg`, etc.), checks whether a Graphify knowledge graph (`graphify-out/graph.json`) or a discovery report (`.mallet/discovery-*.md`) exists and suggests querying the richer source first. Advisory only — never blocks. Useful on large or well-documented codebases; low value on small projects.
-
-Ask: "Which hooks would you like to enable?" List only unregistered hooks. If all are already registered, report that and stop.
+If typecheck is already registered, report that and stop. Otherwise ask whether to enable it.
 
 ---
 
@@ -58,8 +52,6 @@ For each hook the user selected:
 3. Check again whether the script filename already appears in any command string — if yes, skip (idempotent).
 4. Determine the event and matcher:
    - `typecheck.sh` → event `PostToolUse`, matcher `Edit`
-   - `push-confirm.sh` → event `PreToolUse`, matcher `Bash`
-   - `explore-redirect.sh` → event `PreToolUse`, matcher `Bash`
 5. If the event key does not exist in `hooks`, add it as an empty array first.
 6. Append this object to the event array:
    ```json

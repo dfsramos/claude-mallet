@@ -85,13 +85,9 @@ Commit format: one line, imperative verb, capital first letter, ends with period
 
 ## Self-Improvement Loop
 
-After any correction from the user, silently append to `.mallet/lessons.md`:
-- What went wrong
-- The rule to prevent it from recurring
+After any correction from the user, silently save a `feedback` memory in auto memory: the rule, why it matters, and how to apply it.
 
-Review `.mallet/lessons.md` at session start if it exists. Apply those rules throughout the session.
-
-When a constraint or workaround in place for a previous model limitation appears no longer necessary, note it in `.mallet/lessons.md` with the label `[re-evaluate]` so it can be reviewed for removal. Do not remove it unilaterally.
+When a constraint or workaround in place for a previous model limitation appears no longer necessary, save it as a `feedback` memory labelled `[re-evaluate]` so it can be reviewed for removal. Do not remove it unilaterally.
 
 ## Skill Invocation
 
@@ -133,14 +129,12 @@ Actively watch for patterns worth capturing as skills. When identified, silently
 
 ## Project Memory
 
-`.mallet/memory.md` stores persistent project facts. Injected at session start — keep it lean.
+Persistent project facts live in Claude Code's auto memory, not in a Mallet file.
 
-Add: preferred commands, non-obvious behaviours, consistent conventions, better-than-obvious tools.
-Do not add: session outcomes, per-run state, anything already in CLAUDE.md or a skill.
+Save: preferred commands, non-obvious behaviours, consistent conventions, better-than-obvious tools.
+Do not save: session outcomes, per-run state, anything already in CLAUDE.md or a skill.
 
-Mark significant decisions inline with confidence: `[tentative]` for unvalidated choices, `[firm]` once confirmed by outcome or user.
-
-Before adding a new entry, grep existing memory for related content. Update rather than duplicate.
+Mark significant decisions with confidence: `[tentative]` for unvalidated choices, `[firm]` once confirmed by outcome or user.
 
 ## Mission Continuity
 
@@ -152,7 +146,7 @@ For work spanning 3+ tasks or likely to continue across sessions, write a missio
 
 Spawn subagents not only for parallelism but to contain sub-tasks whose intermediate state would otherwise pollute the main context. When a sub-task produces large intermediate output (e.g., raw search results, log analysis, code review) and only the synthesised conclusion is needed downstream, run it in a subagent and surface only the result.
 
-When multiple sub-tasks are genuinely independent (no shared files, no sequential dependencies, no mid-task interactive decisions), dispatch them to subagents in parallel — one tool call per task in a single message.
+When multiple sub-tasks are genuinely independent, dispatch them to subagents in parallel — one tool call per task in a single message. Independent means all three hold: each can be understood without the others, none touches files another touches, and none needs another's output or a mid-task user decision. After they return, check for overlapping edits and run the full test suite once.
 
 This keeps the main context window focused on the current decision rather than accumulated intermediate noise.
 
@@ -162,11 +156,9 @@ This keeps the main context window focused on the current decision rather than a
 
 When the UserPromptSubmit hook emits a `[task-calibrate]` reminder, invoke the `task-calibrate` skill before responding. This is mandatory, not a suggestion — the reminder only fires on high-complexity prompts where model choice materially affects cost or quality.
 
-## Ultracode Mode
+## Workflow Agents
 
-When the UserPromptSubmit hook emits an `[ultracode]` reminder, or the user's prompt contains "ultracode" or uses "ultra" as an explicit qualifier (e.g. "ultra review", "ultra audit"), treat this as an explicit opt-in for Workflow-based multi-agent orchestration. Proceed with the Workflow tool without asking for additional confirmation.
-
-When authoring Workflow scripts under ultracode:
+When authoring Workflow scripts:
 - Use existing agent personas via `agentType` wherever the role maps to a defined agent: `code-analyst` (Callum), `code-reviewer` (Clifford), `feature-analyst` (Frida), `implementer` (Ingrid), `plan-critic` (Percy), `scope-validator` (Sylvie), `test-runner` (Tobias).
 - For novel roles not covered by existing agents, describe the persona inline in the agent prompt using the named-persona style: a name, a narrowly scoped role, a single job.
 - All workflow agents must follow the output contract in `~/.claude/agents/_contract.md`.

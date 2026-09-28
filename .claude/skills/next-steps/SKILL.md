@@ -17,12 +17,12 @@ Never assume a tracker exists. Establish what this environment actually has befo
 Always check:
 - `.mallet/missions/*.md` — every file, not only `active.md`. More than one mission can be live at once, and they frequently overlap.
 - The current session, for work agreed verbally but not yet recorded anywhere.
-- `.mallet/skill-backlog.md` and `.mallet/memory.md` if present, for deferred items.
+- `.mallet/skill-backlog.md` if present, and auto memory, for deferred items.
 
 Environment dependent, use whichever exist:
 - An issue tracker exposed as an MCP server. Read the available tool list to find out which, rather than guessing — it may be Jira, Linear, Notion, or nothing.
 - `gh` for GitHub issues and open pull requests, if the repo has a remote.
-- Whatever the project names as its source of work in `CLAUDE.md`, `.mallet/conventions.md`, or `.mallet/memory.md` — a Miro board, a spreadsheet, a shared document.
+- Whatever the project names as its source of work in `CLAUDE.md`, `.mallet/conventions.md`, or auto memory — a Miro board, a spreadsheet, a shared document.
 
 If nothing exists beyond the mission files, say so and carry on. A personal project with no tracker is a normal case, not a gap to apologise for.
 

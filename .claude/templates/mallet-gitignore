@@ -10,7 +10,6 @@
 
 # Transient — regenerated on demand, no value in history
 pipeline-state/
-compact-snapshot.md
 
 # Point-in-time snapshots — commit deliberately with `git add -f` if wanted
 discovery-*.md
@@ -21,8 +20,6 @@ task-notes.md
 
 # Durable and worth committing, listed here only as documentation:
 #   conventions.md      project conventions
-#   memory.md           persistent project facts
-#   lessons.md          recorded corrections
 #   skill-backlog.md    candidate skills
 #   overrides/          per-skill amendments
 #   skills/             project-specific skills
