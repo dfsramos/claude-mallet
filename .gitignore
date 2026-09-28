@@ -6,6 +6,5 @@
 # must stay visible across every branch. Re-include the directory, then ignore
 # only the genuinely transient parts.
 !.mallet/
+# Legacy: pre-auto-memory project memory, if one is still lying around.
 .mallet/memory.md
-.mallet/compact-snapshot.md
-.mallet/pipeline-state/

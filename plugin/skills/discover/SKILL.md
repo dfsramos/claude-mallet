@@ -1,10 +1,10 @@
 ---
 name: discover
-description: Invoke when the user runs /discover, or says "discover this project", "analyze the codebase", "what could we improve here", or similar. Also when entering a new project and asking what .claude setup improvements are possible.
+description: Invoke when the user runs /discover, or says "discover this project", "analyze the codebase", "what could we improve here", or similar. Also when entering a new project and asking what Claude Code setup improvements are possible.
 ---
 # Project Discovery
 
-Analyse the project to identify opportunities for improving its `.claude/` framework setup.
+Analyse the project to identify opportunities for improving its Claude Code setup: project skills, MCP servers, conventions, and settings.
 
 ---
 

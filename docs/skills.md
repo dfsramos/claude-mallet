@@ -1,91 +1,68 @@
 # Skills
 
-Skills are reusable capabilities defined as `SKILL.md` files inside `~/.claude/skills/`, installed once per machine and available in every project. A project can add its own in `.mallet/skills/`.
+Skills are reusable capabilities defined as `SKILL.md` files inside `plugin/skills/`, shipped with the `mallet` plugin and available in every project once it is installed. They are namespaced at runtime — `/mallet:<name>`, agent type `mallet:<name>` for the review-pipeline agents. A project can add its own in `.mallet/skills/`, which are not namespaced and not part of the plugin.
 
-## Install
+Skills marked **manual-only** below carry `disable-model-invocation: true` in their frontmatter: Claude will not invoke them on its own judgment, only when the user explicitly asks or runs the slash command.
 
-**File:** `install.md` (repo root — public-facing bootstrap)
-**Triggered by:** A user pointing Claude at the framework repo URL
+## Setup
 
-Installs the framework into `~/.claude/` from the remote GitHub repo. Requires no local checkout — only Claude Code and internet access. The install is machine-wide; the current working directory is irrelevant to it.
+**Directory:** `plugin/skills/setup/`
+**Triggered by:** `/mallet:setup` (or `/setup`), "set up Mallet", "install the Mallet statusline", or right after installing the plugin — **manual-only**
 
-Flow:
-1. Derives `owner/repo` from the URL
-2. Queries the GitHub API for the default branch and HEAD commit SHA
-3. Downloads the tarball from `github.com/{owner}/{repo}/archive/{sha}.tar.gz` to `/tmp`
-4. Confirms the machine-wide target with the user, then backs up existing `~/.claude/` config
-5. Backs up any existing `~/.claude/CLAUDE.md` to `CLAUDE.md.pre-mallet-<date>`, with confirmation
-6. Runs `install-payload.sh` — installs each entry individually, reconciles the previous manifest, restores executable bits, writes `framework.json`
-7. Runs `merge-settings.sh` — registers base hooks and the statusline without disturbing other keys
-8. Runs `migrate/detect.sh` and offers to clean up any legacy per-project installs
-9. Asks how `.mallet/` should be treated by git, and applies only what the user picks
-10. Cleans up `/tmp` and detects project type for optional skill suggestions
+One-time setup for what a plugin cannot configure by itself. Each step is independent — the user can decline any of them — and the skill reports what was done at the end.
 
-Two things it deliberately does **not** do:
-
-- **Remove a payload directory wholesale.** `~/.claude/skills/` and its siblings may hold user-authored entries. Replacement is per entry, and unclaimed entries are reported as preserved.
-- **Overwrite `~/.claude/settings.json`.** It holds `model`, `effortLevel`, `enabledPlugins`, and the user's own hooks, so it is merged.
-
-**`framework.json`** format — the `manifest` records what Mallet owns, so a later release can remove entries it drops without touching anything the user added:
-
-```json
-{
-  "repo": "owner/repo",
-  "version": "<full SHA>",
-  "installed_at": "YYYY-MM-DD",
-  "manifest": {
-    "skills": ["adr", "discover", "..."],
-    "agents": ["_contract.md", "..."],
-    "templates": ["knowledge-skill", "mallet-gitignore"],
-    "hooks": ["session-start.sh", "..."]
-  }
-}
-```
+1. **Statusline** — plugins cannot set the main `statusLine` (only `agent`/`subagentStatusLine` settings take effect), so this copies `${CLAUDE_PLUGIN_ROOT}/statusline/statusline.sh` to `${CLAUDE_PLUGIN_DATA}/statusline.sh` and points `~/.claude/settings.json`'s `statusLine` at that copy, backing the settings file up first and asking before replacing an existing non-Mallet `statusLine`
+2. **Auto-update** — tells the user background auto-update is off by default for third-party marketplaces and how to turn it on (`/plugin` → Marketplaces → claude-mallet → Enable auto-update), or the on-demand alternative (`/plugin marketplace update claude-mallet`)
+3. **Legacy Mallet memory files** — if `.mallet/memory.md` or `.mallet/lessons.md` exist in the current project, offers to fold them into Claude Code's auto memory (facts become `project`/`reference` memories, lessons become `feedback` memories); never deletes or edits the source files
+4. **Transition leftovers** — if `~/.claude/skills/migrate/` contains only the stub `detect.sh` and a `MALLET-TRANSITION-STUB` marker left by a prior user-level-install transition, offers to remove the directory
+5. **Report** — one line per step: done, skipped, or not applicable
 
 ## Migrate
 
-**Directory:** `~/.claude/skills/migrate/`
-**Triggered by:** `/migrate`, "clean up the old Mallet installs", the install flow, or a session-start legacy notice
+**Directory:** `plugin/skills/migrate/`
+**Triggered by:** `/mallet:migrate`, "clean up the old Mallet installs", "remove the per-project Mallet", or a session-start notice reporting a legacy per-project payload in the current repo
 
-Removes the per-project payload older Mallet versions left inside each repo. Mechanics live in two scripts beside `SKILL.md` — `detect.sh` and `migrate-repo.sh` — so the file-deleting logic is testable rather than prose.
+Removes the per-project payload that Mallet versions older than the user-level install left inside each repo. Mechanics live in two scripts beside `SKILL.md`, referenced via `${CLAUDE_SKILL_DIR}` so they resolve inside the installed plugin — `detect.sh` and `migrate-repo.sh` — so the file-deleting logic is testable rather than prose.
 
-Flow:
-1. **Discover** — reads the `cwd` field from session transcripts under `~/.claude/projects/`, an exact record of every repo Claude has run in, with an optional bounded filesystem scan for repos never opened in Claude
-2. **Detect** — classifies by *file presence*, never schema; installs exist in the wild whose `framework.json` is `{"commit": ..., "installed_at": ...}` with no `repo` or `version` key
-3. **Back up** — one tarball per repo; a repo whose backup fails is skipped before anything is deleted
-4. **Present and confirm** — lists what moves, what is deleted, and what is only reported
-5. **Ask the VCS question once** — machine-wide ignore, per-repo ignore, commit it, or decide later
-6. **Migrate per repo** — relocate state to `.mallet/`, remove untracked payload, prune `settings.json`, strip an untracked `CLAUDE.md`
-7. **Report** — per repo, including every skipped tracked file
-
-Hard guarantees:
+Non-negotiables, enforced by the scripts:
 
 | Guarantee | Why |
 |---|---|
-| Never modifies a git-tracked file | Changing committed content is the user's decision |
-| Never writes an ignore file by default | VCS policy is not the framework's call |
-| Never touches `.claude/settings.local.json` | User permissions |
-| No backup, no deletion | A half-migrated repo is worse than an unmigrated one |
+| Tracked files never modified | A git-tracked `CLAUDE.md` or `settings.json` is reported, never touched |
+| No ignore file written by default | Whether `.mallet/` is tracked is the user's decision |
+| `.claude/settings.local.json` never touched | User permissions |
+| No backup, no deletion | A repo whose backup fails is skipped whole |
 
-The `CLAUDE.md` strip is exact, not heuristic: it fetches the historical payload for the SHA that repo recorded from `raw.githubusercontent.com/<repo>/<sha>/CLAUDE.md` and diffs, so only genuinely project-authored content survives. If the fetch fails or the SHA is unknown, it skips rather than guessing.
+Flow:
+1. **Discover** — `${CLAUDE_SKILL_DIR}/detect.sh`, with candidates from the `cwd` recorded in session transcripts under `~/.claude/projects/`, optionally extended with `--roots <dir>...`; emits TSV (`repo`, `sha`, `recorded-repo`, `claude-md-state`)
+2. **Present** — what moves (`.claude/project/`, `.claude/features/`, `.claude/pipeline-state/` into `.mallet/`), what is deleted (untracked payload only), what is skipped (every tracked file, named), and the per-repo backup path
+3. **Confirm** — destructive-operation rules apply; confirming the list once covers all repos, then reports per repo as it goes
+4. **Ask the VCS question, once** — ignore machine-wide (`core.excludesFile`), ignore per-repo (`.git/info/exclude`), commit it (mentions `${CLAUDE_SKILL_DIR}/mallet-gitignore` as an opt-in template), or decide later
+5. **Migrate** — resolves the historical payload from `raw.githubusercontent.com/<recorded-repo>/<sha>/CLAUDE.md` so the `CLAUDE.md` strip is exact rather than heuristic (cached per SHA), then runs `${CLAUDE_SKILL_DIR}/migrate-repo.sh <repo> --payload ... --yes`; verifies `git status --porcelain` after each repo
+6. **Report** — per repo: moved, deleted, pruned, stripped, skipped, backup path; a reminder that Mallet itself now comes from the plugin, so nothing Mallet-related should remain in the repo besides `.mallet/`
 
 ## Hooks Setup
 
-**Directory:** `~/.claude/skills/hooks-setup/`
-**Triggered by:** `/hooks-setup`, "set up hooks", "enable typecheck", "enable push confirmation"
+**Directory:** `plugin/skills/hooks-setup/`
+**Triggered by:** `/mallet:hooks-setup`, "set up hooks", "enable typecheck", "disable typecheck" — **manual-only**
 
-Activates optional hook scripts in the current project. The framework distributes hook scripts for all projects but only registers the default set at install time. `hooks-setup` is the activation mechanism for the opt-in tier.
+Turns the one optional hook on or off for the current project. The plugin registers every hook globally; an optional hook only *acts* in projects carrying its marker, so this skill edits no settings file — it only creates or removes the marker.
 
-1. **Audit** — reads `settings.json` and reports which optional hooks (`typecheck`, `push-confirm`, `explore-redirect`) are already registered
-2. **Detect stack** — checks for `tsconfig.json` / `"typescript"` in `package.json` (TypeScript) and `vendor/bin/phpstan` (PHP)
-3. **Present options** — lists unregistered hooks with descriptions; skips `typecheck` if neither stack is detected
-4. **Register** — for each selected hook: verifies the script exists in `~/.claude/hooks/`, checks idempotency by script filename, appends to the correct event array in `settings.json` using Edit
-5. **Confirm** — reports what was registered and what was skipped (already present / script missing / stack not detected)
+| Hook | Event | Marker |
+|---|---|---|
+| `typecheck` | PostToolUse on `Edit`/`Write` | `.mallet/typecheck.enabled` |
+
+1. **Report current state** — checks the marker; also checks `.claude/settings.json`/`settings.local.json` for a pre-plugin registration referencing `.claude/hooks/typecheck.sh`, a path that no longer exists, and offers to remove that stale entry without touching anything else
+2. **Detect the stack** — `tsconfig.json` for TypeScript, `vendor/bin/phpstan` for PHP; says typecheck would do nothing if neither is present
+3. **Apply the choice** — enable: `mkdir -p .mallet && touch .mallet/typecheck.enabled`; disable: `rm .mallet/typecheck.enabled`
+4. **Confirm** — reports the new state and any stale registration removed or left in place
+
+`git push` confirmation is no longer a hook — the skill points users at a `permissions.ask` rule (`"Bash(git push *)"`) instead, which Claude Code enforces natively.
 
 ## Preflight
 
-**Directory:** `~/.claude/skills/preflight/`
-**Triggered by:** `/preflight`, or when environment issues are suspected before git-heavy work
+**Directory:** `plugin/skills/preflight/`
+**Triggered by:** `/mallet:preflight`, or when environment issues are suspected before git-heavy work
 
 Runs four environment checks and reports results as a concise status block. Designed to catch recurring WSL2 and Git LFS issues before they derail a session.
 
@@ -94,25 +71,12 @@ Runs four environment checks and reports results as a concise status block. Desi
 3. **Working tree state** — reports current branch name and whether the tree is clean
 4. **Status summary** — one `[ok]` / `[warn]` / `[block]` line per check; outputs `preflight ok — no issues found` when everything passes
 
-## Update
-
-**Directory:** `~/.claude/skills/update/`
-**Triggered by:** "update the framework", "update from `<url>`"
-
-Upgrades the single machine-wide install. Requires `~/.claude/framework.json` to exist. There is nothing per-project to update — which is the point: eight installs across three versions existed precisely because updates used to be per repo.
-
-Shares `install-payload.sh` and `merge-settings.sh` with the install flow, so the replacement rules live in one tested place rather than in two prose documents. It adds a version check that short-circuits with no writes when the local SHA already matches HEAD, a pre-update backup, and a closing legacy sweep via `migrate/detect.sh`.
-
-Manifest reconciliation is what makes per-entry replacement safe over time: entries the previous manifest claimed but the new release no longer ships are removed, while entries it never claimed are left alone and reported as preserved. Without it, a skill dropped from a later release would linger in `~/.claude/skills/` forever.
-
----
-
 ## Project Discovery
 
-**Directory:** `~/.claude/skills/discover/`
-**Triggered by:** `/discover`, "discover this project", "analyze the codebase"
+**Directory:** `plugin/skills/discover/`
+**Triggered by:** `/mallet:discover`, "discover this project", "analyze the codebase"
 
-Structured analysis of a project's codebase to identify `.claude/` setup opportunities:
+Structured analysis of a project's codebase to identify setup opportunities:
 
 1. **Scan** — languages, frameworks, build tools, structure
 2. **Critical files** — inbound-reference count script identifies the highest-centrality modules (god nodes); reported with reference count and why they matter. Skipped for small projects.
@@ -120,49 +84,61 @@ Structured analysis of a project's codebase to identify `.claude/` setup opportu
 4. **Augmentation opportunities** — MCP servers (e.g., Context7 for libraries with live docs), skill packs (e.g., Impeccable for frontend UI work), CLI-Anything harnesses (pre-built `SKILL.md` wrappers for ~100+ desktop/server apps — recommended when the project interacts with design, media, GIS, or automation software), and Graphify (knowledge graph tool — recommended for large, polyglot, or multi-modal codebases; skipped for small or simple projects)
 5. **Focused questions** via `AskUserQuestion` to resolve priorities
 6. **Research** — WebSearch for confirmed services, propose concrete skills
-7. **Skill and documentation opportunities** — including connection data, project conventions for `.mallet/conventions.md`, and patterns promotable to the base framework
+7. **Skill and documentation opportunities** — including connection data, project conventions for `.mallet/conventions.md`, and patterns worth proposing back to the plugin
 8. **Report** — saved to `.mallet/discovery-YYYY-MM-DD.md`
 9. **Quick wins** — offer to implement high-value suggestions immediately
 
 ## Feature Planning
 
-**Directory:** `~/.claude/skills/plan-feature/`
+**Directory:** `plugin/skills/plan-feature/`
 **Triggered by:** "plan a feature", "I want to build X", or "continue the Y feature"
 
 Intake-to-execution pipeline. Supports resumption across sessions. All planning files are committed directly to `master` via a git worktree so plans remain visible regardless of the active branch.
 
 1. **Pre-check** — reads existing plans from master; surfaces overlaps before creating anything new
 2. **Intake** — broad questions (problem, users, success criteria, constraints, remote system involvement)
-3. **Knowledge skill assessment** — if the feature touches a domain with strong conventions (API design, auth, data modelling, security, accessibility, performance, domain rules), offers to scaffold a knowledge skill
-4. **Decompose** — confirms a slug; writes `plan.md`, `state.md`, and per-task stubs
-5. **Execute (wave model)** — identifies tasks whose dependencies are satisfied (a wave); when parallel, dispatches each task to its own subagent so only results surface to the main context
-6. **Resume** — loads `plan.md` and `state.md` from master
+3. **Design approval gate** — a one-paragraph design summary must be explicitly approved before decomposition begins
+4. **Knowledge skill assessment** — if the feature touches a domain with strong conventions (API design, auth, data modelling, security, accessibility, performance, domain rules), offers to scaffold a knowledge skill by copying `${CLAUDE_SKILL_DIR}/knowledge-skill-template.md` to `.mallet/skills/<domain>-knowledge/SKILL.md`
+5. **Decompose** — confirms a slug; writes `plan.md`, `state.md`, and per-task stubs, each with a task-content discipline check (no TBD, every step names a concrete file or command)
+6. **Execute (wave model)** — identifies tasks whose dependencies are satisfied (a wave); when parallel, dispatches each task to its own subagent so only results surface to the main context
+7. **Resume** — loads `plan.md` and `state.md` from master, reading `state.md` first for prior decisions and blockers
 
 ## Implement Feature
 
-**Directory:** `~/.claude/skills/implement-feature/`
-**Triggered by:** "implement this feature", "add X functionality", or any non-trivial code change
+**Directory:** `plugin/skills/implement-feature/`
+**Triggered by:** "implement this feature", "add X functionality", or any non-trivial code change, including resuming an interrupted run
 
-Orchestrates the full spec-to-review pipeline across seven named agents, each defined in `~/.claude/agents/` and bound to the shared output contract in `~/.claude/agents/_contract.md`.
+A thin launcher: this skill only collects inputs, launches the `implement-feature` workflow, and handles what a Workflow script cannot do itself — asking the user a question.
+
+1. **Collect inputs** — feature description and test command (both required), working directory (default: project root), and three yes/no options defaulting to yes: plan critique, scope validation, code review
+2. **Launch** — calls the Workflow tool (`implement-feature`, or `mallet:implement-feature` where namespaced) with `feature`, `testCommand`, `workingDir`, optional `context`, and the three booleans as `critique`/`scopeValidation`/`review`; `agentPrefix` defaults to `"mallet:"` and is set to `""` only when the personas are installed outside the plugin namespace
+3. **Handle the result** — routes on the returned `status`/`stoppedAt`: `done` reports the run log and offers a PR; `blocked` at `spec` puts Frida's unknowns to the user and re-runs with `answers`; `blocked` at `plan` shows the remaining `amendments`; `blocked` at `implement`/`test`/`review` shows the blocker and waits for direction; `revise` at `validate` shows Sylvie's `gaps` and asks whether to re-plan or re-implement
+4. **Resume** — an interrupted or re-run pipeline resumes via the Workflow tool's `resumeFromRunId`; completed agent calls return cached results and only the changed step onward re-runs
+
+### The workflow itself
+
+**File:** `plugin/workflows/implement-feature.js`
+
+Runs the pipeline across seven named agents, each bound via `agentType: <agentPrefix><agent-name>`:
 
 | Step | Agent | Role |
 |---|---|---|
-| 1. Feature analysis | `feature-analyst` (Frida) | Turn the request into a structured spec |
-| 2. Code analysis | `code-analyst` (Callum) | Read the codebase, produce a change plan |
-| 3. Plan critique | `plan-critic` (Percy) | Challenge the plan against the spec |
-| 4. Implementation | `implementer` (Ingrid) | Apply the approved plan |
-| 5. Test | `test-runner` (Tobias) | Run the suite, return only signal |
-| 6. Scope validation | `scope-validator` (Sylvie) | Confirm acceptance criteria met, no scope creep |
-| 7. Code review | `code-reviewer` (Clifford) | Senior review — blocking vs non-blocking |
+| 1. Spec | `feature-analyst` (Frida) | Turn the request into scope and acceptance criteria |
+| 2. Plan | `code-analyst` (Callum) | Read the codebase, produce a change plan |
+| 2b. Critique | `plan-critic` (Percy) | Challenge the plan against the spec |
+| 3. Implement | `implementer` (Ingrid) | Apply the approved plan |
+| 3b. Test | `test-runner` (Tobias) | Run the suite, return only signal |
+| 3c. Validate | `scope-validator` (Sylvie) | Confirm acceptance criteria met, no scope creep |
+| 3d. Review | `code-reviewer` (Clifford) | Senior review — blocking vs non-blocking |
 
-Pipeline state is checkpointed to `.mallet/pipeline-state/<slug>.md` after every step, so a session that ends mid-pipeline can resume from the last completed handoff rather than restarting.
+Every agent call is scored against a shared JSON contract (`status: approve|revise|blocked`, `summary`, `output`, `handoff`, `amendments`, `changedFiles`) so the orchestrator can route without free-text parsing. Iteration budgets: plan plus critique share 2 revisions; implement, test, and review share 2, with one revision cycle allotted to review specifically. Any `blocked` result ends the run immediately and is returned to the launching skill — a Workflow script cannot pause and ask the user itself. There is no `.mallet/pipeline-state/` checkpoint file any more; resumption goes through the Workflow tool's own `resumeFromRunId` instead.
 
-Each stage has an iteration cap so a disagreeing agent pair cannot loop indefinitely: analysis plus critique share a budget of 2, implementation plus tests plus review share 2, and scope validation gets 1. A user resolving a blocker resets the relevant budget. When Percy's second critique contains only small concrete amendments, the skill folds them into Ingrid's prompt rather than blocking.
+`/code-review` is not reachable from a script, which is why `code-reviewer` (Clifford) remains a dedicated review stage rather than delegating to the slash command.
 
 ## Architecture Decision Records
 
-**Directory:** `~/.claude/skills/adr/`
-**Triggered by:** "record this decision", "create an ADR", "document why we chose X", `/adr`, or during `plan-feature` when a significant architectural choice is made
+**Directory:** `plugin/skills/adr/`
+**Triggered by:** "record this decision", "create an ADR", "document why we chose X", `/mallet:adr`, or during `plan-feature` when a significant architectural choice is made
 
 Captures a significant architectural decision in Nygard format so the rationale survives beyond the session.
 
@@ -175,19 +151,18 @@ Captures a significant architectural decision in Nygard format so the rationale 
 
 ## Checkpoint
 
-**Directory:** `~/.claude/skills/checkpoint/`
-**Triggered by:** "checkpoint", "save state", `/checkpoint`, or proactively before `/compact`
+**Directory:** `plugin/skills/checkpoint/`
+**Triggered by:** "checkpoint", "save state", `/mallet:checkpoint`, or proactively before `/compact`
 
-Persists in-progress session state to disk so it survives compaction or a restart. No summary or reflection — write-only. Complements `reviewing-sessions` (use checkpoint mid-session, wrap-up at the end).
+Persists in-progress session state so it survives compaction or a restart. No summary or reflection — write-only. Complements `reviewing-sessions` (checkpoint mid-session, wrap-up at the end).
 
-1. **Lessons** — appends new corrections/rules to `.mallet/lessons.md` using the standard dated format; skips if nothing new
-2. **Memory** — adds new facts to `.mallet/memory.md` (non-obvious commands, confirmed conventions, tool quirks); skips anything already in CLAUDE.md or a skill
-3. **Mission state** — writes `.mallet/missions/active.md` if work is ongoing and multi-step; skips for single-session or complete work. Reads the file first: if it holds a *different* mission that is still open, writes to `.mallet/missions/<short-name>.md` instead and reports that both are live, rather than overwriting
-4. **Confirm** — one-line report of what was written, e.g. `Checkpoint complete: lessons.md (+1), missions/active.md (updated)`
+1. **Memory** — saves anything not yet recorded to Claude Code's auto memory: corrections as `feedback` memories, non-obvious commands/conventions/quirks as `project`/`reference` memories; updates an existing memory rather than duplicating; skips anything already covered by a skill or the persona
+2. **Mission state** — if work is clearly ongoing, writes or updates `.mallet/missions/active.md`; if that file already holds a *different* open mission, writes to `.mallet/missions/<short-name>.md` instead rather than overwriting it, and tells the user both are live
+3. **Confirm** — one line per file written, or `Checkpoint: nothing new to persist.`
 
 ## Session Wrap-Up
 
-**Directory:** `~/.claude/skills/reviewing-sessions/`
+**Directory:** `plugin/skills/reviewing-sessions/`
 **Triggered by:** "wrap up", "all done", "end session"
 
 Structured end-of-session retrospective. No session record files are written — skill and directive updates (step 4) do write to framework files.
@@ -195,41 +170,40 @@ Structured end-of-session retrospective. No session record files are written —
 1. **Session summary** — goal, approach, outcome
 2. **What went well** — efficient tasks, effective patterns, good tool use
 3. **What went poorly** — mistakes, user corrections, rule violations (with specific references)
-3a. **Token efficiency** — flags patterns that drove unnecessary cost (long sessions without compaction, Write on existing files, verbose post-Bash responses, oversized subagents); adds CLAUDE.md directives for any gaps found
-4. **Applied improvements** — updates to skills or directives based on session observations; skill backlog reviewed and actioned; **docs parity check** — any change to a skill, hook, or directive must reflect in the corresponding `docs/` section before the work counts as done
-4a. **Memory audit** — review and revise `.mallet/memory.md` entries added during the session
-4b. **Mission state** — if work continues beyond this session, write `.mallet/missions/active.md`; if the mission completed, move `active.md` to `.mallet/missions/archive/<session-id>.md`. Reads the file first: if it holds a *different* mission that is still open, either consolidates deliberately or leaves this session's mission in its own `.mallet/missions/<short-name>.md` with a cross-reference, and says which — a single `active.md` does not model two concurrent missions
-5. **Close out** — clear task-notes scratchpad if used; confirm correct working branch; present the full wrap-up to the user
+3a. **Token efficiency** — flags patterns that drove unnecessary cost (long sessions without compaction, Write on existing files, verbose post-Bash responses, oversized subagents); proposes a persona/skill addition for any gap found
+4. **Skill and directive improvements** — updates to skills based on session observations; skill backlog reviewed and actioned; **docs parity check** — any change to a skill or hook must reflect in the corresponding `docs/` section before the work counts as done
+4a. **Review memory entries** — checks the auto memory entries written or updated this session; adds new ones only if something significant was missed
+4b. **Mission state** — if the mission is complete, archives `active.md`; if work continues, writes or updates it, and if a *different* open mission already occupies it, consolidates deliberately or keeps this session's mission in its own file with a cross-reference
+5. **Close out** — clear any scratchpad used; confirm the correct working branch; present the full wrap-up to the user
 
 ## Next Steps
 
-**Directory:** `~/.claude/skills/next-steps/`
-**Triggered by:** "what's pending", "what's left", "what's next", "next steps", `/next-steps`, or a request for the remaining work as a referenceable list
+**Directory:** `plugin/skills/next-steps/`
+**Triggered by:** "what's pending", "what's left", "what's next", "next steps", `/mallet:next-steps`, or a request for the remaining work as a referenceable list
 
 Reports outstanding work as a numbered table the user can refer to by number. Read-only except for step 6 — `checkpoint` writes state and `reviewing-sessions` reflects on the session, this one only reports what remains. Tracker-agnostic: it discovers what the environment has rather than assuming one exists, and degrades to mission files alone when a project has no tracker.
 
-1. **Discover sources** — `.mallet/missions/*.md` (all of them, not just `active.md`), the session, `skill-backlog.md`, `memory.md`; then whatever exists: a tracker MCP, `gh` issues and PRs, or a board named in `CLAUDE.md`/`conventions.md`
+1. **Discover sources** — `.mallet/missions/*.md` (all of them, not just `active.md`), the current session, `.mallet/skill-backlog.md` and auto memory for deferred items; then whatever exists: a tracker MCP, `gh` issues and PRs, or a source named in `CLAUDE.md`/`conventions.md`/auto memory
 2. **Collect** — pending mission items, work agreed but never written down, open tracker items belonging to the thread; excludes completed work and anything already in a `## Cleared` section
-3. **Verify** — re-check each referenced tracker item's real status and search for items covering work recorded as untracked; mission files record what was true when written. Cost-capped: never query for item bodies, batch by identifier, `jq` the overflow file rather than reading it back
+3. **Verify** — re-checks each referenced tracker item's real status and searches for items covering work recorded as untracked; cost-capped — never queries for item bodies, batches by identifier, `jq`s an overflow file rather than reading it back
 4. **Table** — `# | What | Why | Effort | Relevant repo(s) | Tracked as`, ordered by readiness so dependencies stay visible. `Effort` is `Quick`/`Medium`/`Long`/`Unclear`, inferred only from signals already collected, never from fresh investigation. Untracked items say `None`, never blank and never invented
 5. **Report coverage** — which sources were consulted, and which were unavailable, so the table's limits are visible
 6. **Persist pruning** — when the user replies by number, pruned items move to a `## Cleared <date>` section of their mission file rather than being deleted, and the table is reissued renumbered
 
-## Task Calibration
+## Calibrate
 
-**Directory:** `~/.claude/skills/task-calibrate/`
-**Triggered by:** `UserPromptSubmit` hook flagging high complexity (`[task-calibrate]`) or ultracode signals (`[ultracode]`), or explicit "check model for this" / `/task-calibrate`
+**Directory:** `plugin/skills/calibrate/`
+**Triggered by:** `/mallet:calibrate`, "check model for this", "is this the right model?", "what effort should I use?" — **manual-only**
 
-Surfaces a model and execution-mode recommendation before work begins.
+The long-form version of the always-on Task Calibration directive (see [`directives.md`](directives.md#task-calibration)), for when the user asks directly.
 
-1. **Classify** — Mechanical (no model needed), Ultracode, Architectural, Complex, Routine, or Large Context
-2. **Apply model matrix** — tier → recommended model + switch command; includes subagent-model table (Haiku for lookups, Sonnet for standard dev, Sonnet/Opus for deep analysis); Ultracode tier recommends the Workflow tool with Sonnet (sweep) or Opus (per-agent depth)
-3. **Surface** — only interrupt when a switch is warranted; for Ultracode with an explicit prompt signal, proceed directly; for Ultracode hook-only, wait for confirmation
-4. **Ultracode agent personas** — Workflow scripts should bind agents to existing mallet personas via `agentType`: `code-analyst` (Callum), `code-reviewer` (Clifford), `feature-analyst` (Frida), `implementer` (Ingrid), `plan-critic` (Percy), `scope-validator` (Sylvie), `test-runner` (Tobias). Novel roles get an inline persona in the same named style.
+1. **Establish the active setting** — model from the environment section (confirmed by a `[calibrate]` hook line if present); effort from `${CLAUDE_EFFORT}`; available models only from what the environment currently lists, never from memory
+2. **Characterise the task** — judges the work itself against a signal table: lasting design decisions and security-sensitive logic point to higher effort or the most capable model; multi-file work with a clear spec fits the active model at `high`; mechanical/single-file work wants lower effort; very large inputs favour checking `/context` over a bigger model; many independent parts favour a Workflow over a bigger model
+3. **Recommend** — a three-line block (`Active`, `Recommended`, `Why`); if the active setting already fits, says so in one line and stops. A model switch is recommended only when the gain clearly outweighs invalidating the prompt cache.
 
 ## Systematic Debugging
 
-**Directory:** `~/.claude/skills/systematic-debugging/`
+**Directory:** `plugin/skills/systematic-debugging/`
 **Triggered by:** Debugging errors or unexpected behaviour; also after a failed fix attempt
 
 Four-phase methodology enforcing root cause investigation before any fix.
@@ -245,7 +219,7 @@ Includes a **condition-based waiting** pattern: replace arbitrary `sleep` delays
 
 ## Receiving Code Review
 
-**Directory:** `~/.claude/skills/receiving-code-review/`
+**Directory:** `plugin/skills/receiving-code-review/`
 **Triggered by:** A code review is returned from any source (Clifford, human reviewer, PR feedback) and needs to be processed
 
 Methodical framework for processing review feedback without performative compliance or uncritical acceptance.
@@ -258,57 +232,35 @@ Methodical framework for processing review feedback without performative complia
 
 Hard rule: reviewer seniority does not override technical correctness. An incorrect fix applied under social pressure ships wrong code.
 
-## Dispatching Parallel Agents
-
-**Directory:** `~/.claude/skills/dispatching-parallel-agents/`
-**Triggered by:** 3 or more independent failures or problem domains, or a large task partitioned into non-overlapping workstreams
-
-Structured approach for concurrent subagent dispatch when problems are genuinely independent.
-
-Use when all three hold: (1) 3+ independent domains, each understandable in isolation; (2) no shared files between agents; (3) no sequential dependency between tracks.
-
-1. **Identify domains** — confirm each failure or workstream can be fully resolved without knowledge of the others
-2. **Scope tasks** — write a self-contained description per agent (specific error, file paths, test command, output contract)
-3. **Dispatch in parallel** — send all agents in a **single message** (one tool call per domain)
-4. **Review and integrate** — read all results before acting; check for unexpected file conflicts; run the full test suite once
-5. **Surface results** — per-domain status, files changed, verification outcome
-
 ## Create PR
 
-**Directory:** `~/.claude/skills/create-pr/`
+**Directory:** `plugin/skills/create-pr/`
 **Triggered by:** "create PR", "open a PR", "make a pull request"
+**Tools:** `allowed-tools` grants read-only git plus `gh pr view` (`git diff/log/status/rev-parse/symbolic-ref`, `gh pr view`) — a grant, not a restriction; the skill still pushes and creates the PR via ordinary `Bash`/`gh` calls after explicit confirmation
 
 Generates a structured, non-technical PR summary (What Changed / Why / Customer Impact / Risk & Mitigation), pushes the branch with explicit confirmation, and opens the PR via `gh pr create`. The default branch is detected dynamically via `git symbolic-ref refs/remotes/origin/HEAD` — works with any main-branch convention (`master`, `main`, `trunk`, etc.).
 
 ---
 
-## Harvest (framework maintenance, not installed)
+## Harvest (project maintenance, not shipped)
 
 **Directory:** `.mallet/skills/harvest/`
 **Triggered by:** "harvest", "run harvest", or "harvest `<project-path>`"
 
-Reviews a target project for improvements worth pulling back into the framework base. Runs in the claude-mallet repo only.
+Reviews a target project for improvements worth pulling back into the plugin base. Runs in the claude-mallet repo only — this is a project skill (see below), not part of `plugin/`.
 
-1. **Pull check** — ensures the framework repo is up to date before comparing anything
-2. **Project skills** — scans `TARGET/.mallet/skills/`; offers to promote selected skills into `~/.claude/skills/`
+1. **Pull check** — ensures this repo is up to date before comparing anything
+2. **Project skills** — scans `TARGET/.mallet/skills/`; offers to promote selected skills into the base
 3. **Overrides** — scans `TARGET/.mallet/overrides/`; surfaces each override with a summary and asks whether it reveals a gap worth folding into the base skill (overrides are project-specific by design and never auto-promoted)
 
-Framework drift in the target is intentionally **not** addressed — local edits to framework-managed files are overwritten on the next `update`. If a target diverges, the clean path is an override, a project skill, or a direct PR to the framework.
+Framework drift in the target is intentionally **not** addressed — local edits to plugin-managed files are overwritten on the next plugin update. If a target diverges, the clean path is an override, a project skill, or a direct PR to this repo.
 
 ## Knowledge Skill Template
 
-**File:** `~/.claude/templates/knowledge-skill/SKILL.md`
-**Used by:** `plan-feature` when a feature domain warrants encoding expertise
+**File:** `plugin/skills/plan-feature/knowledge-skill-template.md`
+**Used by:** `plan-feature` when a feature domain warrants encoding expertise, referenced via `${CLAUDE_SKILL_DIR}`
 
 Template for creating domain knowledge skills — skills that inject expertise (principles, decision rules, reference data, anti-patterns) rather than orchestrate a workflow. Copy to `.mallet/skills/<domain>-knowledge/SKILL.md` and fill in domain-specific content.
-
-## Project Memory
-
-**File:** `.mallet/memory.md` (created on demand)
-
-Persistent fact store for project-specific knowledge that accumulates across sessions. Unlike skills (procedures) or CLAUDE.md (rules), memory holds facts: preferred commands, gotchas, conventions, tool preferences.
-
-Claude appends entries during sessions and audits them at wrap-up. The full file is injected into context at session start by the [session-start hook](hooks.md#session-start-hook).
 
 ## Skill Backlog
 
@@ -320,18 +272,21 @@ Silent log of potential new skills or improvements captured during sessions. Rev
 
 **Directory:** `.mallet/skills/` (optional)
 
-Project-specific skills that sit alongside framework skills but are not installed into other projects. Same `SKILL.md` format.
+Project-specific skills that sit alongside plugin skills but are not shipped to other projects and are not namespaced. Same `SKILL.md` format.
 
 ## Skill Overrides
 
 **Directory:** `.mallet/overrides/` (optional, one file per overridden skill)
 
-Per-skill amendments to base framework skills, indexed via a "Skill Overrides" section in `.mallet/conventions.md`. Before executing a listed skill, Claude reads `.mallet/overrides/<skill-name>.md` and applies its contents as amendments — overrides win on conflict.
+Per-skill amendments to base plugin skills, indexed via a "Skill Overrides" section in `.mallet/conventions.md`. Before executing a listed skill, Claude reads `.mallet/overrides/<skill-name>.md` and applies its contents as amendments — overrides win on conflict.
 
-Override files are created and maintained by Claude on user request. Because the index lives in `.mallet/conventions.md` (already in context), Claude never probes the filesystem for absent overrides. See the [Skill Overrides directive](directives.md#skill-overrides).
+Override files are created and maintained by Claude on user request. Because the index lives in `.mallet/conventions.md` (already in context), Claude never probes the filesystem for absent overrides. See the [Skill Overrides section of Project Context](directives.md#project-context).
 
-## Adding New Framework Skills
+## Adding New Skills
 
-1. Create `~/.claude/skills/<name>/SKILL.md`
+1. Create `plugin/skills/<name>/SKILL.md`
 2. Write a `description` that states **trigger conditions only** (when to invoke), not what the skill does
-3. Commit; it will be picked up by Claude Code and distributed to target projects on the next install/update
+3. Add `disable-model-invocation: true` if the skill should only run when explicitly asked (setup, one-off toggles, destructive actions)
+4. Reference the skill's own directory via `${CLAUDE_SKILL_DIR}` rather than a hardcoded path, so it resolves correctly inside the installed plugin
+5. Add or update a `docs/skills.md` entry (this file) and, for anything with a script or hook interaction, a test under `tests/`
+6. Commit; it ships to users on their next plugin update (or immediately, for anyone with auto-update enabled)

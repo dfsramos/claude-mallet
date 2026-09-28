@@ -7,58 +7,45 @@
 > A mallet is the heavy, precise hammer a blacksmith uses to shape raw metal on the anvil — delivering controlled force to forge something strong and purposeful.
 > ClaudeMallet is that tool for Claude Code: hammer in directives, hooks, skills, and a consistent persona, transforming raw Claude into a reliable, opinionated, and highly effective coding partner across every project.
 
-A portable configuration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that customises agent behavior through directives, hooks, and skills.
+A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin that customises agent behavior through a persona, hooks, skills, and a review-pipeline workflow.
 
 ## Overview
 
-A configuration framework installed **once per machine** at `~/.claude/`. Every Claude Code session, in every project, adopts the defined persona, enforces the specified rules, and gains access to the registered hooks and skills.
+This repository is both a Claude Code plugin **marketplace** (`.claude-plugin/marketplace.json`) and the single plugin it hosts, `mallet` (`plugin/`). Installing the plugin gives every session, in every project, the Mallet persona, its skills and sub-agents, and its hooks — no per-project setup and nothing written into your repositories.
 
-Nothing is written into your repositories. A project gains a `.mallet/` directory only when Mallet has something project-specific to store there — conventions, memory, lessons, feature plans. Your repo's own `CLAUDE.md`, if it has one, is never touched.
+Plugins cannot ship a `CLAUDE.md`, so the persona (`plugin/persona/PERSONA.md`) is injected at session start by a hook instead (`plugin/hooks/persona.sh`), re-injected after `/clear` and `/compact` since those drop earlier context.
 
-It is not application code — it is a scaffold for standardising Claude Code behavior.
+A project only gains a `.mallet/` directory when Mallet has something project-specific to store there — conventions, feature plans, mission state. Your repo's own `CLAUDE.md`, if it has one, is never touched.
 
-```
-~/.claude/                     installed once, applies everywhere
-├── CLAUDE.md                  directives and persona
-├── skills/  agents/  hooks/  templates/
-├── statusline.sh
-├── settings.json              merged, never overwritten
-└── framework.json             single source of version truth
+Three workflows anchor the plugin and return the most value per session:
 
-<any-repo>/                    only what that project needs
-├── CLAUDE.md                  yours, untouched
-├── .claude/settings.local.json    permissions, untouched
-└── .mallet/                   Mallet's project state
-    ├── conventions.md  memory.md  lessons.md
-    ├── missions/  overrides/  skills/
-    └── features/
-```
-
-Three workflows anchor the framework and return the most value per session:
-
-- **Discovery (`/discover`)** — structured codebase analysis that surfaces `.claude/` setup opportunities: detected stacks and services, highest-centrality files (god nodes), MCP and skill-pack suggestions, conventions worth capturing, and quick wins Claude can implement immediately.
-- **Session wrap-up (`wrap up` / `end session`)** — end-of-session retrospective covering what went well, what went wrong, token-efficiency patterns, and applied improvements to skills, directives, and project memory. The wrap-up is the primary mechanism by which the framework gets better over time.
-- **Architecture decisions (`/adr`)** — captures significant architectural choices in Nygard format (`docs/adr/NNNN-title.md`) so the rationale survives beyond the session. Triggered automatically during feature planning when a significant choice is made.
+- **Discovery (`/mallet:discover`)** — structured codebase analysis that surfaces setup opportunities: detected stacks and services, highest-centrality files (god nodes), MCP and skill-pack suggestions, conventions worth capturing, and quick wins Claude can implement immediately.
+- **Session wrap-up (`/mallet:reviewing-sessions`, or "wrap up")** — end-of-session retrospective covering what went well, what went wrong, token-efficiency patterns, and applied improvements to skills and project memory.
+- **Architecture decisions (`/mallet:adr`)** — captures significant architectural choices in Nygard format (`docs/adr/NNNN-title.md`) so the rationale survives beyond the session. Triggered automatically during feature planning when a significant choice is made.
 
 ## Installation
 
-Open any project in Claude Code and say:
+In Claude Code:
 
 ```
-install the framework from https://github.com/dfsramos/claude-mallet
+/plugin marketplace add dfsramos/claude-mallet
+/plugin install mallet@claude-mallet
+/mallet:setup
 ```
 
-Claude installs into `~/.claude/`, taking a backup first. The install is machine-wide, so the directives apply in every project you open — including ones unrelated to this install.
+`/mallet:setup` handles what a plugin cannot configure on its own: registering the statusline (plugins can only set `agent`/`subagentStatusLine`, not the main `statusLine`), pointing you at enabling auto-update, and offering to fold any legacy `.mallet/memory.md` or `.mallet/lessons.md` into Claude Code's auto memory.
 
-Existing config is preserved, not clobbered:
+There is no version field: the plugin has no pinned release, so you track commits on the marketplace's default branch.
 
-- `~/.claude/settings.json` is **merged** — your `model`, `effortLevel`, `enabledPlugins`, and your own hooks survive.
-- Skills, agents, templates, and hooks are replaced **per entry**. Anything you authored yourself stays, and is reported back to you as preserved.
-- An existing `~/.claude/CLAUDE.md` is backed up to `CLAUDE.md.pre-mallet-<date>` and you are asked before it is replaced.
+**Auto-update** is off by default for third-party marketplaces. Enable it via `/plugin` → **Marketplaces** → **claude-mallet** → **Enable auto-update**, or update on demand with `/plugin marketplace update claude-mallet`.
 
-The installer then offers to clean up any older per-project installs it finds (see below) and asks how you want `.mallet/` treated by git.
+## Moving from the user-level install
 
-### Manual
+Earlier versions of Mallet installed directly into `~/.claude/` (skills, agents, hooks, a `CLAUDE.md`, `framework.json`). If that describes your machine, the transition is a single step:
+
+**If you still have the old `update` skill**, say "update the framework" once more. It runs this repo's `install-payload.sh` and `merge-settings.sh` exactly as before, but those scripts now transition the install instead of updating it, and print the three commands above at the end.
+
+**Manual equivalent**, if the skill is already gone:
 
 ```bash
 curl -sfL https://github.com/dfsramos/claude-mallet/archive/refs/heads/master.tar.gz | tar -xz -C /tmp
@@ -68,90 +55,96 @@ bash /tmp/claude-mallet-master/.claude/merge-settings.sh \
   /tmp/claude-mallet-master/.claude/settings.fragment.json
 ```
 
-Both scripts are idempotent and take backups. `install-payload.sh` writes `~/.claude/framework.json` including the manifest, so the session-start update check works after a manual install.
+Then run the three `/plugin` commands above.
 
-## Migrating from a per-project install
+What the transition does:
 
-Mallet used to install into each repository. If you have those, say:
+| Action | Detail |
+|---|---|
+| Backs up first | `~/.claude/mallet-pretransition-backup-<timestamp>.tar.gz` |
+| Removes | only the skills/agents/templates/hooks entries `framework.json`'s manifest says Mallet installed |
+| Removes | `~/.claude/statusline.sh`, but only if it is still Mallet's |
+| Removes | `~/.claude/CLAUDE.md`, but only if it is byte-identical (ignoring line endings) to the installed version's own copy |
+| Keeps | anything you authored yourself under `skills/`, `agents/`, `hooks/`, `templates/` |
+| Keeps | a modified `~/.claude/CLAUDE.md` — and warns that the persona will now load twice unless you remove Mallet's sections from it yourself (the backup has the original for reference) |
+| Leaves | a `~/.claude/skills/migrate/` stub (`detect.sh` + a marker file) so an in-progress `update` run finishes cleanly; `/mallet:setup` offers to remove it once the plugin is installed |
+| Marks | `framework.json` as transitioned, so re-running the same script a second time is a no-op |
 
-```
-clean up the old Mallet installs
-```
+One follow-up to check yourself: a **project-level** hook registration pointing at `~/.claude/hooks/typecheck.sh` breaks after the transition, since that script no longer exists there. `/mallet:hooks-setup` detects and offers to remove it.
 
-Per repo, the `migrate` skill:
+## Moving from a per-project install
 
-- **moves** `.claude/project/`, `.claude/features/`, and `.claude/pipeline-state/` into `.mallet/` — nothing is discarded, including files it does not recognise
-- renames `.claude/project/CLAUDE.md` to `.mallet/conventions.md`, ending the two-files-called-CLAUDE.md ambiguity
-- **deletes** the old framework payload, but **only files git does not track**
-- prunes the base-hook registrations out of `.claude/settings.json`, keeping your per-project opt-in hooks and repointing them at `~/.claude/hooks/`
-- strips Mallet's directives out of an **untracked** `CLAUDE.md`, keeping whatever you added, by diffing against the exact historical payload for the version that repo recorded
-
-What it will not do:
-
-- **touch a git-tracked file.** A committed `CLAUDE.md` is left exactly as it is — reported, never modified.
-- **touch `.claude/settings.local.json`.**
-- **decide your VCS policy.** Mallet ships no `.gitignore` into `.mallet/` and never edits yours. You are asked once whether to ignore `.mallet/` machine-wide, per repo, or not at all.
-- **delete anything without a backup.** Each repo is tarred to `~/.claude/mallet-migration-backup-<timestamp>-<repo>.tar.gz` first; a repo whose backup fails is skipped whole.
-
-Repos the installer cannot reach are caught later: the session-start hook notices a leftover payload and offers cleanup the next time you open that project.
-
-## Updating
-
-With the framework installed, say:
-
-```
-update the framework
-```
-
-One install means one update. The skill fetches the latest commit, replaces each payload entry, merges settings, and reconciles the manifest — removing only what the new release dropped, and leaving anything you authored yourself alone.
-
-The session-start hook checks for updates and surfaces them inline so you can accept or defer. The result is cached for 24 hours at `~/.claude/.mallet-update-check`, because the hook now runs in every session in every directory and the unauthenticated GitHub API allows 60 requests an hour. A failed check is never cached as "up to date".
+Even older Mallet versions installed into each repository individually. The `migrate` skill still handles cleaning those up — say "clean up the old Mallet installs" or run `/mallet:migrate`. It moves each repo's state into `.mallet/`, removes only the untracked framework payload, leaves every git-tracked file alone, and takes a backup per repo before touching anything. See [`docs/skills.md`](docs/skills.md#migrate) for the full mechanics.
 
 ## What's Included
 
+### Skills
+
 | Skill | Trigger |
 |-------|---------|
-| `discover` | "discover this project", `/discover` |
-| `adr` | "record this decision", "create an ADR", `/adr` |
-| `plan-feature` | "plan a feature", "I want to build X" |
-| `implement-feature` | "implement this feature", "add X functionality" |
-| `systematic-debugging` | Debugging errors or unexpected behaviour |
-| `reviewing-sessions` | "wrap up", "end session" |
-| `task-calibrate` | High-complexity prompt (auto), or "check model for this" |
-| `hooks-setup` | "set up hooks", "enable typecheck", `/hooks-setup` |
-| `preflight` | Environment issues suspected before git-heavy work, `/preflight` |
-| `create-pr` | "create PR", "open a PR" |
-| `receiving-code-review` | Code review returned and needs actioning |
-| `dispatching-parallel-agents` | 3+ independent failures or workstreams |
-| `update` | "update the framework" |
-| `migrate` | "clean up the old Mallet installs", `/migrate` |
+| `/mallet:discover` | "discover this project", "analyze the codebase" |
+| `/mallet:adr` | "record this decision", "create an ADR" |
+| `/mallet:plan-feature` | "plan a feature", "I want to build X" |
+| `/mallet:implement-feature` | "implement this feature", "add X functionality" |
+| `/mallet:systematic-debugging` | Debugging errors or unexpected behaviour |
+| `/mallet:reviewing-sessions` | "wrap up", "end session" |
+| `/mallet:checkpoint` | "checkpoint", "save state", or proactively before `/compact` |
+| `/mallet:calibrate` *(manual-only)* | "check model for this", "what effort should I use?" |
+| `/mallet:hooks-setup` *(manual-only)* | "set up hooks", "enable typecheck" |
+| `/mallet:setup` *(manual-only)* | Right after installing the plugin |
+| `/mallet:preflight` | Environment issues suspected before git-heavy work |
+| `/mallet:create-pr` | "create PR", "open a PR" |
+| `/mallet:receiving-code-review` | A code review has just been returned |
+| `/mallet:next-steps` | "what's left", "what's next" |
+| `/mallet:migrate` | "clean up the old Mallet installs" |
 
-## Hooks
+Manual-only skills carry `disable-model-invocation: true` — Claude will not invoke them on its own; they run only when explicitly asked for.
 
-Hooks run automatically in response to Claude Code events. The scripts live at `~/.claude/hooks/` and are shared by every project; each one locates its *data* through `$CLAUDE_PROJECT_DIR`, so it reads the current project's `.mallet/` state.
+### Agents
 
-The default set is registered globally in `~/.claude/settings.json` at install. The opt-in set is registered **per project** via `/hooks-setup` — the script is global, the choice is local, because `typecheck.sh` is language-specific.
+Sub-agents used by the `implement-feature` workflow, namespaced `mallet:<name>` at runtime:
 
-| Hook | Event | Tier | What it does |
+| Agent | Persona | Role | Model / Effort |
 |---|---|---|---|
-| `session-start.sh` | SessionStart | Default | Injects project memory, restores compact snapshot, checks for framework updates (24h cache), flags a leftover per-project install |
-| `user-prompt-submit.sh` | UserPromptSubmit | Default | Complexity scorer (triggers `task-calibrate`) and turn counter |
-| `write-guard.sh` | PreToolUse `Write` | Default | Blocks `Write` on existing files — enforces `Edit` |
-| `pre-compact.sh` | PreCompact | Default | Captures git state and active mission before compaction; restores on next session start |
-| `typecheck.sh` | PostToolUse `Edit` | Opt-in | Runs the type-checker after every file edit (TypeScript / PHP) |
-| `push-confirm.sh` | PreToolUse `Bash` | Opt-in | Advisory warning before `git push` |
-| `explore-redirect.sh` | PreToolUse `Bash` | Opt-in | Suggests Graphify or discovery report before broad grep/find searches |
+| `code-analyst` | Callum | Reads the codebase, produces a change plan | sonnet / high |
+| `plan-critic` | Percy | Challenges the plan against the spec | sonnet / high |
+| `feature-analyst` | Frida | Turns a request into a structured spec | sonnet / high |
+| `implementer` | Ingrid | Applies the approved plan | sonnet / high |
+| `test-runner` | Tobias | Runs the test suite, returns only signal | haiku / low |
+| `scope-validator` | Sylvie | Confirms acceptance criteria met, no scope creep | sonnet / high |
+| `code-reviewer` | Clifford | Senior review — blocking vs non-blocking | sonnet / high |
+
+Every review-only agent (all but `implementer`) is restricted to `disallowedTools: Edit, Write, NotebookEdit`.
+
+### Workflow
+
+`implement-feature` (`plugin/workflows/implement-feature.js`) runs the full spec → plan → critique → implement → test → validate → review pipeline as a single Workflow, launched by the `implement-feature` skill. Blocked results end the run and hand back to the launching skill, which asks the user and resumes via `resumeFromRunId`.
+
+### Hooks
+
+| Hook | Event | What it does |
+|---|---|---|
+| `persona.sh` | SessionStart (`startup\|resume\|clear\|compact`) | Injects `PERSONA.md` — the only way a plugin can deliver directives |
+| `session-start.sh` | SessionStart (`startup`) | Refreshes the statusline copy in `${CLAUDE_PLUGIN_DATA}`; flags a leftover per-project install |
+| `post-compact.sh` | SessionStart (`compact`) | Prints branch, uncommitted changes, recent commits, and any active mission right after compaction |
+| `user-prompt-submit.sh` | UserPromptSubmit | Session-length warning at 50 and every 20 prompts after 80 (human-typed prompts only); injects the active model/effort line for calibrate when it changes |
+| `write-guard.sh` | PreToolUse (`Write`) | Blocks `Write` on files that already exist — enforces `Edit` |
+| `typecheck.sh` | PostToolUse (`Edit\|Write`) | Opt-in via `.mallet/typecheck.enabled`; runs `tsc`/`phpstan` and returns errors as JSON `additionalContext` |
+
+For `PreToolUse`/`PostToolUse`/`PreCompact`, plain stdout only reaches the debug log, not the model — only `UserPromptSubmit` and `SessionStart` stdout is added to context. That is why `typecheck.sh` returns structured JSON and `write-guard.sh` writes its block reason to stderr with exit `2` instead of printing to stdout.
 
 ## Requirements
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
-- Bash 4+ (for hooks)
-- `jq` (required — hook parses session input JSON)
-- `curl` (required — hook queries GitHub for update checks)
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI with plugin support
+- `bash`
+- `jq`
+- `git`
+
+Node is not required — the `implement-feature` workflow runs through Claude Code's own Workflow tool, not a separate process.
 
 ## Documentation
 
 - [Project Structure](docs/structure.md) — directory layout and file roles
-- [Directives](docs/directives.md) — behavioral rules defined in `CLAUDE.md`
+- [Directives](docs/directives.md) — behavioral rules defined in the persona
 - [Hooks](docs/hooks.md) — automatic actions triggered by Claude Code events
 - [Skills](docs/skills.md) — reusable capabilities and the skill backlog

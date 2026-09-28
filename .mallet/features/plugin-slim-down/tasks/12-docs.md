@@ -1,5 +1,5 @@
 # Task: docs
-Status: pending
+Status: done
 Deps: 10, 11
 
 ## Goal

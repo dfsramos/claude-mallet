@@ -1,226 +1,106 @@
 # Hooks
 
-Hooks are shell scripts that run automatically in response to Claude Code events.
+Hooks are shell scripts that run automatically in response to Claude Code events. They live at `plugin/hooks/` and ship with the plugin — every user runs the same scripts, registered in `plugin/hooks/hooks.json` via `${CLAUDE_PLUGIN_ROOT}`, which resolves to the installed plugin version at runtime.
 
-The scripts live at `~/.claude/hooks/` and are shared by every project. Each one locates its *data* through `$CLAUDE_PROJECT_DIR`, so a single global script reads the current project's `.mallet/` state — which is what made moving the framework to a machine-wide install a path change rather than a behaviour change.
+Each hook locates its *data* through `$CLAUDE_PROJECT_DIR`, so the one global script reads whichever project's `.mallet/` state is current.
 
-Registration is split by tier:
+## A fact that shapes every hook here
 
-| Tier | Registered in | Why |
+**For `PreToolUse`, `PostToolUse`, and `PreCompact`, plain stdout on exit 0 is written only to the debug log — it never reaches the model.** Only `UserPromptSubmit` and `SessionStart` stdout is added to context. This is why `typecheck.sh` (PostToolUse) returns its findings as JSON `additionalContext` instead of printing them, and why `write-guard.sh` (PreToolUse) writes its block reason to stderr and exits `2` — a blocking exit's stderr is fed back to the model as the reason, regardless of event type.
+
+## Registration
+
+All six scripts are registered in one file, `plugin/hooks/hooks.json`:
+
+| Hook | Event | Matcher |
 |---|---|---|
-| Default (`session-start`, `user-prompt-submit`, `write-guard`, `pre-compact`) | `~/.claude/settings.json`, merged at install | Universally applicable |
-| Opt-in (`typecheck`, `push-confirm`, `explore-redirect`) | the **project's** `.claude/settings.json`, via `/hooks-setup` | `typecheck` is language-specific — the script is global, the choice is local |
+| `persona.sh` | SessionStart | `startup\|resume\|clear\|compact` |
+| `session-start.sh` | SessionStart | `startup` |
+| `post-compact.sh` | SessionStart | `compact` |
+| `user-prompt-submit.sh` | UserPromptSubmit | *(none — every prompt)* |
+| `write-guard.sh` | PreToolUse | `Write` |
+| `typecheck.sh` | PostToolUse | `Edit\|Write` |
+
+There is no separate opt-in registration tier at the settings level any more — the plugin registers everything globally. `typecheck.sh` is opt-in in effect only, gated on a per-project marker file (see below), because a per-project `settings.json` registration would need a stable script path, which a versioned plugin cache does not provide.
+
+## Persona Hook
+
+**File:** `plugin/hooks/persona.sh`
+**Trigger:** `SessionStart`, matcher `startup|resume|clear|compact`
+
+Injects the Mallet persona (`plugin/persona/PERSONA.md`) as session context. This is the only way the plugin delivers its directives — **plugins cannot ship a `CLAUDE.md`** — and it fires on `clear` and `compact` too, since both drop earlier context that would otherwise carry the persona with it.
+
+Hook stdout over 10,000 characters is replaced by a file path and a 2,000-character preview instead of being injected whole, so `PERSONA.md` must stay under that. It is currently well under (`tests/test-15-plugin.sh` enforces under 9,800 characters as a safety margin). If `${CLAUDE_PLUGIN_ROOT}` is unset (e.g. run standalone), it falls back to resolving the script's own directory.
 
 ## Session Start Hook
 
-**File:** `~/.claude/hooks/session-start.sh`
-**Trigger:** Claude Code session startup (`matcher: "startup"`)
+**File:** `plugin/hooks/session-start.sh`
+**Trigger:** `SessionStart`, matcher `startup`
 
-Injects project memory and a framework update notice (when available) at session start.
+Two independent jobs, both cheap and network-free:
 
-### What it does
+1. **Statusline refresh.** A `statusLine` command cannot reference `${CLAUDE_PLUGIN_ROOT}`, which changes with every plugin version, so `/mallet:setup` points `statusLine` at a copy in `${CLAUDE_PLUGIN_DATA}` instead. This hook keeps that copy current by comparing it against `${CLAUDE_PLUGIN_ROOT}/statusline/statusline.sh` on every startup and overwriting it (via a temp file + `mv`) when they differ, so a plugin update reaches the statusline without a manual step.
+2. **Legacy per-project install detection.** If the current project still carries a per-project Mallet payload — `.claude/framework.json`, or both `.claude/skills/update/SKILL.md` and `.claude/agents/_contract.md` — prints a notice offering the `migrate` skill. Two exemptions prevent it nagging forever: the install's own project root (identified by `.claude/settings.fragment.json` / `.claude/install-payload.sh`, which only this source repo has), and any project where `.mallet/.migration-declined` exists.
 
-1. **Project memory injection.** If `.mallet/memory.md` exists, echoes its contents wrapped in `--- Project Memory ---` markers so project facts are in context from turn one.
-2. **Compact snapshot restore.** If `.mallet/compact-snapshot.md` exists (written by the PreCompact hook before the last compaction), injects its contents then deletes the file. This restores branch, uncommitted changes, and active mission context in sessions that start after a compaction.
-3. **Framework update check.** If `~/.claude/framework.json` exists, resolves the latest HEAD SHA and emits a `--- Framework Update Available ---` notice when it differs from the local one, instructing Claude to offer the update skill.
+There is no update check here any more — updates arrive through the plugin system itself, so the GitHub-polling logic and its 24-hour cache are gone.
 
-   The result is cached for 24 hours at `~/.claude/.mallet-update-check` (format: `<epoch> <sha> <date>`). The cache exists because Mallet is now installed once at `~/.claude/`, so this hook fires in every session in every directory — an uncached check would exhaust the 60 req/hr unauthenticated GitHub limit and silently disable update notices for the rest of the hour. The up-to-date result is cached too, or every session would re-check. A **failed** lookup is never cached, so a transient outage is not recorded as "up to date" for a day.
+## Post-Compact Hook
 
-4. **Legacy install detection.** If the current project contains `.claude/framework.json`, or both `.claude/skills/update/SKILL.md` and `.claude/agents/_contract.md`, emits a `--- Legacy Mallet Install Detected ---` notice offering the `migrate` skill. This is the self-healing half of migration: the installer's scan catches most repos, and this catches the ones it could not reach.
+**File:** `plugin/hooks/post-compact.sh`
+**Trigger:** `SessionStart`, matcher `compact`
 
-   Suppress it by creating `<project>/.mallet/.migration-declined`. The check is deliberately three `-f` tests — no traversal, no network — because it runs everywhere.
+Restores working state immediately after a compaction, in the same session: current git branch, uncommitted changes (`git status --short`, up to 15 lines), the last 5 commits, the list of mission files present, and the full contents of `.mallet/missions/active.md` if one exists.
 
-Every step fails silently on any error (missing tools, network failure, unparseable JSON) — a hook failure never disrupts session start.
-
-### Why it exists
-
-Project memory — persistent facts about commands, conventions, and non-obvious behaviours — needs to be in context from turn one, not discovered lazily.
-
-The update check moved from the statusline to this hook because the statusline re-renders continuously (forcing a 5-minute cache to avoid API spam), while session start fires exactly once. Moving the check removes the cache, and delivering the notice via context rather than statusline text means Claude can proactively offer to run the update instead of the user having to notice the tiny status string.
+This replaces the old `pre-compact.sh` for two reasons: `PreCompact` stdout never reaches the model (see the fact above), so its context injection was silently doing nothing; and its snapshot file (`.mallet/compact-snapshot.md`) could leak into a later, unrelated session if that session started before the file was consumed. Emitting fresh state from a `SessionStart` hook instead means there is no file to persist and nothing to leak.
 
 ## UserPromptSubmit Hook
 
-**File:** `~/.claude/hooks/user-prompt-submit.sh`
+**File:** `plugin/hooks/user-prompt-submit.sh`
 **Trigger:** Every user message submitted to Claude
 
-Runs two independent checks on every prompt: a session turn counter and a complexity scorer. Designed to be silent for routine work and only speak up when session length or task complexity warrants it.
+Two independent checks, both derived from the transcript on stdin:
 
-### What it does
+**Session-watch (turn counter).** Counts human-typed prompts only — transcripts mark them with `origin.kind == "human"`; tool results, agent hand-backs, and skill expansions are also stored as role `user` and are excluded, since counting them previously inflated the total roughly 7x. At 50 prompts, injects a soft compaction reminder; at 80 and every 20 after, a stronger warning.
 
-Reads the full hook input JSON on stdin, then:
-
-**Turn counter:**
-1. Reads `transcript_path` from the hook input
-2. Counts human messages in the JSONL transcript (filters out sidechain and API-error entries)
-3. At 50 prompts: injects a soft compaction reminder
-4. At 80 prompts and every 20 after: injects a strong compaction warning
-
-**Complexity scorer:**
-1. Reads `prompt` from the hook input
-2. Scores the prompt on three signals:
-   - **Architectural/design keywords** (`architect`, `redesign`, `rethink`, `overhaul`, `refactor`, `strategy`, `tradeoff`, `migrate`, `evaluate`, `pros and cons`, `which approach`, `from scratch`, etc.) — +2 points
-   - **Planning/scope keywords** (`should I/we`, `plan the/a`, `design the/a`, `how should we structure`, `cross-cutting`, `system-wide`, etc.) — +2 points
-   - **Long prompt** (> 80 words) — +1 point
-3. If `score >= 3`: injects a `[task-calibrate]` flag instructing Claude to invoke the `task-calibrate` skill before proceeding
-4. Otherwise: exits silently
-
-**Ultracode scorer:**
-1. Scores the prompt on four signals (independent of complexity score):
-   - **Explicit ultracode intent** (`ultracode`, `ultra review`, `ultra audit`, `ultra sweep`, `ultra analysis`, `ultra mode`) — +3 points
-   - **Exhaustiveness/comprehensiveness** (`comprehensive`, `exhaustive`, `thorough`, `find all`, `audit all`, `review everything`, `scan all`, `migrate all`, `codebase-wide`) — +2 points
-   - **Broad scope** (`across the entire codebase`, `every file`, `all files`, `entire codebase`, `whole codebase`) — +1 point
-   - **Fan-out task types** (`security audit`, `full audit`, `code audit`, `bug sweep`, `dependency audit`, `coverage gap`, `dead code`, `tech debt`) — +1 point
-2. If `ultra_score >= 2`: injects an `[ultracode]` flag instructing Claude to consult the ultracode tier in `task-calibrate`; if an explicit signal is already in the prompt, Claude treats it as an opt-in and proceeds with the Workflow tool directly
-
-### Why it exists
-
-The hook runs three passive guardrails per prompt without burdening every interaction.
-
-The turn counter catches runaway sessions — the primary driver of token costs. Long sessions account for ~87% of output tokens. The 50-prompt soft reminder and 80-prompt hard warning give Claude the signal to suggest `/compact` before the session becomes expensive.
-
-The complexity scorer acts as a lightweight tripwire: when architectural signals coincide, it surfaces `task-calibrate` so Claude can assess whether Opus would be a better fit. The threshold (≥ 3) is deliberately conservative — two strong signals, or one signal plus a long prompt, must coincide before anything is injected.
-
-The ultracode scorer detects tasks where parallel multi-agent execution would produce better coverage than a single sequential agent. An explicit "ultracode" keyword in the prompt scores +3 alone and is sufficient to cross the threshold — this doubles as the user's opt-in for the Workflow tool.
-
-## PreCompact Hook
-
-**File:** `~/.claude/hooks/pre-compact.sh`
-**Trigger:** `PreCompact` — fires before Claude Code compacts the conversation
-
-Captures in-progress state before compaction so critical context survives both within the current session and across restarts.
-
-### What it does
-
-Two outputs simultaneously via `tee`:
-
-1. **stdout** — injected into the compaction context so the summariser has branch, uncommitted changes, recent commits, and any active mission to preserve in its summary.
-2. **`.mallet/compact-snapshot.md`** — a snapshot file read by `session-start.sh` when a _new_ session begins after a compaction. `session-start.sh` injects it then deletes it, so it never accumulates.
-
-Captured state:
-- Timestamp
-- Current git branch
-- Uncommitted changes (`git status --short`, up to 15 lines)
-- Last 5 commits (`git log --oneline`)
-- Full contents of `.mallet/missions/active.md` (if present)
-
-### Why it exists
-
-Context compaction discards conversation history to free the window. Without intervention, Claude loses track of the active branch, what files were being edited, and where a multi-session task was up to. The session-start hook partially addressed this via `active.md`, but that file is only written at manual wrap-up. The PreCompact hook writes the equivalent state automatically — no human action required.
+**Calibrate.** Injects a `[calibrate] active model: X; effort: Y` line when either value changes since the last prompt. Neither value is visible to this hook directly, so it reads them from a per-session state file (`${TMPDIR:-/tmp}/mallet-calibrate-<session_id>.json`) that `statusline.sh` writes on every render from the session JSON's `model.id` and `effort.level` — the latter tracks mid-session `/effort` changes and is absent when the active model has no effort parameter. If no such state file exists (no Mallet statusline registered), it falls back to `effortLevel` in the most specific `settings.local.json`/`settings.json` it can find, and says so, since that fallback cannot see live `/effort` changes. The line is written once per change, tracked via a sibling `.last` file, so it costs nothing on unchanged turns.
 
 ## Write Guard Hook
 
-**File:** `~/.claude/hooks/write-guard.sh`
-**Trigger:** `PreToolUse` — fires before every `Write` tool call (`matcher: "Write"`)
+**File:** `plugin/hooks/write-guard.sh`
+**Trigger:** `PreToolUse`, matcher `Write`
 
-Blocks `Write` calls on files that already exist. CLAUDE.md requires `Edit` for existing files; `Write` is reserved for new files only. This hook enforces that rule at the tooling level.
-
-### What it does
-
-1. Reads the hook input JSON from stdin.
-2. Extracts `tool_name` and `tool_input.file_path`.
-3. If `file_path` points to an existing file, outputs a message directing Claude to use `Edit`, then exits 2 — which blocks the tool call before it executes.
-4. If the file does not exist (Write is creating a new file), exits 0 and the call proceeds normally.
-
-### Why it exists
-
-`Edit` sends only the changed lines; `Write` re-sends the full file content, roughly doubling output tokens per operation. CLAUDE.md already states the preference, but a directive alone relies on Claude remembering it every time. A blocking hook enforces it mechanically — Claude receives the block reason and retries with `Edit`.
-
-The hook only fires on `PreToolUse` for `Write`, so it adds zero overhead to all other tool calls.
+Blocks `Write` calls on files that already exist — the persona requires `Edit` for existing files, since `Edit` sends only the changed lines while `Write` re-sends the whole file. Reads `tool_input.file_path`; if it points to an existing file, writes the block reason to **stderr** and exits `2`. Exit 2 is what feeds the message back to the model as the block reason — plain stdout would not, per the fact above. New files (`Write` creating something that doesn't exist) pass through with exit 0.
 
 ## Typecheck Hook
 
-**File:** `~/.claude/hooks/typecheck.sh`
-**Trigger:** `PostToolUse` — fires after every `Edit` tool call (`matcher: "Edit"`)
-**Activation:** opt-in via `/hooks-setup` — not registered by default
+**File:** `plugin/hooks/typecheck.sh`
+**Trigger:** `PostToolUse`, matcher `Edit|Write`
+**Activation:** opt-in per project via a marker file, not a settings registration
 
-Runs the project's type-checker or linter after each file edit and surfaces errors directly into Claude's context, catching type errors at the moment they're introduced rather than at the end of a session.
+The plugin registers this hook for every project, but it does nothing unless `.mallet/typecheck.enabled` exists at the project root (created by the `hooks-setup` skill). A per-project `settings.json` hook registration would need to reference a stable script path, and the plugin cache path changes with every version — the marker file is what makes the opt-in per-project instead.
 
-### What it does
+When active: detects the edited file's extension and runs `npx tsc --noEmit` (if `tsconfig.json` exists, for `.ts`/`.tsx`) or `vendor/bin/phpstan analyse <file> --no-progress` (if the binary exists, for `.php`), capped to the first 20 lines of output. Because plain `PostToolUse` stdout never reaches the model, results are returned as JSON: `{"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": "[typecheck] ..."}}`. Always exits 0 — advisory only, never blocks.
 
-1. Reads `tool_name` and `tool_input.file_path` from the hook input JSON.
-2. Exits 0 immediately if the tool is not `Edit` or `file_path` is empty.
-3. Detects the file extension and runs the appropriate linter:
-   - `.ts` / `.tsx` — if `tsconfig.json` exists in `$CLAUDE_PROJECT_DIR`, runs `npx tsc --noEmit 2>&1 | head -20`
-   - `.php` — if `vendor/bin/phpstan` exists, runs `phpstan analyse <file> --no-progress 2>&1 | head -20`
-   - All other extensions — exits 0 silently
-4. Outputs non-empty linter results prefixed with `[typecheck]`.
-5. Always exits 0 — advisory only, never blocks.
+## Removed Hooks
 
-### Why it exists
+Three hooks from earlier versions are gone, not carried forward as opt-in:
 
-Linter errors that surface only after a multi-file session require backtracking. Running the type-checker after each edit closes the feedback loop to the turn level, catching errors while the relevant context is still in Claude's window.
-
-## Push-Confirm Hook
-
-**File:** `~/.claude/hooks/push-confirm.sh`
-**Trigger:** `PreToolUse` — fires before every `Bash` tool call (`matcher: "Bash"`)
-**Activation:** opt-in via `/hooks-setup` — not registered by default
-
-Warns Claude before any `git push` executes and requires it to verify the push was explicitly requested, preventing pushes that fire as side effects of autonomous multi-step tasks.
-
-### What it does
-
-1. Reads `tool_name` and `tool_input.command` from the hook input JSON.
-2. Exits 0 immediately if the tool is not `Bash`.
-3. Checks whether the command contains `git push` using `grep -qE '(^|[;&|]\s*)git\s+push(\s|$)'`.
-4. If matched: outputs a `[push-confirm]` warning with the full command and instructs Claude to verify intent before proceeding.
-5. Always exits 0 — advisory only, never blocks.
-
-### Why advisory and not blocking
-
-A blocking hook (exit 2) creates an infinite retry loop: after the user confirms, Claude re-runs the command, the hook fires again and blocks again. An advisory hook instead injects the warning into Claude's context; Claude reads it, verifies intent against the conversation, and either proceeds or stops and asks.
-
-## Explore Redirect Hook
-
-**File:** `~/.claude/hooks/explore-redirect.sh`
-**Trigger:** `PreToolUse` on `Bash` — fires before Bash commands matching broad search patterns
-**Activation:** opt-in via `/hooks-setup`
-
-When Claude runs a broad recursive search (`grep -r`, `find .`, `rg`, `ag`), checks whether a richer source of information is available and suggests using it first. Always advisory (exit 0) — never blocks.
-
-### What it suggests
-
-| Resource found | Suggestion |
+| Hook | Why removed |
 |---|---|
-| `graphify-out/graph.json` | Use `/graphify query`, `/graphify path`, or `/graphify explain` for semantic search |
-| `.mallet/discovery-*.md` | Check the Critical Files section before grepping broadly |
+| `pre-compact.sh` | Its `PreCompact` stdout never reached the model, and its snapshot file could leak into an unrelated later session — see Post-Compact Hook above |
+| `push-confirm.sh` | Superseded by a `permissions.ask` rule (`"Bash(git push *)"`) in settings, which Claude Code enforces natively |
+| `explore-redirect.sh` | Superseded by the built-in Explore agent for broad search; its Graphify pointer was niche enough not to warrant a dedicated hook |
 
-Only fires when the resource actually exists — silent on projects that have neither.
-
-### Why opt-in
-
-Broad searches are often intentional (writing tests, auditing for a pattern). The redirect adds value on large or well-documented codebases but would be noise on smaller ones. Opt-in lets teams enable it where the signal-to-noise ratio justifies it.
-
-## Hook Tiers
-
-The framework ships hooks in two tiers:
-
-**Default hooks** — registered in `~/.claude/settings.json` at install time, active in every project:
-- `session-start.sh` — memory injection, compact-snapshot restore, cached update check, legacy-install detection
-- `user-prompt-submit.sh` — complexity scorer and turn counter
-- `write-guard.sh` — blocks Write on existing files
-- `pre-compact.sh` — captures git state and active mission before compaction
-
-**Optional hooks** — scripts are distributed by the framework but not registered by default; activated per-project via `/hooks-setup`:
-- `typecheck.sh` — PostToolUse linter for TypeScript and PHP projects
-- `push-confirm.sh` — PreToolUse warning before git push
-- `explore-redirect.sh` — PreToolUse suggestion to use Graphify or discovery report before broad searches
+Regex-based complexity scoring (the old `task-calibrate` trigger) and `[ultracode]` scoring are also gone from `user-prompt-submit.sh`. Calibration is now a model-side judgment call — see the Task Calibration directive in [`directives.md`](directives.md) — because hooks cannot see the active model or effort level, and a prompt-type hook cannot itself decide whether a task's *content* warrants a change; only the model can.
 
 ## Adding New Hooks
 
-1. Create a script in `~/.claude/hooks/` — or, to ship it with the framework, in this repo's `.claude/hooks/`
-2. Register it under the appropriate event matcher using an explicit `bash "..."` invocation. **The script path is always `$HOME`**, since the payload is machine-wide; only the file you register it *in* varies by tier:
-
-   Universally applicable — add to `.claude/settings.fragment.json` in this repo so it merges into `~/.claude/settings.json` at install:
+1. Create the script in `plugin/hooks/`.
+2. Register it in `plugin/hooks/hooks.json` under the right event, using an explicit `bash "${CLAUDE_PLUGIN_ROOT}/hooks/<script>.sh"` command:
    ```json
-   { "type": "command", "command": "bash \"$HOME/.claude/hooks/my-hook.sh\"" }
+   { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/my-hook.sh\"" }
    ```
-
-   Project-specific — register in that project's `.claude/settings.json`, which is what `/hooks-setup` does:
-   ```json
-   { "type": "command", "command": "bash \"$HOME/.claude/hooks/my-hook.sh\"" }
-   ```
-
-   Do not use `$CLAUDE_PROJECT_DIR` for the script path — it resolves to the project, not the install, and the script does not live there any more. Use `$CLAUDE_PROJECT_DIR` *inside* the script to locate that project's data.
-
-   Using `bash` explicitly avoids relying on the hook script having the execute bit set on disk. This matters because (a) git may not preserve the bit across platforms (e.g., with `core.fileMode = false`), and (b) tarball extraction and fresh copies can drop permissions until `chmod +x` runs.
+   Always use `${CLAUDE_PLUGIN_ROOT}` for the script's own path — it resolves to the installed plugin version. Use `$CLAUDE_PROJECT_DIR` *inside* the script to locate that project's data, never for the script path itself.
+3. If the hook should be opt-in per project rather than always active, gate it on a `.mallet/<name>.enabled` marker file the way `typecheck.sh` does, and extend the `hooks-setup` skill to toggle it. Do not try to register it only in some projects' `settings.json` — the plugin cache path is not stable enough for that.
+4. Remember which event types reach the model as plain stdout (`UserPromptSubmit`, `SessionStart`) and which do not (`PreToolUse`, `PostToolUse`, `PreCompact`) — pick the delivery mechanism (stdout, JSON `additionalContext`, or stderr + exit 2) accordingly.
+5. Update this file and `tests/` — hook and script behaviour is covered by `tests/test-*.sh`; run `bash tests/run.sh` before committing.

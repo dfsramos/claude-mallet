@@ -56,7 +56,7 @@ AskUserQuestion: "Which project skills do you want to promote to the framework b
 **For each selected skill:**
 
 - Source: `TARGET/.mallet/skills/<skill>/`
-- Destination: `FRAMEWORK_ROOT/.claude/skills/<skill>/`
+- Destination: `FRAMEWORK_ROOT/plugin/skills/<skill>/`
 
 If the destination already exists:
 - Read both `SKILL.md` files
@@ -77,7 +77,7 @@ Scan `TARGET/.mallet/overrides/` for `*.md` files. If empty or absent, note "No 
 
 For each override file:
 1. Read the override
-2. Read the matching base skill at `FRAMEWORK_ROOT/.claude/skills/<skill-name>/SKILL.md`
+2. Read the matching base skill at `FRAMEWORK_ROOT/plugin/skills/<skill-name>/SKILL.md`
 3. Summarise what the override changes (one or two lines)
 
 Present the list with summaries, then ask:
