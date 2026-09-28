@@ -1,5 +1,5 @@
 # Task: setup-skill
-Status: pending
+Status: done
 Deps: 09
 
 ## Goal

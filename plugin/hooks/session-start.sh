@@ -1,10 +1,25 @@
 #!/bin/bash
-# Session startup hook: detects a legacy per-project Mallet install and offers
-# the migrate skill. Updates now arrive through the plugin system, so there is
-# no framework update check here.
+# Session startup hook:
+#   1. Keeps the statusline copy in CLAUDE_PLUGIN_DATA current.
+#   2. Detects a legacy per-project Mallet install and offers the migrate skill.
+# Updates arrive through the plugin system, so there is no update check here.
 #
 # Project memory is not injected here: Claude Code's auto memory loads its own
 # MEMORY.md index at session start.
+
+# ── Statusline copy ─────────────────────────────────────────────────────────
+# A statusLine command cannot reference CLAUDE_PLUGIN_ROOT, which changes with
+# every plugin version. /mallet:setup points statusLine at this copy in the
+# persistent data directory instead, and refreshing it here on every startup
+# carries plugin updates through to it.
+
+if [ -n "${CLAUDE_PLUGIN_DATA:-}" ] && [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+  SRC="${CLAUDE_PLUGIN_ROOT}/statusline/statusline.sh"
+  DST="${CLAUDE_PLUGIN_DATA}/statusline.sh"
+  if [ -f "$SRC" ] && ! cmp -s "$SRC" "$DST"; then
+    mkdir -p "$CLAUDE_PLUGIN_DATA" && cp "$SRC" "$DST.tmp" && mv "$DST.tmp" "$DST"
+  fi
+fi
 
 # ── Legacy per-project install detection ────────────────────────────────────
 # Mallet now ships as a plugin. A framework payload inside the project

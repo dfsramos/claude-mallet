@@ -25,7 +25,7 @@ A 2026-09-28 review against current Claude Code docs found three hooks whose out
 - [x] 07-frontmatter — read-only review agents, effort fields, manual-only skills, contract and template relocated [deps: 04] [parallel: no]
 - [x] 08-pipeline-workflow — implement-feature becomes workflows/implement-feature.js [deps: 07] [parallel: no]
 - [x] 09-plugin-layout — move payload to plugin layout with manifest, marketplace, hooks.json, persona hook [deps: 06, 07, 08] [parallel: no]
-- [ ] 10-setup-skill — /mallet:setup installs the statusline [deps: 09] [parallel: no]
+- [x] 10-setup-skill — /mallet:setup installs the statusline [deps: 09] [parallel: no]
 - [ ] 11-transition — final-release install-payload.sh / merge-settings.sh / detect.sh shims move user-level installs to the plugin [deps: 09] [parallel: no]
 - [ ] 12-docs — README, install.md, docs/*, conventions.md reflect the plugin [deps: 10, 11] [parallel: no]
 - [ ] 13-verify — tests, `claude plugin validate`, local plugin load, independent review [deps: 12] [parallel: no]
