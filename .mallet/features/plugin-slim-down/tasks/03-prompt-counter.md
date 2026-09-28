@@ -1,5 +1,5 @@
 # Task: prompt-counter
-Status: pending
+Status: done
 Deps: —
 
 ## Goal

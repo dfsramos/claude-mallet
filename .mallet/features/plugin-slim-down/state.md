@@ -7,5 +7,7 @@
 <!-- 2026-09-28: Transition through the paths an installed `update` skill already executes, so no manual step is needed for existing installs. -->
 <!-- 2026-09-28: explore-redirect removed rather than fixed — built-in Explore agent covers broad search; Graphify pointer is niche. -->
 
+<!-- 2026-09-28 (task 03): transcripts mark typed prompts with origin.kind == "human" (promptSource typed / suggestion_accepted); agent hand-backs are isMeta with origin.kind "peer"; skill expansions are isMeta with no origin. Review session: new filter 4 = 4 typed prompts. -->
+
 ## Blockers
 <!-- - [ ] <description> (check off when resolved) -->

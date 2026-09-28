@@ -110,8 +110,18 @@ if [ -n "$five_hour" ]; then
   line2_parts+=("$s")
 fi
 
+# Human-typed prompts only. Tool results, agent hand-backs and skill expansions
+# are also stored as role "user"; counting them inflated the total roughly 7x.
+# Current transcripts mark typed prompts with origin.kind == "human"; older ones
+# have no origin, so fall back to excluding meta entries and tool results.
+# Twin of the filter in statusline.sh / user-prompt-submit.sh — keep in sync.
+HUMAN_PROMPTS='[.[] | select(.isSidechain != true and .isApiErrorMessage != true and ((.message.role // .role) == "user"))
+  | select(if .origin then .origin.kind == "human"
+           else (.isMeta != true and ((.message.content | type) == "string"
+                 or ((.message.content | type) == "array" and (any(.message.content[]; .type == "tool_result") | not))))
+           end)] | length'
 if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
-  TURNS=$(jq -rs '[.[] | select(.isSidechain != true and .isApiErrorMessage != true and ((.message.role // .role) == "user"))] | length' "$transcript_path" 2>/dev/null)
+  TURNS=$(jq -rs "$HUMAN_PROMPTS" "$transcript_path" 2>/dev/null)
   [ -n "$TURNS" ] && [ "$TURNS" -gt 0 ] && line2_parts+=("T:${TURNS}")
 fi
 
