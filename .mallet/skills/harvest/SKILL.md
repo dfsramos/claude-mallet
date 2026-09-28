@@ -1,6 +1,6 @@
 ---
 name: harvest
-description: Invoke when the user says "harvest", "run harvest", or "harvest <project-path>" inside the claude-mallet repo. Promotes project-specific skills from a target project into the framework base and surfaces skill overrides for review.
+description: Invoke when the user says "harvest", "run harvest", or "harvest <project-path>" inside the claude-mallet repo.
 ---
 # Harvest
 
@@ -11,7 +11,7 @@ Two phases:
 1. **Project skills** — lift selected project-specific skills from the target into the framework
 2. **Overrides** — surface skill overrides present in the target for review; never auto-promote
 
-Framework drift in the target is **not** addressed by harvest. Local edits to framework-managed files in a target are discarded by the next `update` run. If a target diverges, either (a) make it a project skill, (b) make it an override, or (c) propose a PR to the framework directly.
+Target projects hold no framework files — Mallet reaches them as the `mallet` plugin — so there is no drift to reconcile. A project that needs different behaviour uses (a) a project skill, (b) an override, or (c) a PR to the framework.
 
 ---
 
@@ -66,7 +66,13 @@ If the destination already exists:
 
 If overwriting or new:
 - Copy the entire skill directory to the destination
-- Remove the directory from `TARGET/.mallet/skills/`
+- Adapt it to the plugin layout:
+  - it will be invoked as `/mallet:<skill>`; the `name` field must equal the directory name
+  - the `description` states trigger conditions only
+  - paths to files bundled with the skill use `${CLAUDE_SKILL_DIR}`; paths into the project (`.mallet/...`) stay relative
+  - nothing project-specific remains (hostnames, repo names, credentials) — generalise or stop and ask
+- Run `bash tests/run.sh`; `test-15-plugin.sh` checks skill structure
+- Ask before removing the original from `TARGET/.mallet/skills/`: the plugin copy replaces it, but deleting it is the user's call. Remove it only on an explicit yes.
 - Log: `Promoted: <skill>`
 
 ---
@@ -111,4 +117,7 @@ For "leave" or "skip": log and continue.
 ─────────────────────────────────────────────────────────
 ```
 
-If anything was promoted or folded, remind the user to commit the changes and run `update` in `TARGET` afterwards to pick up the new base skills.
+If anything was promoted or folded:
+- update `docs/skills.md` and the README skills table (Docs Parity in `.mallet/conventions.md`)
+- remind the user that the change reaches machines only after it is pushed and the plugin updates there (auto-update, or `/plugin marketplace update claude-mallet`)
+- if an original project skill was kept in `TARGET`, note that it duplicates `/mallet:<skill>` and can be removed once the plugin version is confirmed working
