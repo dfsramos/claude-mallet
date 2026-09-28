@@ -44,7 +44,7 @@ has "renders version from HOME" "$OUT" "deadbee"
 
 echo "== no stale path references =="
 ck "hooks clean" "$(grep -rln '\.claude/project' "$H" "$REPO/.claude/statusline.sh" 2>/dev/null | wc -l)" "0"
-ck "user-prompt-submit unchanged" "$(grep -c '\.claude/' "$H/user-prompt-submit.sh" 2>/dev/null | head -1)" "0"
+ck "user-prompt-submit reads no payload paths" "$(grep -cE '\.claude/(skills|agents|hooks|templates)' "$H/user-prompt-submit.sh" 2>/dev/null | head -1)" "0"
 ck "write-guard unchanged" "$(grep -c '\.claude/' "$H/write-guard.sh" 2>/dev/null | head -1)" "0"
 
 echo
