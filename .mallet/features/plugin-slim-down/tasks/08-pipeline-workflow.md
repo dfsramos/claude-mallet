@@ -1,5 +1,5 @@
 # Task: pipeline-workflow
-Status: pending
+Status: done
 Deps: 07
 
 ## Goal

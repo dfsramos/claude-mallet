@@ -15,5 +15,7 @@
 
 <!-- 2026-09-28 (task 07): kept model aliases (sonnet/haiku) instead of inherit — aliases track the latest model per tier; inherit would run every persona on the parent model. update and preflight stay model-invocable: update is reached from the session-start notice, preflight has a model-side trigger. Only hooks-setup and calibrate are manual-only. Skills support ${CLAUDE_EFFORT} and ${CLAUDE_SKILL_DIR} (skills.md); allowed-tools grants, does not restrict, and is space-separated. -->
 
+<!-- 2026-09-28 (task 08): kept mallet:code-reviewer as the review stage — workflow agent() cannot invoke slash commands, so /code-review is not reachable from a script. Blocked results end the run and return to the launcher skill, since workflow agents cannot ask the user. Routing covered by test-14 (22 assertions, stubbed agent()). -->
+
 ## Blockers
 <!-- - [ ] <description> (check off when resolved) -->

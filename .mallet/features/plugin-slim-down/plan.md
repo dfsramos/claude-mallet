@@ -23,7 +23,7 @@ A 2026-09-28 review against current Claude Code docs found three hooks whose out
 - [x] 05-calibrate-rework — statusline records effort, hook injects it, directive replaces regex scoring, skill becomes manual [deps: 03, 04] [parallel: no]
 - [x] 06-persona-trim — cut CLAUDE.md to Mallet-specific directives, under 9,000 characters [deps: 04, 05] [parallel: no]
 - [x] 07-frontmatter — read-only review agents, effort fields, manual-only skills, contract and template relocated [deps: 04] [parallel: no]
-- [ ] 08-pipeline-workflow — implement-feature becomes workflows/implement-feature.js [deps: 07] [parallel: no]
+- [x] 08-pipeline-workflow — implement-feature becomes workflows/implement-feature.js [deps: 07] [parallel: no]
 - [ ] 09-plugin-layout — move payload to plugin layout with manifest, marketplace, hooks.json, persona hook [deps: 06, 07, 08] [parallel: no]
 - [ ] 10-setup-skill — /mallet:setup installs the statusline [deps: 09] [parallel: no]
 - [ ] 11-transition — final-release install-payload.sh / merge-settings.sh / detect.sh shims move user-level installs to the plugin [deps: 09] [parallel: no]
