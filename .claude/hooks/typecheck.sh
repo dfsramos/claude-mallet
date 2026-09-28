@@ -12,6 +12,12 @@ if [ "$TOOL_NAME" != "Edit" ] || [ -z "$FILE_PATH" ]; then
   exit 0
 fi
 
+# Plain PostToolUse stdout goes to the debug log only; the model sees a
+# PostToolUse hook's output only as JSON additionalContext.
+emit() {
+  jq -n --arg c "[typecheck] $1" '{hookSpecificOutput:{hookEventName:"PostToolUse",additionalContext:$c}}'
+}
+
 EXT="${FILE_PATH##*.}"
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
@@ -21,7 +27,7 @@ case "$EXT" in
     if [ -f "$PROJECT_DIR/tsconfig.json" ]; then
       OUTPUT="$(cd "$PROJECT_DIR" && npx tsc --noEmit 2>&1 | head -20)"
       if [ -n "$OUTPUT" ]; then
-        printf '[typecheck] %s\n' "$OUTPUT"
+        emit "$OUTPUT"
       fi
     fi
     ;;
@@ -30,7 +36,7 @@ case "$EXT" in
     if [ -f "$PHPSTAN" ]; then
       OUTPUT="$(cd "$PROJECT_DIR" && ./vendor/bin/phpstan analyse "$FILE_PATH" --no-progress 2>&1 | head -20)"
       if [ -n "$OUTPUT" ]; then
-        printf '[typecheck] %s\n' "$OUTPUT"
+        emit "$OUTPUT"
       fi
     fi
     ;;

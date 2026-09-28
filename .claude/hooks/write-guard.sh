@@ -6,10 +6,11 @@
 INPUT=$(cat)
 TOOL=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 
+# Exit 2 feeds stderr, not stdout, back to the model as the block reason.
 if [ "$TOOL" = "Write" ]; then
   FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
   if [ -n "$FILE_PATH" ] && [ -f "$FILE_PATH" ]; then
-    echo "[write-guard] '$FILE_PATH' already exists. Use Edit instead — it sends only the changed lines and costs fewer tokens. Write is reserved for files that do not yet exist (CLAUDE.md)."
+    echo "[write-guard] '$FILE_PATH' already exists. Use Edit instead — it sends only the changed lines and costs fewer tokens. Write is reserved for files that do not yet exist (CLAUDE.md)." >&2
     exit 2
   fi
 fi

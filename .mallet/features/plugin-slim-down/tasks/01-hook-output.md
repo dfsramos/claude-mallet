@@ -1,5 +1,5 @@
 # Task: hook-output
-Status: pending
+Status: done
 Deps: —
 
 ## Goal

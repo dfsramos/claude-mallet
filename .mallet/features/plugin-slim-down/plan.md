@@ -16,7 +16,7 @@ A 2026-09-28 review against current Claude Code docs found three hooks whose out
 - Plugin agents are namespaced `mallet:<name>` at runtime.
 
 ## Tasks
-- [ ] 01-hook-output — typecheck emits JSON additionalContext; write-guard reason to stderr [deps: —] [parallel: no]
+- [x] 01-hook-output — typecheck emits JSON additionalContext; write-guard reason to stderr [deps: —] [parallel: no]
 - [ ] 02-compact-continuity — replace pre-compact snapshot with a SessionStart `compact` hook [deps: —] [parallel: no]
 - [ ] 03-prompt-counter — count only human prompts in user-prompt-submit.sh and statusline.sh [deps: —] [parallel: no]
 - [ ] 04-remove-redundant — remove memory.md/lessons.md machinery, push-confirm, explore-redirect, dispatching-parallel-agents, ultracode scoring [deps: 01, 02, 03] [parallel: no]
