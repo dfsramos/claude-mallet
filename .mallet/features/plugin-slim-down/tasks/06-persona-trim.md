@@ -1,5 +1,5 @@
 # Task: persona-trim
-Status: pending
+Status: done
 Deps: 04, 05
 
 ## Goal

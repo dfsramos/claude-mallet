@@ -11,5 +11,7 @@
 
 <!-- 2026-09-28 (task 05 spike): statusline docs list `effort.level` ("Reflects the live session value, including mid-session /effort changes"; absent when the model has no effort parameter) and `model.id`. No live probe needed. Settings fallback runs only when no statusline state exists. -->
 
+<!-- 2026-09-28 (task 06): CLAUDE.md 16,063 -> 8,697 chars. Dropped: Context Cache Design (cache note kept in calibrate skill), Ultracode Mode (native), directives duplicated by the built-in prompt ("run commands", dedicated-tool list). Git Workflow now says "default branch" instead of master for public users. -->
+
 ## Blockers
 <!-- - [ ] <description> (check off when resolved) -->
