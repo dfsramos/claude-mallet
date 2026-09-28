@@ -2,6 +2,8 @@
 name: scope-validator
 description: Verify that the final implementation satisfies all acceptance criteria and introduced no scope creep or regressions.
 model: sonnet
+effort: high
+disallowedTools: Edit, Write, NotebookEdit
 ---
 
 ## Role

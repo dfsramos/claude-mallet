@@ -1,6 +1,7 @@
 ---
 name: create-pr
 description: Invoke when the user says "create PR", "open a PR", "make a pull request", or similar.
+allowed-tools: Bash(git diff *) Bash(git log *) Bash(git status *) Bash(git rev-parse *) Bash(git symbolic-ref *) Bash(gh pr view *)
 ---
 # Create PR
 

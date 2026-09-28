@@ -2,6 +2,7 @@
 name: implementer
 description: Apply an approved change plan to the codebase — read, edit, and create files as specified.
 model: sonnet
+effort: high
 ---
 
 ## Role

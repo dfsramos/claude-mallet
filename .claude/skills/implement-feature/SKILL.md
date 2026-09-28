@@ -11,7 +11,7 @@ Orchestrates a structured, context-isolated pipeline for implementing features. 
 
 ## 0. Pre-flight
 
-Read `~/.claude/agents/_contract.md`. All subagents must return output in that contract format.
+Each agent defines its own Output Contract (Status / Summary / Output / Handoff). Status is `approve` (advance), `revise` (re-run with the Amendments it lists), or `blocked` (surface to the user and pause).
 
 **Check for an existing pipeline state file first.** Run:
 ```bash

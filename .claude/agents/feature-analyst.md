@@ -2,6 +2,8 @@
 name: feature-analyst
 description: Understand a feature request and produce a structured implementation spec.
 model: sonnet
+effort: high
+disallowedTools: Edit, Write, NotebookEdit
 ---
 
 ## Role

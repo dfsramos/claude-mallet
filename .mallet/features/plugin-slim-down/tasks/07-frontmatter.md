@@ -1,5 +1,5 @@
 # Task: frontmatter
-Status: pending
+Status: done
 Deps: 04
 
 ## Goal

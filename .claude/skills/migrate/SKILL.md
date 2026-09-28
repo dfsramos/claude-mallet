@@ -70,7 +70,7 @@ Ask how `.mallet/` should be treated, and apply only what the user picks:
 |---|---|
 | Ignore on this machine | append `.mallet/` to `git config --global core.excludesFile`, defaulting to `~/.config/git/ignore` when unset — git reads that path automatically. Grep for an existing entry first; never duplicate. |
 | Ignore in specific repos | append `.mallet/` to each `<repo>/.git/info/exclude` |
-| Commit it | write nothing. Mention `~/.claude/templates/mallet-gitignore` as a template they can copy in by hand to exclude transient files. |
+| Commit it | write nothing. Mention `${CLAUDE_SKILL_DIR}/mallet-gitignore` as a template they can copy in by hand to exclude transient files. |
 | Decide later | write nothing |
 
 Never edit a tracked `.gitignore`. If the user has already ignored `.mallet/` globally, say so and skip the question.

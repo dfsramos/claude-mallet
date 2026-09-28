@@ -12,7 +12,7 @@ Give a reasoned model and effort recommendation for the task at hand. The always
 ## 1. Establish the active setting
 
 - **Model:** the environment section names it; a `[calibrate]` hook line, if present, confirms it.
-- **Effort:** the most recent `[calibrate]` line. If it says `from settings`, a mid-session `/effort` change would not be reflected — say so. If there is no line, report effort as unknown rather than guessing.
+- **Effort:** `${CLAUDE_EFFORT}` (substituted live when this skill loads; ultracode reports as `xhigh`).
 - **Available models:** only those the environment lists as current. Never recommend a model from memory.
 
 ## 2. Characterise the task

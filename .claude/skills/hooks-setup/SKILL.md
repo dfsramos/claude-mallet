@@ -1,6 +1,7 @@
 ---
 name: hooks-setup
 description: Invoke when the user runs /hooks-setup, asks to "set up hooks", "enable typecheck", or wants to activate optional hook scripts in the current project.
+disable-model-invocation: true
 ---
 # Hooks Setup
 

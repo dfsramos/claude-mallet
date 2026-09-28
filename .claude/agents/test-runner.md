@@ -2,6 +2,8 @@
 name: test-runner
 description: Execute a test suite and return only signal — status, failures, and counts.
 model: haiku
+effort: low
+disallowedTools: Edit, Write, NotebookEdit
 ---
 
 ## Role

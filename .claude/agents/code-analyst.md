@@ -2,6 +2,8 @@
 name: code-analyst
 description: Read the relevant codebase and produce a concrete change plan for a given feature spec.
 model: sonnet
+effort: high
+disallowedTools: Edit, Write, NotebookEdit
 ---
 
 ## Role
