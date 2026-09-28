@@ -77,6 +77,28 @@ rm -rf "$PA"
 OUT=$(cd "$SCRATCH/a" && bash "$PW"); ck "exit 0" "$?" "0"
 ck "recreated" "$(git -C "$(val "$OUT" PLANS_DIR)" branch --show-current)" "master"
 
+echo "== detached HEAD with no resolvable default branch fails loudly =="
+mkrepo "$SCRATCH/d" trunk; git -C "$SCRATCH/d" checkout -q --detach
+OUT=$(cd "$SCRATCH/d" && bash "$PW" 2>/dev/null); ck "exit 1" "$?" "1"
+ck "no COMMIT line" "$(val "$OUT" COMMIT)" ""
+
+echo "== detached HEAD with a resolvable default uses the worktree =="
+mkrepo "$SCRATCH/e" master; git -C "$SCRATCH/e" checkout -q --detach
+OUT=$(cd "$SCRATCH/e" && bash "$PW")
+ck "worktree on master" "$(git -C "$(val "$OUT" PLANS_DIR)" branch --show-current)" "master"
+
+echo "== called from inside a linked worktree =="
+mkrepo "$SCRATCH/l" master; git -C "$SCRATCH/l" branch -q feat
+git -C "$SCRATCH/l" checkout -q --detach; git -C "$SCRATCH/l" worktree add -q "$SCRATCH/l-feat" feat
+OUT=$(cd "$SCRATCH/l-feat" && bash "$PW")
+ck "shares the main repo's plans worktree" "$(val "$OUT" PLANS_DIR)" "$(cd "$SCRATCH/l" && pwd -P)/.git/mallet-plans"
+
+echo "== path with spaces =="
+mkrepo "$SCRATCH/sp ace" master; git -C "$SCRATCH/sp ace" checkout -q -b feat
+OUT=$(cd "$SCRATCH/sp ace" && bash "$PW"); ck "exit 0" "$?" "0"
+plan_commit "$(val "$OUT" PLANS_DIR)" s-plan
+ck "committed on master" "$(git -C "$SCRATCH/sp ace" log --format=%s -1 master)" "Add feature plan: s-plan."
+
 echo "== outside a repository =="
 mkdir -p "$SCRATCH/plain"; (cd "$SCRATCH/plain" && bash "$PW" >/dev/null 2>&1); ck "exit 1" "$?" "1"
 

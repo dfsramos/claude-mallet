@@ -27,6 +27,13 @@ if [ -z "$DEFAULT" ]; then
   else DEFAULT=$(git branch --show-current)
   fi
 fi
+# Detached HEAD with nothing to resolve against leaves DEFAULT empty, which would
+# then "match" the empty current branch and commit plans onto a detached HEAD,
+# where they become unreachable. Fail instead.
+if [ -z "$DEFAULT" ]; then
+  echo "could not determine a default branch (detached HEAD, no local main/master, no origin/HEAD)" >&2
+  exit 1
+fi
 echo "DEFAULT=$DEFAULT"
 
 if git check-ignore -q .mallet/features/probe; then
