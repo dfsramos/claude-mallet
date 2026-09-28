@@ -1,5 +1,5 @@
 # Feature: plugin-slim-down
-Status: planning
+Status: done
 Created: 2026-09-28
 Branch: — (this repo commits directly to master per `.mallet/conventions.md`)
 
@@ -28,4 +28,4 @@ A 2026-09-28 review against current Claude Code docs found three hooks whose out
 - [x] 10-setup-skill — /mallet:setup installs the statusline [deps: 09] [parallel: no]
 - [x] 11-transition — final-release install-payload.sh / merge-settings.sh / detect.sh shims move user-level installs to the plugin [deps: 09] [parallel: no]
 - [x] 12-docs — README, install.md, docs/*, conventions.md reflect the plugin [deps: 10, 11] [parallel: no]
-- [ ] 13-verify — tests, `claude plugin validate`, local plugin load, independent review [deps: 12] [parallel: no]
+- [x] 13-verify — tests, `claude plugin validate`, local plugin load, independent review [deps: 12] [parallel: no]

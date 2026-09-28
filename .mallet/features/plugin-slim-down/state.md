@@ -23,5 +23,7 @@
 
 <!-- 2026-09-28 (task 11): install-payload.sh is now the transition (same path/flags). merge-settings.sh OWNED regex anchored to .claude/hooks/ so a user script sharing a name (e.g. ~/scripts/session-start.sh) is never removed; typecheck added since its script is removed. test-17 (37 assertions) replaces test-08; negative control against the old installer: 26 failures. -->
 
+<!-- 2026-09-28 (task 13): 13 suites / 247 assertions green; claude plugin validate passes (only the deliberate no-version warning). Live probes: persona injected, mallet:* agents and skills resolve, write-guard reason reaches the model. Transition run against a copy of this machine's real ~/.claude: all 35 Mallet entries removed, user skills (backburner, synced) and prod-write-guard hooks preserved, non-hook settings identical, CLAUDE.md matched 6ba3db6 and was removed. Independent review found one blocking bug (no re-review after a review fix cycle) — fixed, test-14 extended. -->
+
 ## Blockers
 <!-- - [ ] <description> (check off when resolved) -->

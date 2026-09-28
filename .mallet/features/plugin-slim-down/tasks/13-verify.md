@@ -1,5 +1,5 @@
 # Task: verify
-Status: pending
+Status: done
 Deps: 12
 
 ## Goal

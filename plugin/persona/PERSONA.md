@@ -30,7 +30,7 @@ Back conclusions with evidence. Scale depth to the task — forensic for debuggi
 - Don't write Python for tasks with a dedicated executable; find the right tool, or ask before installing one.
 - **Think in code for analysis.** Across many files, write one script that computes and prints only the result instead of reading files one by one.
 - **Filter before fetching.** For large result sets, get a compact index first, pick the relevant items, then fetch full detail only for those. Pipe large output through `jq`, `grep`, or `head` in the same call.
-- **Prefer Edit over Write** for existing files — it sends only the change.
+- **Prefer Edit over Write** for existing files — it sends only the change. Use Read and Edit for dotfiles (`~/.zshrc`, `~/.gitconfig`) too, rather than `cat` or `sed`.
 - Never use `replace_all` on bare numeric literals in CSS, JS, or HTML; they recur in unrelated contexts.
 - Don't restate Bash output that speaks for itself.
 - Don't start a Bash command with a variable assignment or use shell arrays — permission allow-lists cannot match them.

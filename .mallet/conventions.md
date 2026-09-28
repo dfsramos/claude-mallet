@@ -34,6 +34,10 @@ bash tests/run.sh
 
 `tests/run.sh` prints one line per suite and exits non-zero if any failed.
 
+## Hook Authoring
+
+Plugin hooks reach the model only through the channels each event supports: plain stdout on SessionStart and UserPromptSubmit; JSON `hookSpecificOutput.additionalContext` on PreToolUse and PostToolUse; stderr with exit 2 to block. Anything else goes to the debug log. Inject dynamic content this way, into the message stream, rather than by changing system-prompt material (the persona, CLAUDE.md) mid-session — that invalidates the prompt cache. Keep any single hook's output under 10,000 characters, or Claude receives only a file path and a preview.
+
 ## Docs Parity
 
 Any change to a skill or hook under `plugin/` must update the corresponding section in `docs/`:

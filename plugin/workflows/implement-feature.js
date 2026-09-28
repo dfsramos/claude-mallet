@@ -125,11 +125,16 @@ for (let i = 0; ; i++) {
     const review = await run('Clifford', 'code-reviewer', 'Review',
       `CHANGED_FILES:\n${[...changed].join('\n')}` + block(`WORKING_DIR: ${DIR}`) + block(`SPEC:\n${spec.handoff}`))
     reviewed = true
-    if (review.status === 'revise' && !reviewRevised) {
-      if (i + 1 >= BUILD_CAP) return finish('blocked', 'review', 'Implementation revision cap reached with blocking review issues.', { blocking: review.handoff })
+    if (review.status === 'revise') {
+      // One fix cycle, then Clifford reviews the fix. A second revise, or the
+      // shared build cap, ends the run rather than reporting unreviewed work as done.
+      if (reviewRevised || i + 1 >= BUILD_CAP) {
+        return finish('blocked', 'review', 'Blocking review issues remain after the revision cycle.', { blocking: review.handoff })
+      }
       reviewRevised = true
+      reviewed = false
       fixes = review.handoff
-      log('Blocking review issues — one revision cycle')
+      log('Blocking review issues — one revision cycle, then re-review')
       continue
     }
     runLog.push({ agent: 'Clifford', status: 'notes', summary: review.output || '' })
