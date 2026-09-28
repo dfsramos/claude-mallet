@@ -75,9 +75,37 @@ echo '{"commit":"2ae59d1","installed_at":"2026-05-19T12:43:30Z"}' > "$E/.claude/
 F=$(mkrepo f); mkdir -p "$F/.mallet"; echo "MEM" > "$F/.mallet/memory.md"
 echo '{"permissions":{}}' > "$F/.claude/settings.local.json" 2>/dev/null || { mkdir -p "$F/.claude"; echo '{"permissions":{}}' > "$F/.claude/settings.local.json"; }
 
+# (g)/(h) line-ending mismatch between payload and installed CLAUDE.md.
+# A payload read out of a git blob on a Windows checkout is CRLF; the installed
+# CLAUDE.md may be LF. A line-ending-sensitive diff aligns nothing and calls the
+# entire payload project-authored — silently writing the stale payload back.
+PAYLOAD_CRLF="$SCRATCH/payload-CLAUDE-crlf.md"
+sed 's/$/\r/' "$PAYLOAD" > "$PAYLOAD_CRLF"
+
+# (g) CRLF payload vs LF pure-payload CLAUDE.md — must still be deleted
+G=$(mkrepo g); payload "$G"; cp "$PAYLOAD" "$G/CLAUDE.md"
+
+# (h) CRLF payload vs LF CLAUDE.md carrying a project delta — strip to the delta
+H=$(mkrepo h); payload "$H"; cp "$PAYLOAD" "$H/CLAUDE.md"
+printf '\n---\n\n## House Style\n\nTabs, not spaces.\n' >> "$H/CLAUDE.md"
+
+# (i) April-era layout: state at the .claude/ TOP LEVEL, plus the two
+# harness-owned directories that must survive untouched.
+I=$(mkrepo i); payload "$I"
+echo "DISC-APRIL"  > "$I/.claude/discovery-2026-04-01.md"
+echo "BACKLOG"     > "$I/.claude/skill-backlog.md"
+mkdir -p "$I/.claude/sessions";  echo "sid" > "$I/.claude/sessions/.current-id"
+mkdir -p "$I/.claude/commands";  echo "cmd" > "$I/.claude/commands/mycmd.md"
+mkdir -p "$I/.claude/worktrees/wt1"; echo "live" > "$I/.claude/worktrees/wt1/file.txt"
+# Both layouts at once — the same basename under project/ AND at the top level.
+# The project/ copy is the richer one and must win; the other must be parked,
+# never allowed to overwrite it.
+mkdir -p "$I/.claude/project"
+echo "PROJECT-BACKLOG-WINS" > "$I/.claude/project/skill-backlog.md"
+
 echo "== detection =="
 OUT=$(bash "$DETECT" --roots "$SCRATCH" 2>&1)
-for r in a b c d e; do has "detects fixture $r" "$OUT" "$SCRATCH/$r"; done
+for r in a b c d e g h i; do has "detects fixture $r" "$OUT" "$SCRATCH/$r"; done
 ck "skips already-migrated f" "$(echo "$OUT" | grep -c "$SCRATCH/f\b")" "0"
 has "reads commit-key sha" "$OUT" "2ae59d1"
 
@@ -130,8 +158,36 @@ echo "== (e) broken schema still migrates =="
 bash "$MIG" "$E" --payload "$PAYLOAD" --yes >/dev/null 2>&1
 ck "payload gone" "$([ -f "$E/.claude/framework.json" ] && echo present || echo gone)" "gone"
 
+echo "== (g) CRLF payload vs LF pure-payload CLAUDE.md =="
+bash "$MIG" "$G" --payload "$PAYLOAD_CRLF" --yes >/dev/null 2>&1
+ck "CLAUDE.md deleted despite line-ending mismatch" \
+   "$([ -f "$G/CLAUDE.md" ] && echo present || echo gone)" "gone"
+
+echo "== (h) CRLF payload vs LF CLAUDE.md with project delta =="
+bash "$MIG" "$H" --payload "$PAYLOAD_CRLF" --yes >/dev/null 2>&1
+ck  "CLAUDE.md kept"       "$([ -f "$H/CLAUDE.md" ] && echo yes || echo no)" "yes"
+has "project section kept" "$(cat "$H/CLAUDE.md")" "House Style"
+ck  "mallet persona gone"  "$(grep -c 'Evidence-Based Approach' "$H/CLAUDE.md")" "0"
+ck  "whole payload not written back" \
+    "$([ "$(wc -l < "$H/CLAUDE.md")" -lt 10 ] && echo small || echo bloated)" "small"
+
+echo "== (i) April-era top-level state relocated, harness dirs untouched =="
+bash "$MIG" "$I" --payload "$PAYLOAD" --yes >/dev/null 2>&1
+ck "top-level discovery moved"  "$(cat "$I/.mallet/discovery-2026-04-01.md" 2>/dev/null)" "DISC-APRIL"
+ck "collision: project/ copy wins" "$(cat "$I/.mallet/skill-backlog.md" 2>/dev/null)" "PROJECT-BACKLOG-WINS"
+ck "collision: other parked, not lost" "$(cat "$I/.mallet/skill-backlog.md.legacy-claude-root" 2>/dev/null)" "BACKLOG"
+ck "sessions/ moved"            "$(cat "$I/.mallet/sessions/.current-id" 2>/dev/null)" "sid"
+ck "none stranded in .claude"   "$([ -e "$I/.claude/skill-backlog.md" ] || [ -e "$I/.claude/discovery-2026-04-01.md" ] && echo stranded || echo clean)" "clean"
+ck "harness commands/ kept"     "$(cat "$I/.claude/commands/mycmd.md" 2>/dev/null)" "cmd"
+ck "harness worktrees/ kept"    "$(cat "$I/.claude/worktrees/wt1/file.txt" 2>/dev/null)" "live"
+ck "worktrees/ not moved"       "$([ -e "$I/.mallet/worktrees" ] && echo moved || echo no)" "no"
+I_BACKUP=$(ls -t "$HOME"/.claude/mallet-migration-backup-*-i.tar.gz 2>/dev/null | head -1)
+ck "worktrees/ excluded from backup" "$(tar -tzf "$I_BACKUP" 2>/dev/null | grep -c 'worktrees')" "0"
+# The backup is the recovery source for a collision, so it must hold BOTH copies.
+ck "backup holds both colliding copies" "$(tar -tzf "$I_BACKUP" 2>/dev/null | grep -c 'skill-backlog\.md$')" "2"
+
 echo "== backups written =="
-ck "one backup per migrated repo" "$(ls "$HOME"/.claude/mallet-migration-backup-*.tar.gz 2>/dev/null | wc -l)" "5"
+ck "one backup per migrated repo" "$(ls "$HOME"/.claude/mallet-migration-backup-*.tar.gz 2>/dev/null | wc -l)" "8"
 ck "backup extracts" "$(tar -tzf "$(ls "$HOME"/.claude/mallet-migration-backup-*a.tar.gz 2>/dev/null | head -1)" >/dev/null 2>&1 && echo ok)" "ok"
 
 echo "== idempotency =="
@@ -139,11 +195,11 @@ BEFORE=$(find "$A" -path "$A/.git" -prune -o -type f -print | sort | md5sum)
 bash "$MIG" "$A" --payload "$PAYLOAD" --yes >/dev/null 2>&1
 ck "second run changes nothing" "$(find "$A" -path "$A/.git" -prune -o -type f -print | sort | md5sum)" "$BEFORE"
 OUT=$(bash "$DETECT" --roots "$SCRATCH" 2>&1)
-ck "nothing left to detect" "$(echo "$OUT" | grep -c "$SCRATCH/[abcde]\b")" "0"
+ck "nothing left to detect" "$(echo "$OUT" | grep -c "$SCRATCH/[abcdeghi]\b")" "0"
 
 echo "== no repo gitignore or exclude was touched =="
 n=0
-for d in "$A" "$B" "$C" "$D" "$E"; do
+for d in "$A" "$B" "$C" "$D" "$E" "$G" "$H" "$I"; do
   [ -f "$d/.gitignore" ] && n=$((n+1))
   grep -q mallet "$d/.git/info/exclude" 2>/dev/null && n=$((n+1))
 done

@@ -1,5 +1,5 @@
 # Feature: user-level-install
-Status: in-progress
+Status: done
 Created: 2026-07-31
 Branch: — (this repo commits directly to master per `.mallet/conventions.md`)
 
@@ -63,7 +63,11 @@ Git-tracked `CLAUDE.md` files are left completely alone — no strip, no diff, n
 - [x] 07-legacy-detect — Add legacy-payload detection to `session-start.sh` [deps: 02, 05] [parallel: yes]
 - [x] 08-update-skill — Rewrite the `update` skill for user-level with jq merge [deps: 01] [parallel: yes]
 - [x] 09-docs — Update `docs/` and `README.md` for parity [deps: 01, 02, 03, 04, 05, 06, 07, 08] [parallel: no]
-- [ ] 10-self-migrate — Migrate this repo to `.mallet/`, then run migration across the 8 installs as live validation [deps: 09] [parallel: no]
+- [x] 10-self-migrate — Migrate this repo to `.mallet/`, then run migration across the 8 installs as live validation [deps: 09] [parallel: no]
+  - Sections A–D complete. Six repos migrated: `gitops`, `Cludo.WebRenderService`, `Cludo.PuppeteerService`, `cludo-lambdas`, `Cludo.App.Backend`, `Cludo/ai`.
+  - **`Personal/exocortex` is out of scope by user decision (2026-08-07)** — the repo is being retired, so its April-era install is left exactly as committed. It remains the one `framework.json` in the fleet.
+  - Live validation earned its keep: four defects surfaced that fixtures had not caught (CRLF-blind `CLAUDE.md` strip, stranded April-era top-level state, 125MB backup from the harness worktree dir, and a collision that clobbered a 32-line backlog). All fixed with regression coverage; test-05 went 41 → 61 assertions.
+  - Section E: the exclude audit found task 10's own line counts wrong. They counted every line matching "claude", but most are Claude Code *runtime* rules (`scheduled_tasks`, `routines/.state/`, `mailbox`, `agent-registry`) unrelated to Mallet — removing them would have been a regression. Only 11 lines across 3 repos were genuinely dead; `Cludo.PuppeteerService` had none. `Cludo.App.Backend`'s `CLAUDE.md` rule was deliberately kept: it still hides a project-authored file. Verified by diffing `git status --porcelain` before and after in each repo — all identical.
 
 ## Waves
 | Wave | Tasks |

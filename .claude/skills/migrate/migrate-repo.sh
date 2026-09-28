@@ -64,9 +64,13 @@ fi
 # ── Backup first; no backup, no deletion ────────────────────────────────────
 mkdir -p "$HOME/.claude"
 BACKUP="$HOME/.claude/mallet-migration-backup-$(date +%Y%m%d%H%M%S)-${NAME}.tar.gz"
-if ! tar -czf "$BACKUP" -C "$REPO" .claude CLAUDE.md 2>/dev/null; then
+# .claude/worktrees/ is the harness's own directory — EnterWorktree checks out
+# full working trees there. One real install held 3.1GB across 19,669 files,
+# which turned a 50KB backup into a 125MB one and stalled the migration. It is
+# never Mallet state, so it is never archived and never moved.
+if ! tar -czf "$BACKUP" --exclude=.claude/worktrees -C "$REPO" .claude CLAUDE.md 2>/dev/null; then
   # CLAUDE.md may legitimately be absent; retry with just .claude/
-  if ! tar -czf "$BACKUP" -C "$REPO" .claude 2>/dev/null; then
+  if ! tar -czf "$BACKUP" --exclude=.claude/worktrees -C "$REPO" .claude 2>/dev/null; then
     say "ABORT: could not write backup $BACKUP — no changes made"
     exit 1
   fi
@@ -103,6 +107,37 @@ fi
 
 move "$REPO/.claude/features"       "$REPO/.mallet/features"
 move "$REPO/.claude/pipeline-state" "$REPO/.mallet/pipeline-state"
+
+# April-era installs kept state at the .claude/ TOP LEVEL rather than under
+# project/ — discovery-*.md, skill-backlog.md and sessions/ all lived there.
+# Sweeping by exclusion rather than by a known-names list means state this
+# version has never heard of still gets carried across instead of stranded.
+# Anything harness-owned or payload-owned is left for the steps below.
+for entry in "$REPO"/.claude/* "$REPO"/.claude/.[!.]*; do
+  [ -e "$entry" ] || continue
+  base=$(basename "$entry")
+  case "$base" in
+    # Harness-pinned: Claude Code reads these from .claude/ and nowhere else.
+    settings.json|settings.local.json|commands|worktrees) continue ;;
+    # Framework payload: removed (untracked) or reported (tracked) further down.
+    agents|hooks|skills|templates|statusline.sh|framework.json) continue ;;
+    merge-settings.sh|settings.fragment.json) continue ;;
+    # Already relocated above.
+    project|features|pipeline-state) continue ;;
+  esac
+  # A repo can carry BOTH layouts — Cludo/ai had .claude/project/skill-backlog.md
+  # (32 lines) and .claude/skill-backlog.md (11 lines). project/ is relocated
+  # first, so moving the top-level one onto the same name silently destroys the
+  # richer file. Never overwrite: park the collision and make the user choose.
+  if [ -e "$REPO/.mallet/$base" ]; then
+    say "COLLISION: .claude/$base and .claude/project/$base both map to .mallet/$base"
+    say "  -> kept the project/ copy, parked the other at .mallet/$base.legacy-claude-root"
+    move "$entry" "$REPO/.mallet/$base.legacy-claude-root"
+    continue
+  fi
+  say "moved legacy .claude/$base -> .mallet/$base"
+  move "$entry" "$REPO/.mallet/$base"
+done
 
 # No .gitignore is written here — see the header. The user chooses.
 
@@ -167,7 +202,12 @@ if [ -f "$MD" ]; then
   elif [ -z "$PAYLOAD" ] || [ ! -f "$PAYLOAD" ]; then
     say "SKIPPED: CLAUDE.md — no historical payload supplied to diff against"
   else
-    DELTA=$(diff "$PAYLOAD" "$MD" | sed -n 's/^> \{0,1\}//p')
+    # --strip-trailing-cr is load-bearing, not defensive. The payload arrives
+    # from a git blob (CRLF on a Windows checkout) while the installed CLAUDE.md
+    # may be LF, or vice versa. Plain diff aligns nothing across that mismatch
+    # and reports every line as project-authored — which would write the whole
+    # stale payload back as the repo's CLAUDE.md and report success.
+    DELTA=$(diff --strip-trailing-cr "$PAYLOAD" "$MD" | sed -n 's/^> \{0,1\}//p')
     # Trim leading blank lines and a leading horizontal rule left behind by the
     # payload/project boundary.
     DELTA=$(printf '%s\n' "$DELTA" | sed -e '/./,$!d' -e '1{/^---$/d}' -e '/./,$!d')
