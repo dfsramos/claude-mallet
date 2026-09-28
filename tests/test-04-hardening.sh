@@ -1,5 +1,5 @@
 #!/bin/bash
-# Test: statusline survives a missing framework.json; session-start caches its update check.
+# Test: statusline renders without Mallet state; session-start makes no network calls.
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SCRATCH=$(mktemp -d)
 trap 'rm -rf "$SCRATCH"' EXIT
@@ -17,19 +17,23 @@ mkdir -p "$HOME/.claude" "$CLAUDE_PROJECT_DIR"
 
 SESSION_JSON=$(printf '{"workspace":{"project_dir":"%s"},"cost":{"total_cost_usd":1.2345},"context_window":{"used_percentage":42},"rate_limits":{"five_hour":{"used_percentage":10}}}' "$CLAUDE_PROJECT_DIR")
 
-echo "== statusline with NO framework.json =="
+echo "== statusline with no Mallet state =="
 OUT=$(echo "$SESSION_JSON" | bash "$SL" 2>&1)
 has   "cost still rendered"        "$OUT" '\$1\.2345'
 has   "context % still rendered"   "$OUT" '42%'
 has   "rate limit still rendered"  "$OUT" '5h: 10%'
 hasnt "no version segment"         "$OUT" 'Claude Mallet'
 
-echo "== statusline with framework.json present =="
+echo "== statusline shows model and effort =="
+OUT=$(printf '{"model":{"id":"m","display_name":"Opus"},"effort":{"level":"high"},"workspace":{"project_dir":"%s"}}' "$CLAUDE_PROJECT_DIR" | bash "$SL" 2>&1)
+has "model name"   "$OUT" "Opus"
+has "effort level" "$OUT" "effort: high"
+
+echo "== statusline ignores a leftover framework.json =="
 echo '{"repo":"a/b","version":"abcdef1234567890","installed_at":"2026-01-01"}' > "$HOME/.claude/framework.json"
 OUT=$(echo "$SESSION_JSON" | bash "$SL" 2>&1)
-has "version segment present" "$OUT" 'Claude Mallet abcdef1'
-has "installed_at present"    "$OUT" '2026-01-01'
-has "cost still rendered"     "$OUT" '\$1\.2345'
+hasnt "no version segment" "$OUT" "abcdef1"
+has "cost still rendered" "$OUT" '\$1\.2345'
 
 echo "== statusline with malformed framework.json =="
 printf '{broken' > "$HOME/.claude/framework.json"

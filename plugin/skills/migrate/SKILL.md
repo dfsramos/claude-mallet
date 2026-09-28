@@ -1,18 +1,18 @@
 ---
 name: migrate
-description: Invoke when the user runs /migrate, says "clean up the old Mallet installs", "migrate to user-level Mallet", "remove the per-project Mallet", or when a session-start notice reports a legacy per-project payload in the current repo. Also invoked by the user-level install flow after a fresh install.
+description: Invoke when the user runs /migrate, says "clean up the old Mallet installs", "remove the per-project Mallet", or when a session-start notice reports a legacy per-project payload in the current repo.
 ---
 
 # Migrate Off Per-Project Mallet
 
-Mallet installs once at `~/.claude/`. This skill removes the per-project payload that older installs left inside each repo, relocates that repo's Mallet state to `.mallet/`, and leaves everything else alone.
+Mallet now ships as the `mallet` plugin. This skill removes the per-project payload that older installs left inside each repo, relocates that repo's Mallet state to `.mallet/`, and leaves everything else alone.
 
 The deterministic mechanics live in two scripts next to this file. Do not reimplement them inline:
 
 | Script | Job |
 |---|---|
-| `~/.claude/skills/migrate/detect.sh` | find legacy installs, emit TSV |
-| `~/.claude/skills/migrate/migrate-repo.sh` | migrate one repo (dry-run unless `--yes`) |
+| `${CLAUDE_SKILL_DIR}/detect.sh` | find legacy installs, emit TSV |
+| `${CLAUDE_SKILL_DIR}/migrate-repo.sh` | migrate one repo (dry-run unless `--yes`) |
 
 ## Non-negotiables
 
@@ -28,13 +28,13 @@ These are enforced by the scripts. Do not work around them:
 ## 1. Discover
 
 ```bash
-bash ~/.claude/skills/migrate/detect.sh
+bash ${CLAUDE_SKILL_DIR}/detect.sh
 ```
 
 With no arguments, candidates come from the `cwd` recorded in session transcripts under `~/.claude/projects/` — an accurate record of every repo Claude has actually run in. Ask whether to also scan additional roots, and if so:
 
 ```bash
-bash ~/.claude/skills/migrate/detect.sh --roots <dir> [<dir> ...]
+bash ${CLAUDE_SKILL_DIR}/detect.sh --roots <dir> [<dir> ...]
 ```
 
 Output is TSV: `repo`, `sha`, `recorded-repo`, `claude-md-state`.
@@ -93,7 +93,7 @@ Cache per SHA — repos commonly share one. Two fallbacks:
 Then:
 
 ```bash
-bash ~/.claude/skills/migrate/migrate-repo.sh <repo> --payload /tmp/mallet-payload-<sha>.md --yes
+bash ${CLAUDE_SKILL_DIR}/migrate-repo.sh <repo> --payload /tmp/mallet-payload-<sha>.md --yes
 ```
 
 Run without `--yes` first if the user wants to see the plan for a repo. Relay each repo's output; do not summarise away a `SKIPPED (tracked)` line.
@@ -115,6 +115,6 @@ Per repo: moved, deleted, pruned, stripped, skipped, and the backup path. Then:
 - count migrated versus skipped
 - every tracked file left in place, so the user has the full list
 - the VCS choice applied, if any
-- a reminder that `~/.claude/framework.json` is now the single source of version truth
+- a reminder that Mallet itself now comes from the plugin, so nothing Mallet-related should remain in the repo besides `.mallet/`
 
 If any repo failed, say which and why. Do not report partial success as success.

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Test: hooks resolve state from .mallet/ and framework.json from $HOME.
+# Test: hooks resolve state from .mallet/ and never from a payload path.
 # Portable: resolves the repo from this script's location and uses a temp dir.
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SCRATCH=$(mktemp -d)
@@ -37,10 +37,9 @@ OUT=$(printf '{"prompt":"ultracode: do a comprehensive, thorough audit of the en
 hasnt "no ultracode scoring" "$OUT" "ultracode"
 ck "removed hooks gone" "$(ls "$H" | grep -cE 'push-confirm|explore-redirect')" "0"
 
-echo "== statusline.sh reads \$HOME/framework.json =="
-echo '{"repo":"a/b","version":"deadbeefcafe1234","installed_at":"2026-01-01"}' > "$HOME/.claude/framework.json"
+echo "== statusline renders without framework.json =="
 OUT=$(printf '{"workspace":{"project_dir":"%s"},"cost":{"total_cost_usd":0.5}}' "$CLAUDE_PROJECT_DIR" | bash "$REPO/plugin/statusline/statusline.sh" 2>&1)
-has "renders version from HOME" "$OUT" "deadbee"
+has "renders cost" "$OUT" "0.5000"
 
 echo "== no stale path references =="
 ck "hooks clean" "$(grep -rln '\.claude/project' "$H" "$REPO/plugin/statusline/statusline.sh" 2>/dev/null | wc -l)" "0"

@@ -1,16 +1,13 @@
 #!/bin/bash
-# Statusline: shows Claude Mallet version, git branch, and usage.
+# Statusline: shows model and effort, git branch, and usage.
 # Receives Claude Code session JSON via stdin.
-# Update checks are handled by the session-start hook.
 
 input=$(cat)
 
 # Resolve the project dir for git/branch reporting (env var preferred, JSON fallback).
-# framework.json is user-level: Mallet is installed once at ~/.claude/.
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(echo "$input" | jq -r '.workspace.project_dir // empty' 2>/dev/null)}"
-FRAMEWORK_JSON="${HOME}/.claude/framework.json"
 
-# jq is required by every segment below, not only the version one.
+# jq is required by every segment below.
 command -v jq &>/dev/null || exit 0
 
 # Calibrate: record the live model and effort for user-prompt-submit.sh, which
@@ -22,14 +19,8 @@ if [ -n "$cal_sid" ]; then
     > "${TMPDIR:-/tmp}/mallet-calibrate-${cal_sid}.json" 2>/dev/null
 fi
 
-# The version segment is optional. A missing, empty, or malformed
-# framework.json must not suppress cost, context, rate limits, or token totals.
-LOCAL_HASH=""
-INSTALLED_AT=""
-if [ -f "$FRAMEWORK_JSON" ]; then
-  LOCAL_HASH=$(jq -r '.version // empty' "$FRAMEWORK_JSON" 2>/dev/null)
-  INSTALLED_AT=$(jq -r '.installed_at // empty' "$FRAMEWORK_JSON" 2>/dev/null)
-fi
+model_name=$(echo "$input" | jq -r '.model.display_name // empty' 2>/dev/null)
+effort_level=$(echo "$input" | jq -r '.effort.level // empty' 2>/dev/null)
 
 # Helpers ────────────────────────────────────────────────────────────────────
 
@@ -83,10 +74,10 @@ if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
 fi
 tok_total=$(( tok_in + tok_cw + tok_cr + tok_out ))
 
-# Line 1: framework version · installed_at · branch ──────────────────────────
+# Line 1: model · effort · branch ─────────────────────────────────────────────
 line1_parts=()
-[ -n "$LOCAL_HASH" ] && line1_parts+=("Claude Mallet ${LOCAL_HASH:0:7}")
-[ -n "$INSTALLED_AT" ] && line1_parts+=("$INSTALLED_AT")
+[ -n "$model_name" ] && line1_parts+=("$model_name")
+[ -n "$effort_level" ] && line1_parts+=("effort: $effort_level")
 if [ -n "$PROJECT_DIR" ] && command -v git &>/dev/null; then
   branch=$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null)
   repo_name=$(basename "$(git -C "$PROJECT_DIR" rev-parse --show-toplevel 2>/dev/null)")

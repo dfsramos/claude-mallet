@@ -59,5 +59,13 @@ REFS=$(grep -rnE '(~|\$HOME)/\.claude/(hooks|templates)/|agents/_contract' "$P" 
 [ -n "$REFS" ] && echo "$REFS" | sed 's/^/    /'
 ck "clean" "$(printf '%s' "$REFS" | grep -c . )" "0"
 
+# Mallet skills are no longer copied to ~/.claude/skills/, so a skill that calls
+# a sibling by that path breaks (after the transition it reaches only a stub).
+NAMES=$(ls "$P/skills" | paste -sd'|')
+SREFS=$(grep -rnE "(~|\$HOME)/\.claude/skills/($NAMES)/" "$P" --include='*.md')
+SREFS=$(printf '%s' "$SREFS" | grep -v 'MALLET-TRANSITION-STUB')
+[ -n "$SREFS" ] && echo "$SREFS" | sed 's/^/    /'
+ck "no skill calls a Mallet skill by its old user-level path" "$(printf '%s' "$SREFS" | grep -c . )" "0"
+
 echo "pass=$pass fail=$fail"
 [ "$fail" -eq 0 ]
