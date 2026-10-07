@@ -35,7 +35,7 @@ const CONTRACT = {
     output: { type: 'string', description: 'The role-specific Output section, as markdown' },
     handoff: { type: 'string', description: 'The Handoff section verbatim: what the next agent needs' },
     amendments: { type: 'array', items: { type: 'string' }, description: 'Actionable changes required when status is revise' },
-    changedFiles: { type: 'array', items: { type: 'string' }, description: 'Paths modified (implementer only)' },
+    changedFiles: { type: 'array', items: { type: 'string' }, description: 'Paths modified: reported by the implementer, read from git by the scope validator' },
   },
   required: ['status', 'summary', 'handoff'],
 }
@@ -88,6 +88,7 @@ for (let i = 0; ; i++) {
 // ── 4–7. Implement, test, validate, review ─────────────────────────────────
 phase('Implement')
 let fixes = ''
+let fixesFrom = ''
 let impl = null
 let tests = null
 let validated = false
@@ -97,7 +98,7 @@ const changed = new Set()
 
 for (let i = 0; ; i++) {
   impl = await run('Ingrid', 'implementer', 'Implement',
-    `PLAN:\n${plan.handoff}` + block(`WORKING_DIR: ${DIR}`) + (fixes ? block(`FAILURES:\n${fixes}`) : ''))
+    `PLAN:\n${plan.handoff}` + block(`WORKING_DIR: ${DIR}`) + (fixes ? block(`FAILURES${fixesFrom}:\n${fixes}`) : ''))
   if (impl.status === 'blocked') return finish('blocked', 'implement', impl.output || impl.summary)
   ;(impl.changedFiles || []).forEach(f => changed.add(f))
 
@@ -107,6 +108,7 @@ for (let i = 0; ; i++) {
   if (tests.status === 'revise') {
     if (i + 1 >= BUILD_CAP) return finish('blocked', 'test', 'Implementation revision cap reached with failing tests.', { failures: tests.handoff })
     fixes = tests.handoff
+    fixesFrom = ''
     log(`Test failures — implementation revision ${i + 1}/${BUILD_CAP}`)
     continue
   }
@@ -115,6 +117,8 @@ for (let i = 0; ; i++) {
   if (opt('scopeValidation') && !validated) {
     const scope = await run('Sylvie', 'scope-validator', 'Validate',
       `SPEC:\n${spec.handoff}` + block(`CHANGED_FILES:\n${[...changed].join('\n')}`) + block(`WORKING_DIR: ${DIR}`))
+    // Sylvie reads the change set from git, so files the implementer left out of its report still reach review.
+    ;(scope.changedFiles || []).forEach(f => changed.add(f))
     if (scope.status !== 'approve') {
       return finish('revise', 'validate', 'Scope gaps found. Ask the user whether to re-enter at planning or implementation.', { gaps: scope.output || scope.handoff })
     }
@@ -134,6 +138,7 @@ for (let i = 0; ; i++) {
       reviewRevised = true
       reviewed = false
       fixes = review.handoff
+      fixesFrom = ' (code review)'
       log('Blocking review issues — one revision cycle, then re-review')
       continue
     }

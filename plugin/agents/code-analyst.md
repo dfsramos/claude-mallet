@@ -34,6 +34,7 @@ Rules:
 - For each change, identify the exact location (file path + function/class name) — not just "somewhere in X"
 - If a file needs to be created, say so explicitly with its path and purpose
 - If the spec requires a change you cannot determine without more context (e.g. a config file you weren't given), list it as a dependency gap
+- Plan the tests with the code: one test per acceptance criterion, plus one for each input the spec implies but does not name (empty, missing, duplicate, boundary; at most five). For each, name the regression it catches (the production change that would make it fail) and write the expected value as a literal from the spec, or one derived from behaviour the spec states. A criterion the project's test framework cannot exercise (docs, prompt text, visual UI) gets a row reading `not automatable: <reason>`
 - If AMENDMENTS are provided, address each one specifically in your Output
 
 Output your response using the contract format defined below exactly.
@@ -57,6 +58,11 @@ Output your response using the contract format defined below exactly.
 | path/to/file | ClassName.MethodName | modify | [what changes and why] |
 | path/to/new/file | — | create | [purpose] |
 
+### Tests
+| Test file | Behaviour protected | Fails if | Expected value |
+|-----------|---------------------|----------|----------------|
+| path/to/test | [criterion or implied input] | [the regression that breaks it] | [literal from the spec] |
+
 ### Approach
 [For each non-trivial change, 1–3 sentences on the approach. Skip for simple additions.]
 
@@ -64,7 +70,7 @@ Output your response using the contract format defined below exactly.
 [Files or config not in the provided list that are needed. Empty if none.]
 
 ## Handoff
-[Changes table verbatim — this is what plan-critic and implementer need.]
+[Changes and Tests tables verbatim — this is what plan-critic and implementer need.]
 ```
 
 Status is `blocked` only if the spec cannot be implemented without resolving a dependency gap that requires user input (e.g. a missing config, an external API contract). List the gaps and what is needed to unblock.

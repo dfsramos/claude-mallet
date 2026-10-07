@@ -124,12 +124,12 @@ Runs the pipeline across seven named agents, each bound via `agentType: <agentPr
 | Step | Agent | Role |
 |---|---|---|
 | 1. Spec | `feature-analyst` (Frida) | Turn the request into scope and acceptance criteria |
-| 2. Plan | `code-analyst` (Callum) | Read the codebase, produce a change plan |
-| 2b. Critique | `plan-critic` (Percy) | Challenge the plan against the spec |
-| 3. Implement | `implementer` (Ingrid) | Apply the approved plan |
+| 2. Plan | `code-analyst` (Callum) | Read the codebase, produce a change plan with a planned test per acceptance criterion, each naming the regression it catches |
+| 2b. Critique | `plan-critic` (Percy) | Challenge the plan against the spec, including criteria without a test |
+| 3. Implement | `implementer` (Ingrid) | Apply the approved plan, tests included |
 | 3b. Test | `test-runner` (Tobias) | Run the suite, return only signal |
-| 3c. Validate | `scope-validator` (Sylvie) | Confirm acceptance criteria met, no scope creep |
-| 3d. Review | `code-reviewer` (Clifford) | Senior review — blocking vs non-blocking |
+| 3c. Validate | `scope-validator` (Sylvie) | Read the real change set from git, confirm acceptance criteria met, no scope creep; its git file list feeds review |
+| 3d. Review | `code-reviewer` (Clifford) | Senior review — blocking vs non-blocking; checks consumers outside the diff, concurrency and trust boundaries, test quality, stale docs; lists what it declined to judge |
 
 Every agent call is scored against a shared JSON contract (`status: approve|revise|blocked`, `summary`, `output`, `handoff`, `amendments`, `changedFiles`) so the orchestrator can route without free-text parsing. Iteration budgets: plan plus critique share 2 revisions; implement, test, and review share 2, with one revision cycle allotted to review specifically, after which Clifford re-reviews the fix; a second blocking review ends the run as `blocked`. Any `blocked` result ends the run immediately and is returned to the launching skill — a Workflow script cannot pause and ask the user itself. There is no `.mallet/pipeline-state/` checkpoint file any more; resumption goes through the Workflow tool's own `resumeFromRunId` instead.
 
