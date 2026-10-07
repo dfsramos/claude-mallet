@@ -128,11 +128,13 @@ Every review-only agent (all but `implementer`) is restricted to `disallowedTool
 | `persona.sh` | SessionStart (`startup\|resume\|clear\|compact`) | Injects `PERSONA.md` — the only way a plugin can deliver directives |
 | `session-start.sh` | SessionStart (`startup`) | Refreshes the statusline copy in `${CLAUDE_PLUGIN_DATA}`; flags a leftover per-project install |
 | `post-compact.sh` | SessionStart (`compact`) | Prints branch, uncommitted changes, recent commits, and any active mission right after compaction |
-| `user-prompt-submit.sh` | UserPromptSubmit | Session-length warning at 50 and every 20 prompts after 80 (human-typed prompts only); injects the active model/effort line for calibrate when it changes |
-| `write-guard.sh` | PreToolUse (`Write`) | Blocks `Write` on files that already exist — enforces `Edit` |
-| `typecheck.sh` | PostToolUse (`Edit\|Write`) | Opt-in via `.mallet/typecheck.enabled`; runs `tsc`/`phpstan` and returns errors as JSON `additionalContext` |
+| `user-prompt-submit.sh` | UserPromptSubmit | Compaction reminder at 60% context usage and every 15% after (prompt count when no statusline is in use); injects the active model/effort line for calibrate when it changes |
+| `write-guard.sh` | PreToolUse (`Edit\|Write`) | Blocks `Write` on files that already exist — enforces `Edit`; asks before edits to lint or type-check config |
+| `command-guard.sh` | PreToolUse (`Bash`) | Opt-in via `.mallet/command-guard.enabled`; denies git hook bypasses and force-pushing the default branch, asks before other destructive commands |
+| `typecheck.sh` | PostToolUse (`Edit\|Write`) | Opt-in via `.mallet/typecheck.enabled`; records edited TypeScript/PHP files |
+| `typecheck-stop.sh` | Stop | Opt-in, same marker; runs `tsc`/`phpstan` once per turn and returns errors in that turn's files as JSON `additionalContext` |
 
-For `PreToolUse`/`PostToolUse`/`PreCompact`, plain stdout only reaches the debug log, not the model — only `UserPromptSubmit` and `SessionStart` stdout is added to context. That is why `typecheck.sh` returns structured JSON and `write-guard.sh` writes its block reason to stderr with exit `2` instead of printing to stdout.
+For `PreToolUse`/`PostToolUse`/`PreCompact`, plain stdout only reaches the debug log, not the model — only `UserPromptSubmit` and `SessionStart` stdout is added to context. That is why the guards answer with a JSON `permissionDecision`, `typecheck-stop.sh` returns JSON `additionalContext`, and `write-guard.sh` writes its Write block reason to stderr with exit `2` instead of printing to stdout.
 
 ## Requirements
 

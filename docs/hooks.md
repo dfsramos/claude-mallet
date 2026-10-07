@@ -6,11 +6,11 @@ Each hook locates its *data* through `$CLAUDE_PROJECT_DIR`, so the one global sc
 
 ## A fact that shapes every hook here
 
-**For `PreToolUse`, `PostToolUse`, and `PreCompact`, plain stdout on exit 0 is written only to the debug log — it never reaches the model.** Only `UserPromptSubmit` and `SessionStart` stdout is added to context. This is why `typecheck.sh` (PostToolUse) returns its findings as JSON `additionalContext` instead of printing them, and why `write-guard.sh` (PreToolUse) writes its block reason to stderr and exits `2` — a blocking exit's stderr is fed back to the model as the reason, regardless of event type.
+**For `PreToolUse`, `PostToolUse`, and `PreCompact`, plain stdout on exit 0 is written only to the debug log — it never reaches the model.** Only `UserPromptSubmit` and `SessionStart` stdout is added to context. This is why `typecheck-stop.sh` (Stop) returns its findings as JSON `additionalContext` instead of printing them, why `write-guard.sh` and `command-guard.sh` (PreToolUse) answer with a JSON `permissionDecision` (`deny` reasons go to the model, `ask` reasons to the user's permission prompt), and why `write-guard.sh` blocks Write by writing to stderr and exiting `2` — a blocking exit's stderr is fed back to the model as the reason, regardless of event type.
 
 ## Registration
 
-All six scripts are registered in one file, `plugin/hooks/hooks.json`:
+All eight scripts are registered in one file, `plugin/hooks/hooks.json`:
 
 | Hook | Event | Matcher |
 |---|---|---|
@@ -18,10 +18,12 @@ All six scripts are registered in one file, `plugin/hooks/hooks.json`:
 | `session-start.sh` | SessionStart | `startup` |
 | `post-compact.sh` | SessionStart | `compact` |
 | `user-prompt-submit.sh` | UserPromptSubmit | *(none — every prompt)* |
-| `write-guard.sh` | PreToolUse | `Write` |
+| `write-guard.sh` | PreToolUse | `Edit\|Write` |
+| `command-guard.sh` | PreToolUse | `Bash` |
 | `typecheck.sh` | PostToolUse | `Edit\|Write` |
+| `typecheck-stop.sh` | Stop | *(none)* |
 
-There is no separate opt-in registration tier at the settings level any more — the plugin registers everything globally. `typecheck.sh` is opt-in in effect only, gated on a per-project marker file (see below), because a per-project `settings.json` registration would need a stable script path, which a versioned plugin cache does not provide.
+There is no separate opt-in registration tier at the settings level any more — the plugin registers everything globally. `typecheck.sh`, `typecheck-stop.sh`, and `command-guard.sh` are opt-in in effect only, gated on a per-project marker file (see below), because a per-project `settings.json` registration would need a stable script path, which a versioned plugin cache does not provide.
 
 ## Persona Hook
 
@@ -58,28 +60,49 @@ This replaces the old `pre-compact.sh` for two reasons: `PreCompact` stdout neve
 **File:** `plugin/hooks/user-prompt-submit.sh`
 **Trigger:** Every user message submitted to Claude
 
-Two independent checks, both derived from the transcript on stdin:
+Two independent checks:
 
-**Session-watch (turn counter).** Counts human-typed prompts only — transcripts mark them with `origin.kind == "human"`; tool results, agent hand-backs, and skill expansions are also stored as role `user` and are excluded, since counting them previously inflated the total roughly 7x. At 50 prompts, injects a soft compaction reminder; at 80 and every 20 after, a stronger warning.
+**Session-watch.** Suggests compaction as the context window fills. It reads `context_window.used_percentage` from the per-session state file `statusline.sh` writes (below) and injects a `[session-watch]` reminder at 60% and a stronger one at each further 15% (75%, 90%). A sibling `mallet-watch-<session_id>.last` file records the last band warned, so each band warns once; dropping below 60% (after `/compact`) re-arms the first warning. Context usage replaced a prompt count because prompts are a poor proxy for window pressure — one prompt can pull in a large file or log.
 
-**Calibrate.** Injects a `[calibrate] active model: X; effort: Y` line when either value changes since the last prompt. Neither value is visible to this hook directly, so it reads them from a per-session state file (`${TMPDIR:-/tmp}/mallet-calibrate-<session_id>.json`) that `statusline.sh` writes on every render from the session JSON's `model.id` and `effort.level` — the latter tracks mid-session `/effort` changes and is absent when the active model has no effort parameter. If no such state file exists (no Mallet statusline registered), it falls back to `effortLevel` in the most specific `settings.local.json`/`settings.json` it can find, and says so, since that fallback cannot see live `/effort` changes. The line is written once per change, tracked via a sibling `.last` file, so it costs nothing on unchanged turns.
+Without a Mallet statusline there is no usage figure, so it falls back to counting human-typed prompts — transcripts mark them with `origin.kind == "human"`; tool results, agent hand-backs, and skill expansions are also stored as role `user` and are excluded, since counting them previously inflated the total roughly 7x. At 50 prompts it injects a soft reminder; at 80 and every 20 after, a stronger warning.
+
+**Calibrate.** Injects a `[calibrate] active model: X; effort: Y` line when either value changes since the last prompt. Neither value is visible to this hook directly, so it reads them from a per-session state file (`${TMPDIR:-/tmp}/mallet-calibrate-<session_id>.json`) that `statusline.sh` writes on every render from the session JSON's `model.id`, `effort.level`, and `context_window.used_percentage`. `effort.level` tracks mid-session `/effort` changes and is absent when the active model has no effort parameter. If no such state file exists (no Mallet statusline registered), it falls back to `effortLevel` in the most specific `settings.local.json`/`settings.json` it can find, and says so, since that fallback cannot see live `/effort` changes. The line is written once per change, tracked via a sibling `.last` file, so it costs nothing on unchanged turns.
 
 ## Write Guard Hook
 
 **File:** `plugin/hooks/write-guard.sh`
-**Trigger:** `PreToolUse`, matcher `Write`
+**Trigger:** `PreToolUse`, matcher `Edit|Write`
 
 Blocks `Write` calls on files that already exist — the persona requires `Edit` for existing files, since `Edit` sends only the changed lines while `Write` re-sends the whole file. Reads `tool_input.file_path`; if it points to an existing file, writes the block reason to **stderr** and exits `2`. Exit 2 is what feeds the message back to the model as the block reason — plain stdout would not, per the fact above. New files (`Write` creating something that doesn't exist) pass through with exit 0.
 
-## Typecheck Hook
+It also asks before `Edit` changes an existing linter or type-checker config — ESLint, Prettier, Biome, Stylelint, `tsconfig*.json`/`jsconfig.json`, Ruff, mypy, Flake8, Pylint, PHPStan, Psalm, PHP-CS-Fixer, golangci-lint — returning `permissionDecision: "ask"`, whose reason appears in the user's permission prompt. A failing check should be fixed in the code, not loosened in its config; when the config change is intended, the user allows it. Creating a new config file is not asked about. A hook `ask` forces the prompt even in auto mode.
 
-**File:** `plugin/hooks/typecheck.sh`
-**Trigger:** `PostToolUse`, matcher `Edit|Write`
+## Typecheck Hooks
+
+**Files:** `plugin/hooks/typecheck.sh`, `plugin/hooks/typecheck-stop.sh`
+**Trigger:** `PostToolUse`, matcher `Edit|Write` (record); `Stop` (check)
 **Activation:** opt-in per project via a marker file, not a settings registration
 
-The plugin registers this hook for every project, but it does nothing unless `.mallet/typecheck.enabled` exists at the project root (created by the `hooks-setup` skill). A per-project `settings.json` hook registration would need to reference a stable script path, and the plugin cache path changes with every version — the marker file is what makes the opt-in per-project instead.
+The plugin registers both hooks for every project, but they do nothing unless `.mallet/typecheck.enabled` exists at the project root (created by the `hooks-setup` skill). A per-project `settings.json` hook registration would need to reference a stable script path, and the plugin cache path changes with every version — the marker file is what makes the opt-in per-project instead.
 
-When active: detects the edited file's extension and runs `npx tsc --noEmit` (if `tsconfig.json` exists, for `.ts`/`.tsx`) or `vendor/bin/phpstan analyse <file> --no-progress` (if the binary exists, for `.php`), capped to the first 20 lines of output. Because plain `PostToolUse` stdout never reaches the model, results are returned as JSON: `{"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": "[typecheck] ..."}}`. Always exits 0 — advisory only, never blocks.
+`typecheck.sh` only records each edited `.ts`, `.tsx`, or `.php` file in `${TMPDIR:-/tmp}/mallet-typecheck-<session_id>.list`. When Claude finishes the turn, `typecheck-stop.sh` checks them once: `npx tsc --noEmit` (if `tsconfig.json` exists) filtered to errors in the recorded files, and `vendor/bin/phpstan analyse --error-format=raw <files>` (if the binary exists), each capped to 20 lines. Checking once per turn replaced a full-project check after every edit, which repeated the same work and reported half-finished multi-edit states as errors. Filtering to the turn's files keeps pre-existing errors elsewhere from stopping every turn.
+
+Errors come back as Stop `additionalContext` — non-error feedback that continues the turn so Claude fixes them. When `stop_hook_active` is set (the turn is already continuing because of a Stop hook), it lets the turn end and keeps the list, so the next turn's check still covers those files without any risk of a loop.
+
+## Command Guard Hook
+
+**File:** `plugin/hooks/command-guard.sh`
+**Trigger:** `PreToolUse`, matcher `Bash`
+**Activation:** opt-in per project via `.mallet/command-guard.enabled`
+
+A narrow safety net for commands that bypass checks or destroy work, applied to each simple command in a `;`/`&&`/`||`/`|` chain:
+
+| Decision | Commands |
+|---|---|
+| `deny` (reason to Claude) | `--no-verify`, `git commit -n`, `core.hooksPath` overrides; force-pushing the default branch (named, or pushed from while checked out) |
+| `ask` (reason to the user) | other force-pushes, `git reset --hard`, `git clean -f…`, `git checkout/restore .`, `git branch -D`, `git stash drop/clear`, `rm` with `-r` and `-f` (unless every target is a build directory such as `node_modules` or `dist`), `DROP`/`TRUNCATE`/`DELETE FROM`/`ALTER TABLE … DROP` passed to a SQL client, `kubectl delete`, `terraform destroy` |
+
+Quoted strings are removed from the whole command before it is split, so a commit message — single-line, multi-line, or heredoc-fed — cannot trigger a git or `rm` rule. Destructive SQL needs a database client (`psql`, `mysql`, `sqlcmd`, …) running as a command, while the statement itself is matched anywhere, so `-c` arguments, heredocs, and piped input are covered. Git's global options are skipped to find the real subcommand, leading environment assignments and `sudo` are ignored, redirections such as `2>&1` are not mistaken for separators, and a quoted `core.hooksPath` override is checked against the raw command. Pattern matching on command strings is never complete — variables, aliases, `eval`, and scripts that run these commands internally defeat it — so the hook asks rather than judges, and complements permission rules rather than replacing them. It is opt-in because it adds permission prompts, and some workflows run these commands routinely.
 
 ## Removed Hooks
 

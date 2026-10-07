@@ -1,5 +1,5 @@
 {
-  "description": "Mallet: persona, continuity after compaction, calibrate, write-guard, opt-in typecheck",
+  "description": "Mallet: persona, continuity after compaction, calibrate and session-watch, write-guard, opt-in typecheck and command guard",
   "hooks": {
     "SessionStart": [
       {
@@ -22,14 +22,23 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Write",
+        "matcher": "Edit|Write",
         "hooks": [{ "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/write-guard.sh\"" }]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/command-guard.sh\"" }]
       }
     ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
         "hooks": [{ "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/typecheck.sh\"" }]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [{ "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/typecheck-stop.sh\"" }]
       }
     ]
   }

@@ -1,6 +1,6 @@
 ---
 name: hooks-setup
-description: Invoke when the user runs /hooks-setup, asks to "set up hooks", "enable typecheck", "disable typecheck", or wants to turn optional Mallet hooks on or off in the current project.
+description: Invoke when the user runs /hooks-setup, asks to "set up hooks", "enable typecheck", "disable typecheck", "enable the command guard", or wants to turn optional Mallet hooks on or off in the current project.
 disable-model-invocation: true
 ---
 # Hooks Setup
@@ -9,7 +9,8 @@ Turns optional Mallet hooks on or off for the current project. The plugin regist
 
 | Hook | Event | Marker |
 |---|---|---|
-| typecheck | PostToolUse on Edit and Write | `.mallet/typecheck.enabled` |
+| typecheck | Records edits (PostToolUse), checks them once when the turn ends (Stop) | `.mallet/typecheck.enabled` |
+| command-guard | PreToolUse on Bash | `.mallet/command-guard.enabled` |
 
 ---
 
@@ -26,14 +27,19 @@ Also check `.claude/settings.json` and `.claude/settings.local.json` for a pre-p
 | TypeScript | `tsconfig.json` exists (the hook runs `npx tsc --noEmit` only when it does) |
 | PHP | `vendor/bin/phpstan` exists |
 
-If neither is present, say typecheck would do nothing here and stop unless the user still wants it.
+If neither is present, say typecheck would do nothing here and skip it unless the user still wants it. command-guard applies to any stack.
 
 ## 3. Apply the user's choice
 
-**typecheck** runs the type-checker after every file edit and puts the first 20 lines of errors into Claude's context.
+**typecheck** type-checks the files edited in a turn once, when Claude finishes the turn, and hands errors in those files back so Claude fixes them before stopping. Errors elsewhere in the project are left out.
 
 - Enable: `mkdir -p .mallet && touch .mallet/typecheck.enabled`
 - Disable: `rm .mallet/typecheck.enabled` (only the marker)
+
+**command-guard** denies bypassing git hooks (`--no-verify`, `commit -n`, `core.hooksPath`) and force-pushing the default branch, and asks before other destructive commands: other force-pushes, `git reset --hard`, `git clean -f`, discarding all changes, `git branch -D`, dropping stashes, `rm -rf` outside build directories, destructive SQL passed to a database client, `kubectl delete`, and `terraform destroy`. Recommend it when the user allows broad Bash permissions or uses auto mode, where little else stands between Claude and these commands.
+
+- Enable: `mkdir -p .mallet && touch .mallet/command-guard.enabled`
+- Disable: `rm .mallet/command-guard.enabled` (only the marker)
 
 To confirm before `git push`, use a permission rule instead of a hook: add `"Bash(git push *)"` to `permissions.ask` in settings.
 

@@ -10,12 +10,13 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(echo "$input" | jq -r '.workspace.project_d
 # jq is required by every segment below.
 command -v jq &>/dev/null || exit 0
 
-# Calibrate: record the live model and effort for user-prompt-submit.sh, which
-# cannot see either in its own hook input. effort.level tracks mid-session
-# /effort changes; it is absent when the model has no effort parameter.
+# Calibrate and session-watch: record the live model, effort, and context usage
+# for user-prompt-submit.sh, which cannot see any of them in its own hook input.
+# effort.level tracks mid-session /effort changes; it is absent when the model
+# has no effort parameter.
 cal_sid=$(echo "$input" | jq -r '.session_id // empty' 2>/dev/null | tr -cd 'A-Za-z0-9_-')
 if [ -n "$cal_sid" ]; then
-  echo "$input" | jq -c '{model: (.model.id // null), effort: (.effort.level // null)}' \
+  echo "$input" | jq -c '{model: (.model.id // null), effort: (.effort.level // null), ctx: (.context_window.used_percentage // null)}' \
     > "${TMPDIR:-/tmp}/mallet-calibrate-${cal_sid}.json" 2>/dev/null
 fi
 

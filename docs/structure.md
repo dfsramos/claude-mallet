@@ -45,12 +45,14 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` an
 │   │   └── test-runner.md
 │   ├── hooks/
 │   │   ├── hooks.json                 # Registers every hook below via ${CLAUDE_PLUGIN_ROOT}
+│   │   ├── command-guard.sh           # PreToolUse (Bash): opt-in guard for hook bypasses and destructive commands
 │   │   ├── persona.sh                 # SessionStart: injects PERSONA.md
 │   │   ├── session-start.sh           # SessionStart (startup): statusline refresh, legacy detect
 │   │   ├── post-compact.sh            # SessionStart (compact): restores state after compaction
-│   │   ├── typecheck.sh               # PostToolUse: opt-in linter, JSON additionalContext
+│   │   ├── typecheck.sh               # PostToolUse: opt-in, records edited TS/PHP files
+│   │   ├── typecheck-stop.sh          # Stop: opt-in, checks the turn's files once, JSON additionalContext
 │   │   ├── user-prompt-submit.sh      # UserPromptSubmit: session-watch + calibrate line
-│   │   └── write-guard.sh             # PreToolUse: blocks Write on existing files
+│   │   └── write-guard.sh             # PreToolUse: blocks Write on existing files, asks before lint-config edits
 │   ├── persona/
 │   │   └── PERSONA.md                 # The persona itself — not CLAUDE.md, plugins can't ship one
 │   ├── skills/

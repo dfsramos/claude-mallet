@@ -1,6 +1,8 @@
 #!/bin/bash
-# Test: the session-watch counter and the statusline turn segment count only
-# human-typed prompts — not tool results, agent hand-backs, or skill expansions.
+# Test: session-watch warns on context usage when the statusline reports it, and
+# otherwise falls back to a prompt counter; the counter and the statusline turn
+# segment count only human-typed prompts — not tool results, agent hand-backs,
+# or skill expansions.
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SCRATCH=$(mktemp -d)
 trap 'rm -rf "$SCRATCH"' EXIT
@@ -12,6 +14,7 @@ hasnt() { if echo "$2" | grep -q "$3"; then echo "  FAIL $1 (unexpected '$3')"; 
 
 export HOME="$SCRATCH/home"; mkdir -p "$HOME/.claude"
 export CLAUDE_PROJECT_DIR="$SCRATCH/repo"; mkdir -p "$CLAUDE_PROJECT_DIR"
+export TMPDIR="$SCRATCH/tmp"; mkdir -p "$TMPDIR"
 
 # Current transcript shape: typed prompts carry origin.kind == "human".
 T="$SCRATCH/t.jsonl"
@@ -49,6 +52,21 @@ pad "$SCRATCH/p49.jsonl" 49
 has   "warns at prompt 50"        "$(run_hook "$SCRATCH/p49.jsonl")" "50 prompts"
 pad "$SCRATCH/p10.jsonl" 10
 hasnt "silent at prompt 11 despite 200 tool results" "$(run_hook "$SCRATCH/p10.jsonl")" "session-watch"
+
+echo "== context-based session-watch =="
+ctx() { # $1 percent: render the statusline for session c1 with that context usage
+  jq -n --argjson p "$1" '{session_id:"c1", model:{id:"m"}, context_window:{used_percentage:$p}, workspace:{project_dir:"'"$CLAUDE_PROJECT_DIR"'"}}' \
+    | bash "$REPO/plugin/statusline/statusline.sh" >/dev/null
+}
+cprompt() { jq -n --arg t "$SCRATCH/p49.jsonl" '{prompt:"x", transcript_path:$t, session_id:"c1"}' | bash "$REPO/plugin/hooks/user-prompt-submit.sh"; }
+ctx 45;   hasnt "silent below 60%"                 "$(cprompt)" "session-watch"
+ck    "statusline records ctx" "$(jq -r .ctx "$TMPDIR/mallet-calibrate-c1.json")" "45"
+          hasnt "prompt count ignored when ctx known" "$(cprompt)" "50 prompts"
+ctx 62.4; has   "warns at 60%"                     "$(cprompt)" "Context 62% full"
+ctx 70;   hasnt "silent within the same band"      "$(cprompt)" "session-watch"
+ctx 76;   has   "warns again at 75%"               "$(cprompt)" "high-cost zone"
+ctx 30;   hasnt "silent after compaction"          "$(cprompt)" "session-watch"
+ctx 61;   has   "re-armed after compaction"        "$(cprompt)" "Context 61% full"
 
 echo "== statusline.sh =="
 SL() { jq -n --arg t "$1" '{transcript_path:$t, workspace:{project_dir:"'"$CLAUDE_PROJECT_DIR"'"}}' | bash "$REPO/plugin/statusline/statusline.sh" | sed 's/\x1b\[[0-9;]*m//g'; }

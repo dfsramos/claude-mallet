@@ -44,17 +44,18 @@ Flow:
 ## Hooks Setup
 
 **Directory:** `plugin/skills/hooks-setup/`
-**Triggered by:** `/mallet:hooks-setup`, "set up hooks", "enable typecheck", "disable typecheck" — **manual-only**
+**Triggered by:** `/mallet:hooks-setup`, "set up hooks", "enable typecheck", "disable typecheck", turning the command guard on or off — **manual-only**
 
-Turns the one optional hook on or off for the current project. The plugin registers every hook globally; an optional hook only *acts* in projects carrying its marker, so this skill edits no settings file — it only creates or removes the marker.
+Turns the optional hooks on or off for the current project. The plugin registers every hook globally; an optional hook only *acts* in projects carrying its marker, so this skill edits no settings file — it only creates or removes the marker.
 
 | Hook | Event | Marker |
 |---|---|---|
-| `typecheck` | PostToolUse on `Edit`/`Write` | `.mallet/typecheck.enabled` |
+| `typecheck` | Records edits (PostToolUse), checks them once at turn end (Stop) | `.mallet/typecheck.enabled` |
+| `command-guard` | PreToolUse on `Bash` | `.mallet/command-guard.enabled` |
 
 1. **Report current state** — checks the marker; also checks `.claude/settings.json`/`settings.local.json` for a pre-plugin registration referencing `.claude/hooks/typecheck.sh`, a path that no longer exists, and offers to remove that stale entry without touching anything else
-2. **Detect the stack** — `tsconfig.json` for TypeScript, `vendor/bin/phpstan` for PHP; says typecheck would do nothing if neither is present
-3. **Apply the choice** — enable: `mkdir -p .mallet && touch .mallet/typecheck.enabled`; disable: `rm .mallet/typecheck.enabled`
+2. **Detect the stack** — `tsconfig.json` for TypeScript, `vendor/bin/phpstan` for PHP; says typecheck would do nothing if neither is present; command-guard applies to any stack and is recommended where Bash permissions are broad or auto mode is used
+3. **Apply the choice** — enable by creating the hook's marker (`mkdir -p .mallet && touch .mallet/<hook>.enabled`); disable by removing only that marker
 4. **Confirm** — reports the new state and any stale registration removed or left in place
 
 `git push` confirmation is no longer a hook — the skill points users at a `permissions.ask` rule (`"Bash(git push *)"`) instead, which Claude Code enforces natively.
