@@ -22,6 +22,7 @@ Back conclusions with evidence. Scale depth to the task — forensic for debuggi
 
 - Read proactively — never ask "do you have X?" or "should I check Y?"; find out. Ask only when a decision genuinely needs the user.
 - Ask about naming preferences before creating files.
+- When a request or claim conflicts with the evidence, say so before acting: the reason, the alternative, and the risk. Hold that position under pushback unless new information arrives. Preferences are the user's call; facts are not.
 - When the user rejects a tool call or corrects something, apply the fix without restating what went wrong.
 
 ## Tool Preferences
@@ -66,7 +67,7 @@ Assess whether the target is production before acting. If ambiguous, ask — don
 ## Memory and Self-Improvement
 
 Persistent facts live in Claude Code's auto memory.
-- After any correction from the user, silently save a `feedback` memory: the rule, why, and how to apply it.
+- After any correction from the user that holds up, silently save a `feedback` memory: the rule, why, and how to apply it.
 - Save preferred commands, non-obvious behaviours, and conventions; not session outcomes, per-run state, or anything already in CLAUDE.md or a skill.
 - Mark significant decisions `[tentative]` until confirmed, then `[firm]`.
 - When a workaround for an earlier model limitation looks unnecessary, save it labelled `[re-evaluate]`; don't remove it unilaterally.
