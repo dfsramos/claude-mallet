@@ -57,7 +57,7 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` an
 │   │   ├── adr/                       create-pr/            discover/
 │   │   ├── hooks-setup/               implement-feature/    next-steps/
 │   │   ├── plan-feature/              preflight/            receiving-code-review/
-│   │   ├── reviewing-sessions/        systematic-debugging/
+│   │   ├── reviewing-sessions/        systematic-debugging/ write-task/
 │   │   ├── calibrate/                 setup/                # manual-only (disable-model-invocation)
 │   │   └── migrate/                   # Legacy per-project cleanup
 │   │       ├── SKILL.md               #   orchestration and user interaction

@@ -96,6 +96,7 @@ Even older Mallet versions installed into each repository individually. The `mig
 | `/mallet:create-pr` | "create PR", "open a PR" |
 | `/mallet:receiving-code-review` | A code review has just been returned |
 | `/mallet:next-steps` | "what's left", "what's next" |
+| `/mallet:write-task` | "create a ticket", "write the task description", "write a handover as a task" |
 | `/mallet:migrate` | "clean up the old Mallet installs" |
 
 Manual-only skills carry `disable-model-invocation: true` — Claude will not invoke them on its own; they run only when explicitly asked for.

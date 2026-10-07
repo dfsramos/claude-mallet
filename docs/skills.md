@@ -240,6 +240,19 @@ Hard rule: reviewer seniority does not override technical correctness. An incorr
 
 Generates a structured, non-technical PR summary (What Changed / Why / Customer Impact / Risk & Mitigation), pushes the branch with explicit confirmation, and opens the PR via `gh pr create`. The default branch is detected dynamically via `git symbolic-ref refs/remotes/origin/HEAD` — works with any main-branch convention (`master`, `main`, `trunk`, etc.).
 
+## Write Task
+
+**Directory:** `plugin/skills/write-task/`
+**Triggered by:** creating a ticket, task, issue or sub-task in any tracker; writing or filling in a task description; writing a handover prompt "as a task" for another session or repository
+
+The single home of Mallet's task format. Writes a task body a later session can complete without the originating conversation, using a fixed skeleton: `📋 OBJECTIVE` (Goal, Rationale), `🔍 CURRENT STATE` (Scope, Entry Points, Context Docs), `🎯 TARGET STATE` (a checklist of verifiable conditions), with no `---` dividers.
+
+1. **Gather** — the outcome, the reason and its evidence, scope, entry points, related docs, and completion conditions; asks rather than guessing when the outcome or reason is unclear
+2. **Draft** — fills the skeleton under two rule sets. Filling rules: intent rather than implementation (no line numbers, no spelled-out edits, no prescribed commit or deploy sequence), Entry Points as pointers only, Target State conditions as outcomes someone else can verify, evidence and its verification date in Rationale, incident-prone ordering as a Target State condition. Writing rules: no em or en dashes or arrow characters, no hyphenated compound modifiers in prose, periods on every sentence and bullet, no capital after a colon in a bullet
+3. **Check** — re-reads the draft against both rule sets before showing it
+4. **Confirm** — shows title and body and waits for confirmation; a text-only request (such as a handover prompt) ends here with the body in chat
+5. **Create** — tracker-agnostic, following `next-steps`: finds the tracker from the tool list, `gh`, or project config, asks when several apply, and returns the body in chat when none does. Jira via REST or MCP needs ADF `taskList`/`taskItem` nodes for the checkboxes, since markdown `- [ ]` is stored as escaped literal text; GitHub issues and Linear take the markdown as is
+
 ---
 
 ## Harvest (project maintenance, not shipped)
