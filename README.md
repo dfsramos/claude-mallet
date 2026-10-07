@@ -110,7 +110,7 @@ Sub-agents used by the `implement-feature` workflow, namespaced `mallet:<name>` 
 | `code-analyst` | Callum | Reads the codebase, produces a change plan | opus / high |
 | `plan-critic` | Percy | Challenges the plan against the spec | opus / high |
 | `feature-analyst` | Frida | Turns a request into a structured spec | sonnet / high |
-| `implementer` | Ingrid | Applies the approved plan | sonnet / high |
+| `implementer` | Ingrid | Applies the approved plan | sonnet / high (opus on the last fix attempt) |
 | `test-runner` | Tobias | Runs the test suite, returns only signal | haiku / low |
 | `scope-validator` | Sylvie | Confirms acceptance criteria met, no scope creep | sonnet / high |
 | `code-reviewer` | Clifford | Senior review — blocking vs non-blocking | opus / high |

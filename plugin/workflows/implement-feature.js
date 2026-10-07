@@ -41,8 +41,8 @@ const CONTRACT = {
 }
 
 const runLog = []
-async function run(persona, agentName, phaseName, prompt) {
-  const r = await agent(prompt, { agentType: PREFIX + agentName, phase: phaseName, label: persona, schema: CONTRACT })
+async function run(persona, agentName, phaseName, prompt, extra = {}) {
+  const r = await agent(prompt, { agentType: PREFIX + agentName, phase: phaseName, label: persona, schema: CONTRACT, ...extra })
   const res = r || { status: 'blocked', summary: `${persona} returned nothing (skipped or failed)`, handoff: '' }
   runLog.push({ agent: persona, status: res.status, summary: res.summary })
   return res
@@ -94,11 +94,15 @@ let tests = null
 let validated = false
 let reviewed = false
 let reviewRevised = false
+let priorBlocking = ''
 const changed = new Set()
 
 for (let i = 0; ; i++) {
+  // The last fix attempt the budget allows runs on the stronger model.
+  const lastFix = i > 0 && i + 1 >= BUILD_CAP
   impl = await run('Ingrid', 'implementer', 'Implement',
-    `PLAN:\n${plan.handoff}` + block(`WORKING_DIR: ${DIR}`) + (fixes ? block(`FAILURES${fixesFrom}:\n${fixes}`) : ''))
+    `PLAN:\n${plan.handoff}` + block(`WORKING_DIR: ${DIR}`) + (fixes ? block(`FAILURES${fixesFrom}:\n${fixes}`) : ''),
+    lastFix ? { model: 'opus' } : {})
   if (impl.status === 'blocked') return finish('blocked', 'implement', impl.output || impl.summary)
   ;(impl.changedFiles || []).forEach(f => changed.add(f))
 
@@ -127,7 +131,8 @@ for (let i = 0; ; i++) {
 
   if (opt('review') && !reviewed) {
     const review = await run('Clifford', 'code-reviewer', 'Review',
-      `CHANGED_FILES:\n${[...changed].join('\n')}` + block(`WORKING_DIR: ${DIR}`) + block(`SPEC:\n${spec.handoff}`))
+      `CHANGED_FILES:\n${[...changed].join('\n')}` + block(`WORKING_DIR: ${DIR}`) + block(`SPEC:\n${spec.handoff}`) +
+      (priorBlocking ? block(`PREVIOUS_BLOCKING:\n${priorBlocking}`) : ''))
     reviewed = true
     if (review.status === 'revise') {
       // One fix cycle, then Clifford reviews the fix. A second revise, or the
@@ -137,8 +142,9 @@ for (let i = 0; ; i++) {
       }
       reviewRevised = true
       reviewed = false
-      fixes = review.handoff
+      fixes = review.handoff || review.summary
       fixesFrom = ' (code review)'
+      priorBlocking = fixes
       log('Blocking review issues — one revision cycle, then re-review')
       continue
     }

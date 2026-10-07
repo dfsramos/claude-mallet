@@ -21,7 +21,7 @@ const ck = (name, got, want) => {
 async function runWith(script, args) {
   const calls = []
   const agent = async (prompt, opts) => {
-    calls.push({ who: opts.label, type: opts.agentType, prompt })
+    calls.push({ who: opts.label, type: opts.agentType, model: opts.model, prompt })
     const q = script[opts.label] || []
     const r = q.length > 1 ? q.shift() : q[0]
     return r === undefined ? { status: 'approve', summary: 'ok', handoff: `${opts.label}-handoff` } : r
@@ -77,12 +77,18 @@ ck('git-found files in result', r.res.changedFiles, ['src/a.ts', 'src/b.ts'])
 r = await runWith({ Clifford: [rev({ handoff: 'null deref' }), ok()] }, {})
 ck('review revise -> fix cycle, then re-review', r.who, ['Frida', 'Callum', 'Percy', 'Ingrid', 'Tobias', 'Sylvie', 'Clifford', 'Ingrid', 'Tobias', 'Clifford'])
 ck('review fixes forwarded', r.calls[7].prompt.includes('null deref'), true)
+ck('first Ingrid has no model override', r.calls[3].model, undefined)
+ck('review fix escalates to opus', r.calls[7].model, 'opus')
+ck('re-review gets previous blocking issues', r.calls[9].prompt.includes('PREVIOUS_BLOCKING:\nnull deref'), true)
+ck('first review has no previous blocking', r.calls[6].prompt.includes('PREVIOUS_BLOCKING'), false)
 ck('review fixes labelled', r.calls[7].prompt.includes('FAILURES (code review):\nnull deref'), true)
 ck('done after fix cycle', r.res.status, 'done')
 r = await runWith({ Clifford: [rev({ handoff: 'still broken' })] }, {})
 ck('second revise -> blocked at review', [r.res.status, r.res.stoppedAt, r.res.blocking], ['blocked', 'review', 'still broken'])
 ck('Clifford ran twice', r.who.filter(w => w === 'Clifford').length, 2)
 r = await runWith({ Tobias: [rev(), ok()], Clifford: [rev()] }, {})
+ck('first implementation inherits the model', r.calls.filter(c => c.who === 'Ingrid')[0].model, undefined)
+ck('last fix attempt escalates to opus', r.calls.filter(c => c.who === 'Ingrid')[1].model, 'opus')
 ck('review revise after a test fix hits the shared cap', [r.res.status, r.res.stoppedAt, r.who.filter(w => w === 'Ingrid').length], ['blocked', 'review', 2])
 
 console.log('== agent returns null ==')

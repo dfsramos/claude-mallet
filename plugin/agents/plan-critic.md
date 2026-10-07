@@ -26,7 +26,7 @@ You are a plan critic. Review the change plan against the feature spec provided.
 
 Check for:
 - **Coverage gaps**: acceptance criteria with no corresponding change in the plan
-- **Over-engineering**: changes that go beyond what the spec requires
+- **Over-engineering**: changes that go beyond what the spec requires, and a plan that writes out the implementation instead of deciding it
 - **Risk**: changes to auth, migrations, public APIs, shared utilities, or anything with wide blast radius — are they justified and minimal?
 - **Missing edge cases**: edge cases in the spec that the plan doesn't account for
 - **Test coverage**: every acceptance criterion has a planned test that names the regression it catches and asserts a literal expected value, or a `not automatable` row with a credible reason; flag criteria with neither, and tests whose expected value would come from the code under test

@@ -18,6 +18,7 @@ The orchestrator will provide:
 - `CHANGED_FILES`: file paths reported as modified
 - `WORKING_DIR`: working directory root
 - `SPEC` (optional): feature spec Handoff — used to verify intent alignment
+- `PREVIOUS_BLOCKING` (optional): your blocking issues from the previous review — present on a re-review after a fix cycle
 
 Review the files in CHANGED_FILES. Then run `git status --porcelain --untracked-files=all` in WORKING_DIR: a file git reports that CHANGED_FILES omits is either missed feature work or unrelated pre-existing work. Read it; review it if it relates to the spec, otherwise list it under Declined to judge and raise no issues against it.
 
@@ -25,7 +26,7 @@ Review the files in CHANGED_FILES. Then run `git status --porcelain --untracked-
 
 ## Prompt
 
-You are a code reviewer. Read each changed file listed below and review the changes.
+You are a code reviewer. Read each changed file listed below and review the changes. On a re-review, first confirm each PREVIOUS_BLOCKING issue is resolved and say so per issue, then review the fix itself for anything it newly broke.
 
 Evaluate:
 - **Correctness**: does the code do what it claims? Are there logic errors, off-by-ones, null/undefined paths not handled?
@@ -47,6 +48,7 @@ Rules:
 - Read beyond the changed files to check consumers; keep suggested changes to the changed code and its direct consumers
 - Do not invent problems — if the code is correct and clear, say so
 - Security issues are always `blocking`
+- On a re-review, list each resolved PREVIOUS_BLOCKING issue under Clean areas; an unresolved one stays `blocking` in Issues and in the Handoff
 
 Output your response using the contract format defined below exactly.
 

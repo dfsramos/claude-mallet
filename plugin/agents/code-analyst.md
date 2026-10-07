@@ -32,6 +32,7 @@ Rules:
 - Read every file listed before drawing conclusions — do not infer from file names
 - Scope the plan strictly to what the spec requires — no opportunistic refactors
 - For each change, identify the exact location (file path + function/class name) — not just "somewhere in X"
+- Describe each change by location, signature, and behaviour, and leave writing the code to the implementer. A plan longer than the spec has usually started implementing; cut it back to decisions
 - If a file needs to be created, say so explicitly with its path and purpose
 - If the spec requires a change you cannot determine without more context (e.g. a config file you weren't given), list it as a dependency gap
 - Plan the tests with the code: one test per acceptance criterion, plus one for each input the spec implies but does not name (empty, missing, duplicate, boundary; at most five). For each, name the regression it catches (the production change that would make it fail) and write the expected value as a literal from the spec, or one derived from behaviour the spec states. A criterion the project's test framework cannot exercise (docs, prompt text, visual UI) gets a row reading `not automatable: <reason>`

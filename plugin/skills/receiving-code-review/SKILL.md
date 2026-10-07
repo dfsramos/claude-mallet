@@ -14,7 +14,7 @@ Read the full review before acting on any single item. Classify every issue:
 - **Blocking:** must be resolved before the work is mergeable
 - **Non-blocking:** should be addressed but does not block
 
-Do not begin fixing until you have read and classified every item.
+Do not begin fixing until you have read and classified every item. If any item is unclear, ask about it before fixing anything: items are often related, and fixing on a partial reading produces the wrong change.
 
 ---
 
@@ -28,6 +28,8 @@ Before accepting any feedback as correct, verify it against the actual code:
 
 A reviewer may be working from a diff view, a stale mental model, or incomplete context. Technical correctness is the standard — not reviewer seniority or confidence.
 
+If you cannot verify a claim (it needs a running service, data, or context you lack), say so and ask how to proceed rather than accepting it on trust.
+
 ---
 
 ## 3. Evaluate Technically
@@ -39,7 +41,7 @@ For each blocking issue, apply these tests before implementing the fix:
 | Correctness | Does accepting this feedback produce code that is more correct? |
 | Functionality | Does it break existing working behaviour? |
 | Context | Does the reviewer have full context, or is the flag based on a local view? |
-| Scope | Does the suggestion go beyond the spec (YAGNI)? |
+| Scope | Does the suggestion go beyond the spec (YAGNI)? Before "implementing it properly", grep for whether the code is used at all — unused code may be better removed |
 | Architecture | Does it conflict with established patterns in this codebase? |
 
 If a suggestion fails any test, do not silently comply — surface the conflict with a specific technical explanation.
@@ -53,6 +55,7 @@ When addressing review feedback (in a PR comment, to the orchestrator, or to the
 - Describe the actual fix: "Changed the guard condition at `auth.ts:42` from `=== null` to `== null` to handle undefined" — not "Great catch, fixed!"
 - When pushing back, state the technical reason: "This would break the existing `SessionStore` contract at `store.ts:15` — the interface requires synchronous return"
 - Do not use performative language: "Absolutely", "Great point", "You're right", "Of course"
+- On GitHub, reply to an inline review comment in its own thread (`gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`), not as a top-level PR comment
 
 ---
 

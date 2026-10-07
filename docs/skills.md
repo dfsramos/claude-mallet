@@ -125,14 +125,14 @@ Runs the pipeline across seven named agents, each bound via `agentType: <agentPr
 | Step | Agent | Role |
 |---|---|---|
 | 1. Spec | `feature-analyst` (Frida) | Turn the request into scope and acceptance criteria |
-| 2. Plan | `code-analyst` (Callum) | Read the codebase, produce a change plan with a planned test per acceptance criterion, each naming the regression it catches |
+| 2. Plan | `code-analyst` (Callum) | Read the codebase, produce a change plan (locations, signatures, behaviour — not written-out code) with a planned test per acceptance criterion, each naming the regression it catches |
 | 2b. Critique | `plan-critic` (Percy) | Challenge the plan against the spec, including criteria without a test |
 | 3. Implement | `implementer` (Ingrid) | Apply the approved plan, tests included |
 | 3b. Test | `test-runner` (Tobias) | Run the suite, return only signal |
 | 3c. Validate | `scope-validator` (Sylvie) | Read the real change set from git, confirm acceptance criteria met, no scope creep; its git file list feeds review |
 | 3d. Review | `code-reviewer` (Clifford) | Senior review — blocking vs non-blocking; checks consumers outside the diff, concurrency and trust boundaries, test quality, stale docs; lists what it declined to judge |
 
-Every agent call is scored against a shared JSON contract (`status: approve|revise|blocked`, `summary`, `output`, `handoff`, `amendments`, `changedFiles`) so the orchestrator can route without free-text parsing. Iteration budgets: plan plus critique share 2 revisions; implement, test, and review share 2, with one revision cycle allotted to review specifically, after which Clifford re-reviews the fix; a second blocking review ends the run as `blocked`. Any `blocked` result ends the run immediately and is returned to the launching skill — a Workflow script cannot pause and ask the user itself. There is no `.mallet/pipeline-state/` checkpoint file any more; resumption goes through the Workflow tool's own `resumeFromRunId` instead.
+Every agent call is scored against a shared JSON contract (`status: approve|revise|blocked`, `summary`, `output`, `handoff`, `amendments`, `changedFiles`) so the orchestrator can route without free-text parsing. Iteration budgets: plan plus critique share 2 revisions; implement, test, and review share 2, with one revision cycle allotted to review specifically, after which Clifford re-reviews the fix, checking each previous blocking issue first; the last fix attempt the budget allows runs Ingrid on `opus`; a second blocking review ends the run as `blocked`. Any `blocked` result ends the run immediately and is returned to the launching skill — a Workflow script cannot pause and ask the user itself. There is no `.mallet/pipeline-state/` checkpoint file any more; resumption goes through the Workflow tool's own `resumeFromRunId` instead.
 
 `/code-review` is not reachable from a script, which is why `code-reviewer` (Clifford) remains a dedicated review stage rather than delegating to the slash command.
 
@@ -209,12 +209,12 @@ The long-form version of the always-on Task Calibration directive (see [`directi
 
 Four-phase methodology enforcing root cause investigation before any fix.
 
-1. **Root cause investigation** — reproduce consistently; read full error and trace; review recent changes; add diagnostic instrumentation
+1. **Root cause investigation** — reproduce consistently; read full error and trace; review recent changes; add diagnostic instrumentation; trace a deep failure backward to where the bad value originates; bisect the suite when a test fails only alongside others
 2. **Pattern analysis** — locate a working analogue (if one exists); otherwise reason from first principles across touched dependencies
 3. **Hypothesis and testing** — falsifiable hypothesis; one variable at a time; discard or refine on evidence
-4. **Implementation** — write a failing test first (when behaviour is testable); apply a single targeted fix; confirm pass and no regressions
+4. **Implementation** — write a failing test first (when behaviour is testable); apply a single targeted fix at the origin; validate at the boundary the bad value crossed; confirm pass and no regressions
 
-Hard rule: no fix is applied before root cause is confirmed. Three consecutive failed fixes in different locations signals an architectural problem — stop and map the system rather than continue guessing.
+Hard rule: no fix is applied before root cause is confirmed. Three consecutive failed fixes in different locations signals an architectural problem — stop and map the system rather than continue guessing. Signs from the user that Claude is guessing ("Stop guessing", "Is that not happening?") send it back to step 1. When a complete investigation finds the failure environmental or external, the skill's exit is to record what was ruled out, add handling (retry, timeout, clear error), and add logging for next time.
 
 Includes a **condition-based waiting** pattern: replace arbitrary `sleep` delays in tests with polling for the actual condition (check every 10ms, timeout with a descriptive message). Eliminates flaky timing-dependent failures.
 
@@ -225,10 +225,10 @@ Includes a **condition-based waiting** pattern: replace arbitrary `sleep` delays
 
 Methodical framework for processing review feedback without performative compliance or uncritical acceptance.
 
-1. **Understand completely** — read and classify all feedback (blocking / non-blocking) before acting on any item
-2. **Verify against reality** — confirm each flagged location and described behaviour matches the actual code before accepting the review as correct
-3. **Evaluate technically** — test each blocking item for correctness, functionality impact, context completeness, scope (YAGNI), and architectural fit; surface conflicts with a specific technical explanation rather than silently complying
-4. **Respond factually** — describe the actual fix, not praise ("Changed guard at `auth.ts:42`" not "Great catch!"); push back technically when warranted
+1. **Understand completely** — read and classify all feedback (blocking / non-blocking) before acting on any item; ask about unclear items before fixing any
+2. **Verify against reality** — confirm each flagged location and described behaviour matches the actual code before accepting the review as correct; say so when a claim cannot be verified
+3. **Evaluate technically** — test each blocking item for correctness, functionality impact, context completeness, scope (YAGNI — grep whether the code is used before "implementing it properly"), and architectural fit; surface conflicts with a specific technical explanation rather than silently complying
+4. **Respond factually** — describe the actual fix, not praise ("Changed guard at `auth.ts:42`" not "Great catch!"); push back technically when warranted; reply to inline GitHub comments in their thread
 5. **Implement methodically** — locate, understand, apply targeted fixes; batch all blocking fixes before re-review
 
 Hard rule: reviewer seniority does not override technical correctness. An incorrect fix applied under social pressure ships wrong code.
