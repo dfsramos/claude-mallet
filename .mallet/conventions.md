@@ -40,6 +40,8 @@ Tests cover executable code: hooks, the statusline, scripts that edit user files
 
 Plugin hooks reach the model only through the channels each event supports: plain stdout on SessionStart and UserPromptSubmit; JSON `hookSpecificOutput.additionalContext` on PreToolUse and PostToolUse; stderr with exit 2 to block. Anything else goes to the debug log. Inject dynamic content this way, into the message stream, rather than by changing system-prompt material (the persona, CLAUDE.md) mid-session — that invalidates the prompt cache. Keep any single hook's output under 10,000 characters, or Claude receives only a file path and a preview.
 
+Hook scripts must run on macOS as well as Linux, and the tests only run on Linux, so write to the common subset: bash 3.2 (no `mapfile`/`readarray`, no associative arrays), BSD `sed` (no `\n` in a replacement — split with `tr`), and `printf` without locale-dependent `%f`. A hook that parses command strings strips quoted text from the whole command before matching, and its tests include multi-line and heredoc inputs.
+
 ### Mods
 
 Claude Code mods (v2.1.287+, October 2026) are JavaScript event handlers that run inside Claude Code as part of a plugin; see https://code.claude.com/docs/en/plugins/mods/overview. Plugin shell hooks stay the baseline for anything Mallet must always do: managed `allowManagedModsOnly` blocks installed mods while plugin shell hooks keep running, mods do not load in the Desktop app's WSL sessions, and they need a recent Claude Code. Reach for a mod only for what a hook cannot do at all — drawing interface, or reading session state such as `$.session.usage()` (context percent, rate limits, cost) directly — and keep a hook fallback for the same behaviour.
