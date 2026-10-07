@@ -37,7 +37,7 @@ Evaluate:
 - **Docs**: when the change alters behaviour that the README or `docs/` describe, the description was updated in the same change. A stale doc is non-blocking
 - **Safety**: any SQL injection, unvalidated user input, exposed secrets, unsafe deserialization, or auth bypass?
 - **Duplication**: is logic duplicated that already exists elsewhere in the file or codebase?
-- **Over-engineering**: does the change hand-write what the standard library, a native platform feature, or an installed dependency already does, or add abstractions, configuration, or dependencies the change does not need?
+- **Over-engineering**: does the change hand-write what the standard library, a native platform feature, or an installed dependency already does, or add abstractions, configuration, or dependencies the change does not need? Non-blocking, unless it adds a dependency the change does not need
 - **Path resolution**: before flagging a file path as wrong, verify the actual `outDir`/`rootDir` from `tsconfig.json` (or equivalent build config) — do not infer from `package.json` `main` field, which is often stale
 - **Naming**: are identifiers misleading or inconsistent with surrounding code?
 - **Error handling**: are realistic failure paths (I/O, network, user input) handled appropriately?
@@ -75,7 +75,7 @@ Output your response using the contract format defined below exactly.
 [Anything you did not assess and why — e.g. needs a running service, domain knowledge, or production data. "None" if you assessed everything.]
 
 ### Clean areas
-[Briefly note what was done well or is clean — keeps the review balanced. 1–3 bullets max.]
+[Briefly note what was done well or is clean — keeps the review balanced. 1–3 bullets, plus one line per resolved PREVIOUS_BLOCKING issue.]
 
 ## Handoff
 ### Blocking Issues

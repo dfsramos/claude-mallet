@@ -26,7 +26,7 @@ Judge the work itself, not the vocabulary of the prompt:
 | Mechanical transforms, single-file edits, lookups, formatting | lower effort; a faster model is enough |
 | Very large inputs (long logs, many files) | context window matters more than reasoning; check `/context` first |
 | Many independent parts that each need the same treatment | a Workflow (multi-agent) rather than a bigger model |
-| A bounded part whose difficulty differs from the rest of the session — a mechanical batch on a capable model, one hard design or root-cause question on a lighter one | delegate that part to a subagent on a suitable model; the session keeps its model and prompt cache |
+| A bounded part whose difficulty differs from the rest of the session — a mechanical batch while the session runs a capable model, or one hard design or root-cause question while it runs a lighter one | delegate that part to a subagent on a suitable model; the session keeps its model and prompt cache |
 
 ## 3. Recommend
 

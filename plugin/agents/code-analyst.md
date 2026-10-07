@@ -32,6 +32,7 @@ Rules:
 - Read every file listed before drawing conclusions — do not infer from file names
 - Scope the plan strictly to what the spec requires — no opportunistic refactors
 - For each change, identify the exact location (file path + function/class name) — not just "somewhere in X"
+- Before planning new code, look for what already does the job — an existing helper, the standard library, a native platform feature, or an installed dependency — and name it in the change you plan
 - Describe each change by location, signature, and behaviour, and leave writing the code to the implementer. A plan longer than the spec has usually started implementing; cut it back to decisions
 - If a file needs to be created, say so explicitly with its path and purpose
 - If the spec requires a change you cannot determine without more context (e.g. a config file you weren't given), list it as a dependency gap

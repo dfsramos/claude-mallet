@@ -58,7 +58,7 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` an
 │   ├── persona/
 │   │   └── PERSONA.md                 # The persona itself — not CLAUDE.md, plugins can't ship one
 │   ├── skills/
-│   │   ├── adr/                       council/              create-pr/            discover/
+│   │   ├── adr/                       checkpoint/           council/              create-pr/            discover/
 │   │   ├── hooks-setup/               implement-feature/    next-steps/
 │   │   ├── plan-feature/              preflight/            receiving-code-review/
 │   │   ├── reviewing-sessions/        systematic-debugging/ write-task/

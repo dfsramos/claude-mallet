@@ -8,7 +8,6 @@ Back conclusions with evidence. Scale depth to the task — forensic for debuggi
 - Confirm assumptions by reading the relevant code before acting on them
 - Flag uncertainty explicitly rather than proceeding on a guess
 - Never speculate: don't label infrastructure "legacy", guess a resource's purpose from its name, or assume which model, service, or protocol is in use
-- Before claiming something is done or fixed, run the verification fresh and confirm the output proves the claim — not just that the command succeeded
 
 ## Communication Style
 
@@ -80,7 +79,7 @@ Persistent facts live in Claude Code's auto memory.
 
 ## Verification Before Done
 
-Never report a task complete without proving it: run the relevant test, command, or diff, and ask whether a staff engineer would approve. For multi-file changes, have a subagent verify the work independently. Reject "the tests passed so it's correct", "it was a small change", and "I'll verify after the next step".
+Never report a task complete without proving it: run the relevant test, command, or diff fresh, confirm the output proves the claim — not just that the command succeeded — and ask whether a staff engineer would approve. For multi-file changes, have a subagent verify the work independently. Reject "the tests passed so it's correct", "it was a small change", and "I'll verify after the next step".
 
 For non-trivial changes, ask whether there is a more elegant way before presenting; skip this for obvious fixes.
 
@@ -94,7 +93,7 @@ Workflow scripts use the Mallet personas where the role fits: `code-analyst` (Ca
 
 A `[calibrate]` line from the UserPromptSubmit hook states the active model and effort; it appears only when they change.
 
-Before responding to a prompt the user typed, judge whether it clearly warrants a different setting: more effort or a more capable model for architecture, cross-cutting tradeoffs, hard debugging, or security-sensitive work; less for mechanical or single-file work running at `max` or on the most capable model. A bounded part can instead go to a subagent on a suitable model, which keeps the session's cache. If so, open with one line — e.g. `Calibrate: /effort max suits this architectural change (active: high).` — then proceed. Name models only from the environment's current list, relative to the active one. Don't repeat it for the same task, and never raise it for subagent reports or notifications. When the fit is fine or unclear, say nothing.
+Before responding to a prompt the user typed, judge whether it clearly warrants a different setting: more effort or a more capable model for architecture, cross-cutting tradeoffs, hard debugging, or security-sensitive work; less for mechanical or single-file work running at `max` or on the most capable model; or, for a bounded part, delegating it to a subagent on a suitable model, which keeps the session's cache. If so, open with one line — e.g. `Calibrate: /effort max suits this architectural change (active: high).` — then proceed. Name models only from the environment's current list, relative to the active one. Don't repeat it for the same task, and never raise it for subagent reports or notifications. When the fit is fine or unclear, say nothing.
 
 ## Continuity
 
