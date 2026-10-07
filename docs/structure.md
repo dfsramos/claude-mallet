@@ -42,7 +42,9 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` an
 │   ├── agents/
 │   │   ├── code-analyst.md            code-reviewer.md      feature-analyst.md
 │   │   ├── implementer.md             plan-critic.md        scope-validator.md
-│   │   └── test-runner.md
+│   │   ├── test-runner.md             # the implement-feature pipeline (above)
+│   │   ├── council-contrarian.md      council-executor.md
+│   │   └── council-expansionist.md    council-first-principles.md   # the council skill's advisors
 │   ├── hooks/
 │   │   ├── hooks.json                 # Registers every hook below via ${CLAUDE_PLUGIN_ROOT}
 │   │   ├── command-guard.sh           # PreToolUse (Bash): opt-in guard for hook bypasses and destructive commands
@@ -56,7 +58,7 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` an
 │   ├── persona/
 │   │   └── PERSONA.md                 # The persona itself — not CLAUDE.md, plugins can't ship one
 │   ├── skills/
-│   │   ├── adr/                       create-pr/            discover/
+│   │   ├── adr/                       council/              create-pr/            discover/
 │   │   ├── hooks-setup/               implement-feature/    next-steps/
 │   │   ├── plan-feature/              preflight/            receiving-code-review/
 │   │   ├── reviewing-sessions/        systematic-debugging/ write-task/

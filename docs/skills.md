@@ -98,7 +98,7 @@ Intake-to-execution pipeline. Supports resumption across sessions. All planning 
 
 1. **Pre-check** — reads existing plans from the default branch; surfaces overlaps before creating anything new
 2. **Intake** — broad questions (problem, users, success criteria, constraints, remote system involvement)
-3. **Design approval gate** — a one-paragraph design summary must be explicitly approved before decomposition begins
+3. **Design approval gate** — a one-paragraph design summary must be explicitly approved before decomposition begins; when the design commits to something expensive to reverse, offers to test it with `/mallet:council` first
 4. **Knowledge skill assessment** — if the feature touches a domain with strong conventions (API design, auth, data modelling, security, accessibility, performance, domain rules), offers to scaffold a knowledge skill by copying `${CLAUDE_SKILL_DIR}/knowledge-skill-template.md` to `.mallet/skills/<domain>-knowledge/SKILL.md`
 5. **Decompose** — confirms a slug; writes `plan.md`, `state.md`, and per-task stubs, each with a task-content discipline check (no TBD, every step names a concrete file or command)
 6. **Execute (wave model)** — identifies tasks whose dependencies are satisfied (a wave); when parallel, dispatches each task to its own subagent so only results surface to the main context
@@ -144,11 +144,32 @@ Every agent call is scored against a shared JSON contract (`status: approve|revi
 Captures a significant architectural decision in Nygard format so the rationale survives beyond the session.
 
 1. **Locate** — finds `docs/adr/` and determines the next four-digit number; creates the directory if it doesn't exist
-2. **Gather** — extracts context, decision, alternatives, and consequences from the conversation; asks only for what's missing
+2. **Gather** — extracts context, decision, alternatives, and consequences from the conversation; asks only for what's missing; for an undecided choice that is expensive to reverse, offers to run `council` first
 3. **Write** — creates `docs/adr/NNNN-<title>.md` with Context, Decision, Alternatives Considered, and Consequences sections
 4. **Index** — appends to (or creates) `docs/adr/README.md`
 5. **Link** — offers to reference the ADR from an active feature plan or mission file
 6. **Commit** — stages and commits with `Add ADR-NNNN: <title>.`
+
+## Council
+
+**Directory:** `plugin/skills/council/`
+**Triggered by:** `/mallet:council`, "council this", "pressure-test this decision"; offered by `adr` and by `plan-feature`'s design gate, and run once the user agrees, when a decision is expensive to reverse
+
+Tests a decision against four independent advisors before it is made. Each starts from a written brief in its own context rather than the conversation, so none inherits the framing or agreement built up in the session.
+
+| Agent | Persona | Lens | Model / Effort |
+|---|---|---|---|
+| `council-contrarian` | Cassandra | What would make the decision fail | opus / high |
+| `council-first-principles` | Felix | Whether it addresses the right problem, framed the right way | opus / high |
+| `council-expansionist` | Esme | The upside and the options being missed, each with its cost | sonnet / high |
+| `council-executor` | Ezra | The first concrete steps and what blocks them | sonnet / high |
+
+1. **Brief** — question, context, every option including doing nothing, hard constraints, and what is settled; the chair's own leaning is kept out so it cannot anchor the advisors. The user confirms or corrects the brief before convening, since a wrong brief misleads all four advisors alike
+2. **Convene** — all four in parallel with identical inputs; a failed advisor is re-dispatched once, and a lens still missing is named in the verdict
+3. **Chair** — the main session verifies the claims that decide the outcome and weighs the answers rather than averaging them: the verdict follows the objections that hold, from any advisor, rather than the vote count; an objection that holds moves the verdict or is named as an accepted risk; shared-model agreement counts for less than it looks; a `reframe` is settled first; and the chair's own leaning is tested last. Output: verdict, strongest objection and whether it holds, upside worth its cost, first action, a per-advisor table, and what would change the verdict
+4. **Record** — feeds an ADR when called from `adr`; otherwise offers one for an architectural decision, or leaves the summary in the conversation
+
+Modelled on Karpathy's LLM Council, which polls different model vendors. Here the independence comes from separate contexts and lenses, with a mix of `opus` and `sonnet`; the anonymous peer-ranking round is left out, since it adds a second round of calls within one model family. Four subagent runs per council, so it is for decisions that are expensive to reverse.
 
 ## Checkpoint
 

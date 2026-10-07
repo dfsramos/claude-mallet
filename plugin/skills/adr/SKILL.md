@@ -30,6 +30,8 @@ If the user hasn't already described the decision fully, ask the minimum necessa
 
 Don't ask for information already present in the conversation. Extract what you can from context and only fill gaps.
 
+If the decision has not been made yet, would be expensive to reverse, and has not already been through a council, offer to run `/mallet:council` on it first, and run it once the user agrees; its findings feed the Alternatives Considered and Consequences sections.
+
 ---
 
 ## 3. Write the ADR

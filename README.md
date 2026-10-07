@@ -84,6 +84,7 @@ Even older Mallet versions installed into each repository individually. The `mig
 |-------|---------|
 | `/mallet:discover` | "discover this project", "analyze the codebase" |
 | `/mallet:adr` | "record this decision", "create an ADR" |
+| `/mallet:council` | "council this", "pressure-test this decision" |
 | `/mallet:plan-feature` | "plan a feature", "I want to build X" |
 | `/mallet:implement-feature` | "implement this feature", "add X functionality" |
 | `/mallet:systematic-debugging` | Debugging errors or unexpected behaviour |
@@ -103,7 +104,7 @@ Manual-only skills carry `disable-model-invocation: true` — Claude will not in
 
 ### Agents
 
-Sub-agents used by the `implement-feature` workflow, namespaced `mallet:<name>` at runtime:
+Sub-agents, namespaced `mallet:<name>` at runtime. These are used by the `implement-feature` workflow:
 
 | Agent | Persona | Role | Model / Effort |
 |---|---|---|---|
@@ -115,7 +116,16 @@ Sub-agents used by the `implement-feature` workflow, namespaced `mallet:<name>` 
 | `scope-validator` | Sylvie | Confirms acceptance criteria met, no scope creep | sonnet / high |
 | `code-reviewer` | Clifford | Senior review — blocking vs non-blocking | opus / high |
 
-Every review-only agent (all but `implementer`) is restricted to `disallowedTools: Edit, Write, NotebookEdit`.
+The `council` skill convenes four advisors, each starting from the same written brief in its own context:
+
+| Agent | Persona | Lens | Model / Effort |
+|---|---|---|---|
+| `council-contrarian` | Cassandra | What would make the decision fail | opus / high |
+| `council-first-principles` | Felix | Whether it addresses the right problem | opus / high |
+| `council-expansionist` | Esme | The upside and the options being missed | sonnet / high |
+| `council-executor` | Ezra | The first concrete steps and what blocks them | sonnet / high |
+
+Every agent except `implementer` is restricted to `disallowedTools: Edit, Write, NotebookEdit`.
 
 ### Workflow
 
