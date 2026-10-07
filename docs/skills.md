@@ -81,7 +81,7 @@ Structured analysis of a project's codebase to identify setup opportunities:
 1. **Scan** — languages, frameworks, build tools, structure
 2. **Critical files** — inbound-reference count script identifies the highest-centrality modules (god nodes); reported with reference count and why they matter. Skipped for small projects.
 3. **External services** — SDKs, auth providers, data services, observability
-4. **Augmentation opportunities** — MCP servers (e.g., Context7 for libraries with live docs), skill packs (e.g., Impeccable for frontend UI work), CLI-Anything harnesses (pre-built `SKILL.md` wrappers for ~100+ desktop/server apps — recommended when the project interacts with design, media, GIS, or automation software), and Graphify (knowledge graph tool — recommended for large, polyglot, or multi-modal codebases; skipped for small or simple projects)
+4. **Augmentation opportunities** — evaluated against `plugin/skills/discover/catalog.md`, which holds each tool's install command and recommend/skip signals: MCP servers (e.g., Context7 for libraries with live docs), skill packs (e.g., Impeccable for frontend UI work), CLI-Anything harnesses (pre-built `SKILL.md` wrappers for ~100+ desktop/server apps — recommended when the project interacts with design, media, GIS, or automation software), and Graphify (knowledge graph tool — recommended for large, polyglot, or multi-modal codebases; skipped for small or simple projects)
 5. **Focused questions** via `AskUserQuestion` to resolve priorities
 6. **Research** — WebSearch for confirmed services, propose concrete skills
 7. **Skill and documentation opportunities** — including connection data, project conventions for `.mallet/conventions.md`, and patterns worth proposing back to the plugin

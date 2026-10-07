@@ -1,5 +1,5 @@
 # Task: push-confirm-hook
-Status: pending
+Status: done
 Deps: —
 
 ## Goal

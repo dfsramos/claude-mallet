@@ -63,39 +63,11 @@ For each, note: service name, how it's used (SDK / HTTP / CLI), and where config
 
 ## 3. Assess Augmentation Opportunities
 
-Check whether the project would benefit from project-scoped additions:
+Check whether the project would benefit from project-scoped additions.
 
-**MCP servers** — live docs, API access, or data-source integration. Recommend when dependencies include fast-moving libraries or the workflow would benefit from queryable external context. Example: Context7 (`npx -y @upstash/context7-mcp@latest`) for current, version-specific library docs.
+Read `${CLAUDE_SKILL_DIR}/catalog.md`. It lists the MCP servers, skill packs, and standalone tools this skill can recommend, each with its install command and the signals that justify or rule it out. Evaluate every entry against what steps 1 and 2 found.
 
-**Skill packs** — domain-specific command bundles. Recommend when the project's domain matches an existing pack. Example: Impeccable (`npx skills add pbakaus/impeccable`) for frontend UI/design work.
-
-**CLI-Anything** — a registry of ~100+ pre-built `SKILL.md` harnesses that make desktop and server software agent-native. Install the hub: `pip install cli-anything-hub`, then `cli-hub install <name>`. Individual skills install via `npx skills add HKUDS/CLI-Anything --skill <name>`. Recommend when the project interacts with design, media, GIS, automation, or desktop software. Trigger examples:
-
-| Detected software / dependency | Suggested harness |
-|---|---|
-| Blender, FreeCAD, 3MF files | `blender`, `freecad`, `3mf` |
-| GIMP, Krita, Inkscape | `gimp`, `krita`, `inkscape` |
-| Godot, Unreal Engine | `godot`, `unreal-insights` |
-| Obsidian, Zotero, Joplin | `obsidian`, `zotero`, `joplin` |
-| LibreOffice, Calibre | `libreoffice`, `calibre` |
-| n8n, Dify | `n8n`, `dify-workflow` |
-| QGIS, ArcGIS | `qgis`, `arcgis-pro` |
-
-Browse the full registry at `cli-hub list` or https://hkuds.github.io/CLI-Anything/.
-
-**Graphify** (`pip install graphify` / `uv add graphify`) — turns a codebase into a queryable knowledge graph (god nodes, surprising connections, interactive visualisation). Requires Python. Evaluate against these signals:
-
-Recommend when 3 or more are true:
-- Large codebase — many source files spread across multiple modules, packages, or services
-- Polyglot — 3+ languages in meaningful use (e.g. TypeScript + Python + SQL + shell)
-- Mixed modalities — docs, PDFs, architectural diagrams, or research papers live alongside code
-- High interdependence — layered architecture, microservices, multiple databases, or complex import graph
-- Team context — multiple contributors; a shared `graphify-out/graph.json` committed to git has compounding value
-
-Skip when any of these apply:
-- Small project (fewer than ~20 meaningful source files)
-- Primarily configuration or scripts with minimal application logic
-- Logic concentrated in one or two files — the graph won't reveal non-obvious connections
+Beyond the catalog, still consider an MCP server for any external service from step 2 the workflow would benefit from querying directly (live docs, API access, data-source integration), and any skill pack whose domain matches the project's.
 
 Note the trigger (specific dependencies or project type) so the report can justify the recommendation.
 

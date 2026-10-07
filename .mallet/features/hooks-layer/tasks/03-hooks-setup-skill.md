@@ -1,5 +1,5 @@
 # Task: hooks-setup-skill
-Status: pending
+Status: done
 Deps: 01, 02
 
 ## Goal

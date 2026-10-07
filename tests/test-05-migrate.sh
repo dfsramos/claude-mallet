@@ -109,6 +109,13 @@ for r in a b c d e g h i; do has "detects fixture $r" "$OUT" "$SCRATCH/$r"; done
 ck "skips already-migrated f" "$(echo "$OUT" | grep -c "$SCRATCH/f\b")" "0"
 has "reads commit-key sha" "$OUT" "2ae59d1"
 
+# Windows transcripts: backslash separators, and native jq.exe emits CRLF.
+mkdir -p "$HOME/.claude/projects/win"
+jq -nc --arg c "${A//\//\\}"$'\r' '{cwd: $c}' > "$HOME/.claude/projects/win/t.jsonl"
+OUT=$(bash "$DETECT" 2>&1)
+has "transcript cwd with backslashes and CR resolves" "$OUT" "$SCRATCH/a"
+rm -rf "$HOME/.claude/projects/win"
+
 echo "== (a) full migration =="
 bash "$MIG" "$A" --payload "$PAYLOAD" --yes >/dev/null 2>&1
 ck "conventions.md"   "$(cat "$A/.mallet/conventions.md" 2>/dev/null)" "PROJ-CONV"
