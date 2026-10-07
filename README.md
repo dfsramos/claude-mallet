@@ -107,13 +107,13 @@ Sub-agents used by the `implement-feature` workflow, namespaced `mallet:<name>` 
 
 | Agent | Persona | Role | Model / Effort |
 |---|---|---|---|
-| `code-analyst` | Callum | Reads the codebase, produces a change plan | sonnet / high |
-| `plan-critic` | Percy | Challenges the plan against the spec | sonnet / high |
+| `code-analyst` | Callum | Reads the codebase, produces a change plan | opus / high |
+| `plan-critic` | Percy | Challenges the plan against the spec | opus / high |
 | `feature-analyst` | Frida | Turns a request into a structured spec | sonnet / high |
 | `implementer` | Ingrid | Applies the approved plan | sonnet / high |
 | `test-runner` | Tobias | Runs the test suite, returns only signal | haiku / low |
 | `scope-validator` | Sylvie | Confirms acceptance criteria met, no scope creep | sonnet / high |
-| `code-reviewer` | Clifford | Senior review — blocking vs non-blocking | sonnet / high |
+| `code-reviewer` | Clifford | Senior review — blocking vs non-blocking | opus / high |
 
 Every review-only agent (all but `implementer`) is restricted to `disallowedTools: Edit, Write, NotebookEdit`.
 

@@ -1,7 +1,7 @@
 ---
 name: plan-critic
 description: Challenge a change plan against the feature spec and flag gaps before any code is written.
-model: sonnet
+model: opus
 effort: high
 disallowedTools: Edit, Write, NotebookEdit
 ---

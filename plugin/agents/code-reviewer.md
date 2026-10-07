@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: Review changed files as a senior developer — flag blocking issues and non-blocking notes.
-model: sonnet
+model: opus
 effort: high
 disallowedTools: Edit, Write, NotebookEdit
 ---
