@@ -54,29 +54,6 @@ done
 ck "agents well-formed" "$BAD" "0"
 ck "no nested SKILL.md beyond one level" "$(find "$P/skills" -mindepth 3 -name SKILL.md | wc -l | tr -d ' ')" "0"
 
-echo "== write-task skeleton =="
-WT="$P/skills/write-task/SKILL.md"
-GOT=$(awk '/^```markdown$/{f=1; next} f && /^```$/{exit} f' "$WT")
-WANT=$(cat <<'EOF'
-# 📋 OBJECTIVE
-* **Goal:** [Clear, single-sentence definition of the desired outcome]
-* **Rationale:** [Brief explanation of why this change is necessary]
-
-# 🔍 CURRENT STATE
-* **Scope:** [The specific system, repository, service, or component involved]
-* **Entry Points:** [Where to start looking; files, endpoints, or infrastructure components]
-* **Context Docs:** [Links to relevant documentation, system architecture, or related issues]
-
-# 🎯 TARGET STATE
-The task is successfully completed **only** when the following criteria are verified:
-- [ ] [Measurable condition 1]
-- [ ] [Measurable condition 2]
-- [ ] [Measurable condition 3]
-EOF
-)
-ck "skeleton is verbatim" "$GOT" "$WANT"
-ck "no org-specific content" "$(grep -ciE 'cludo|CDT-[0-9]' "$WT")" "0"
-
 echo "== no references to the removed user-level payload paths =="
 REFS=$(grep -rnE '(~|\$HOME)/\.claude/(hooks|templates)/|agents/_contract' "$P" | grep -v '/skills/migrate/' | grep -v 'CLAUDE_PROJECT_DIR')
 [ -n "$REFS" ] && echo "$REFS" | sed 's/^/    /'

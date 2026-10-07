@@ -34,6 +34,8 @@ bash tests/run.sh
 
 `tests/run.sh` prints one line per suite and exits non-zero if any failed.
 
+Tests cover executable code: hooks, the statusline, scripts that edit user files, and plugin structure. Skill prose is not shell-tested. Some suites exist only for transitional code and go when it does: `test-01-merge.sh` and `test-17-transition.sh` with the `.claude/` transition scripts, and `test-05-migrate.sh` and `test-07-legacy.sh` with the `migrate` skill.
+
 ## Hook Authoring
 
 Plugin hooks reach the model only through the channels each event supports: plain stdout on SessionStart and UserPromptSubmit; JSON `hookSpecificOutput.additionalContext` on PreToolUse and PostToolUse; stderr with exit 2 to block. Anything else goes to the debug log. Inject dynamic content this way, into the message stream, rather than by changing system-prompt material (the persona, CLAUDE.md) mid-session — that invalidates the prompt cache. Keep any single hook's output under 10,000 characters, or Claude receives only a file path and a preview.
