@@ -46,19 +46,28 @@ Added to `.mcp.json` at the project root.
 
 ---
 
-## Standalone tools
+## Code intelligence plugins
 
-### Graphify
+Language server (LSP) plugins from Anthropic's official marketplace, `claude-plugins-official`. Each one gives Claude an `LSP` tool for symbol lookups (definitions, references) instead of text search, and reports type errors and missing imports after every edit. The plugin only names the server; the language server binary must be installed separately and on the `PATH` of the shell that starts `claude`. Reference: https://code.claude.com/docs/en/plugins/code-intelligence
 
-- **Provides:** a queryable knowledge graph of the codebase — god nodes, surprising connections, interactive visualisation. Requires Python.
-- **Install:** `pip install graphify` or `uv add graphify`
-- **Recommend when** 3 or more are true:
-  - Large codebase — many source files spread across multiple modules, packages, or services
-  - Polyglot — 3+ languages in meaningful use (e.g. TypeScript + Python + SQL + shell)
-  - Mixed modalities — docs, PDFs, architectural diagrams, or research papers live alongside code
-  - High interdependence — layered architecture, microservices, multiple databases, or complex import graph
-  - Team context — multiple contributors; a shared `graphify-out/graph.json` committed to git has compounding value
-- **Skip when** any of these apply:
-  - Small project (fewer than ~20 meaningful source files)
-  - Primarily configuration or scripts with minimal application logic
-  - Logic concentrated in one or two files — the graph won't reveal non-obvious connections
+- **Install:** first the binary, using the command in the plugin's README at `https://github.com/anthropics/claude-plugins-official/tree/main/plugins/<plugin>`; then `claude plugin install <plugin>@claude-plugins-official` from the shell (default scope `user`; `--scope project` enables it in the repo's `.claude/settings.json`, but each collaborator still runs the same install once). The plugin loads after `/reload-plugins` or in a new session.
+- **Recommend when:** a language in the table below is in meaningful use (application code, not a stray script). Recommend one plugin per such language.
+- **Skip when:** `claude plugin list` already shows the plugin, or the project is worked on only in cloud sessions, where Claude Code doesn't start plugin language servers.
+- **Report:** for each recommendation, whether the binary is already on `PATH` (`command -v <binary>`). When it is, the install is a single command.
+
+  | Language | Plugin | Binary |
+  |---|---|---|
+  | C/C++ | `clangd-lsp` | `clangd` |
+  | C# | `csharp-lsp` | `csharp-ls` |
+  | Go | `gopls-lsp` | `gopls` |
+  | Java | `jdtls-lsp` | `jdtls` |
+  | Kotlin | `kotlin-lsp` | `kotlin-lsp` |
+  | Lua | `lua-lsp` | `lua-language-server` |
+  | PHP | `php-lsp` | `intelephense` |
+  | Python | `pyright-lsp` | `pyright-langserver` |
+  | Ruby | `ruby-lsp` | `ruby-lsp` |
+  | Rust | `rust-analyzer-lsp` | `rust-analyzer` |
+  | Swift | `swift-lsp` | `sourcekit-lsp` |
+  | TypeScript / JavaScript | `typescript-lsp` | `typescript-language-server` |
+
+  For a language not listed, check the official marketplace for a newer plugin before concluding none exists.

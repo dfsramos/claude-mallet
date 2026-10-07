@@ -65,7 +65,7 @@ For each, note: service name, how it's used (SDK / HTTP / CLI), and where config
 
 Check whether the project would benefit from project-scoped additions.
 
-Read `${CLAUDE_SKILL_DIR}/catalog.md`. It lists the MCP servers, skill packs, and standalone tools this skill can recommend, each with its install command and the signals that justify or rule it out. Evaluate every entry against what steps 1 and 2 found.
+Read `${CLAUDE_SKILL_DIR}/catalog.md`. It lists the MCP servers, skill packs, and code intelligence plugins this skill can recommend, each with its install command and the signals that justify or rule it out. Evaluate every entry against what steps 1 and 2 found.
 
 Beyond the catalog, still consider an MCP server for any external service from step 2 the workflow would benefit from querying directly (live docs, API access, data-source integration), and any skill pack whose domain matches the project's.
 
@@ -137,10 +137,10 @@ _(Omit if none.)_
 | Harness | Software | Install |
 _(List only harnesses relevant to detected software. Omit section if none detected.)_
 
-## Graphify
-Verdict: [Recommended / Not recommended] — <one-line rationale listing which signals fired>
+## Code Intelligence Plugins
+| Language | Plugin | Binary | Binary on PATH? |
 
-_(Omit if not recommended.)_
+_(Omit if every detected language's plugin is already installed or none has one.)_
 
 ## Recommended Skills
 **High Priority** / **Medium** / **Low** — name, description, why valuable.
@@ -169,5 +169,6 @@ Offer to implement high-value, low-effort improvements immediately:
 - Connection data templates for critical services
 - Project conventions written to `.mallet/conventions.md` (not base `CLAUDE.md`)
 - MCP servers added to `.mcp.json` at project root (Claude Code reads this automatically; do not place inside `.claude/`)
+- Code intelligence plugins whose binary is already on `PATH`, installed with `claude plugin install` — ask whether to use user or project scope
 
 Ask: "Want me to implement any of these now?" Implement whatever the user selects.
