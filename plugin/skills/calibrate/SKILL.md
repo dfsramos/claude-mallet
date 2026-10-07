@@ -26,13 +26,14 @@ Judge the work itself, not the vocabulary of the prompt:
 | Mechanical transforms, single-file edits, lookups, formatting | lower effort; a faster model is enough |
 | Very large inputs (long logs, many files) | context window matters more than reasoning; check `/context` first |
 | Many independent parts that each need the same treatment | a Workflow (multi-agent) rather than a bigger model |
+| A bounded part whose difficulty differs from the rest of the session — a mechanical batch on a capable model, one hard design or root-cause question on a lighter one | delegate that part to a subagent on a suitable model; the session keeps its model and prompt cache |
 
 ## 3. Recommend
 
 ```
 Active:       <model>, effort <level> (<source>)
-Recommended:  <same | /model X | /effort Y | Workflow>
+Recommended:  <same | /model X | /effort Y | Workflow | delegate <part> to a <model> subagent>
 Why:          <one sentence tied to the task, not the prompt wording>
 ```
 
-If the active setting already fits, say so in one line and stop. Switching models mid-session invalidates the prompt cache, so recommend a model switch only when the gain clearly outweighs that.
+If the active setting already fits, say so in one line and stop. Switching models mid-session invalidates the prompt cache, so prefer delegating the part that needs a different model to a subagent, and recommend `/model` only when most of the remaining work needs it. Delegate only a part with a clear input and output: the subagent starts without the conversation, so the brief must carry everything it needs.

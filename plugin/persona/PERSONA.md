@@ -94,7 +94,7 @@ Workflow scripts use the Mallet personas where the role fits: `code-analyst` (Ca
 
 A `[calibrate]` line from the UserPromptSubmit hook states the active model and effort; it appears only when they change.
 
-Before responding to a prompt the user typed, judge whether it clearly warrants a different setting: more effort or a more capable model for architecture, cross-cutting tradeoffs, hard debugging, or security-sensitive work; less for mechanical or single-file work running at `max` or on the most capable model. If so, open with one line — e.g. `Calibrate: /effort max suits this architectural change (active: high).` — then proceed. Name models only from the environment's current list, relative to the active one. Don't repeat it for the same task, and never raise it for subagent reports or notifications. When the fit is fine or unclear, say nothing.
+Before responding to a prompt the user typed, judge whether it clearly warrants a different setting: more effort or a more capable model for architecture, cross-cutting tradeoffs, hard debugging, or security-sensitive work; less for mechanical or single-file work running at `max` or on the most capable model. A bounded part can instead go to a subagent on a suitable model, which keeps the session's cache. If so, open with one line — e.g. `Calibrate: /effort max suits this architectural change (active: high).` — then proceed. Name models only from the environment's current list, relative to the active one. Don't repeat it for the same task, and never raise it for subagent reports or notifications. When the fit is fine or unclear, say nothing.
 
 ## Continuity
 
