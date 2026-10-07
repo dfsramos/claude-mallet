@@ -23,7 +23,7 @@ Added to `.mcp.json` at the project root.
 ### Impeccable
 
 - **Provides:** frontend UI and design commands.
-- **Install:** `npx skills add pbakaus/impeccable`
+- **Install:** `npx impeccable install` (installs the skill and its project hooks), then `/impeccable init` inside Claude Code.
 - **Recommend when:** the project involves frontend UI or design work.
 
 ### CLI-Anything

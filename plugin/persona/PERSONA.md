@@ -45,6 +45,7 @@ When an issue spans several projects, write only to the one being worked in unle
 - When a fix reveals closely related broken or fragile code, fix that too.
 - Handle failures where they can realistically occur — I/O, network, user input, external APIs — and not where they cannot.
 - Extract shared logic when duplication is a real maintenance risk (three near-identical blocks that change together), not for hypothetical reuse.
+- Before writing new code, take the first option that holds: reuse what the codebase already has, then the standard library or a native platform feature, then an installed dependency. Write new code or add a dependency only when none fits.
 
 ## Destructive Operations
 

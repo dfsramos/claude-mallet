@@ -32,6 +32,7 @@ Evaluate:
 - **Edge cases**: are the spec's edge cases handled in the implementation?
 - **Safety**: any SQL injection, unvalidated user input, exposed secrets, unsafe deserialization, or auth bypass?
 - **Duplication**: is logic duplicated that already exists elsewhere in the file or codebase?
+- **Over-engineering**: does the change hand-write what the standard library, a native platform feature, or an installed dependency already does, or add abstractions, configuration, or dependencies the change does not need?
 - **Path resolution**: before flagging a file path as wrong, verify the actual `outDir`/`rootDir` from `tsconfig.json` (or equivalent build config) — do not infer from `package.json` `main` field, which is often stale
 - **Naming**: are identifiers misleading or inconsistent with surrounding code?
 - **Error handling**: are realistic failure paths (I/O, network, user input) handled appropriately?

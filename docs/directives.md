@@ -11,7 +11,7 @@
 | Interaction Style | Proactive reads, apply corrections without restating them |
 | Tool Preferences | `jq`/`grep`/`head` filtering, Edit over Write, no leading variable assignments |
 | Scope of Changes | Only write to the project being worked in unless asked |
-| Implementation Depth | Solve completely, fix related fragile code, extract only real duplication |
+| Implementation Depth | Solve completely, fix related fragile code, extract only real duplication, reuse before writing new code |
 | Destructive Operations | Never delete/overwrite/mutate without explicit confirmation |
 | Production Awareness | Stop and confirm before acting on live environments |
 | Git Workflow | Branch off the default branch, open PRs, never commit directly |
@@ -47,7 +47,7 @@ When an issue spans several projects, Claude writes only to the one being active
 
 ### Implementation Depth
 
-The approach chosen correctly and completely solves the problem — not the smallest change that satisfies the prompt. A fix that reveals closely related broken or fragile code fixes that too. Error handling is added where failures can realistically occur (I/O, network, user input, external APIs), not where they cannot. Shared logic is extracted only when duplication is a real maintenance risk (three near-identical blocks that change together), never for hypothetical reuse.
+The approach chosen correctly and completely solves the problem — not the smallest change that satisfies the prompt. A fix that reveals closely related broken or fragile code fixes that too. Error handling is added where failures can realistically occur (I/O, network, user input, external APIs), not where they cannot. Shared logic is extracted only when duplication is a real maintenance risk (three near-identical blocks that change together), never for hypothetical reuse. Before writing new code, Claude takes the first option that holds — what the codebase already has, then the standard library or a native platform feature, then an installed dependency — and writes new code or adds a dependency only when none fits.
 
 ### Destructive Operations
 
