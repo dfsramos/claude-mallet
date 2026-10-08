@@ -35,7 +35,7 @@ In Claude Code:
 
 `/mallet:setup` handles what a plugin cannot configure on its own: registering the statusline (plugins can only set `agent`/`subagentStatusLine`, not the main `statusLine`), pointing you at enabling auto-update, and offering to fold any legacy `.mallet/memory.md` or `.mallet/lessons.md` into Claude Code's auto memory.
 
-There is no version field: the plugin has no pinned release, so you track commits on the marketplace's default branch.
+There is no version field: the plugin has no pinned release, so you track commits on the marketplace's default branch. [CHANGELOG.md](CHANGELOG.md) lists what each update changes, newest first.
 
 **Auto-update** is off by default for third-party marketplaces. Enable it via `/plugin` → **Marketplaces** → **claude-mallet** → **Enable auto-update**, or update on demand with `/plugin marketplace update claude-mallet`.
 

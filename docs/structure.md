@@ -76,6 +76,7 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` di
 │   └── test-*.sh / test-14-workflow.mjs
 ├── .gitattributes
 ├── .gitignore
+├── CHANGELOG.md                       # What each update changes for users, dated (no version field)
 ├── CLAUDE.md                          # This repo's own directives — not the shipped persona
 ├── README.md
 └── install.md
@@ -84,6 +85,8 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` di
 ## Transition scripts
 
 `.claude/install-payload.sh`, `.claude/merge-settings.sh`, and `.claude/settings.fragment.json` are not payload in the old sense — they exist only so an already-installed pre-plugin `update` skill can transition a user-level `~/.claude/` install to the plugin on its next run. Their paths and CLI flags must stay stable for that reason. `install-payload.sh` now removes manifest-claimed entries, replaces `~/.claude/skills/migrate/` with a stub, and marks `~/.claude/framework.json` as transitioned; `merge-settings.sh` strips Mallet's old hook and `statusLine` registrations since the plugin registers its own. See [`README.md`](../README.md#moving-from-the-user-level-install) for the user-facing flow.
+
+**Retirement.** The transition code goes once every known user has moved to the plugin: each confirms that `~/.claude/framework.json` shows `"transitioned": "plugin"` (or no longer exists) and that `/mallet:migrate` finds no per-project install in their repos. It is then removed in one change: `.claude/install-payload.sh`, `.claude/merge-settings.sh`, `.claude/settings.fragment.json`, the `migrate` skill, the legacy check in `session-start.sh`, tests `test-01`, `test-05`, `test-07`, and `test-17`, and the requirement below that the root `CLAUDE.md` keep existing.
 
 The root `CLAUDE.md` is this repo's own project instructions (not the persona users receive — that is `plugin/persona/PERSONA.md`, injected by `plugin/hooks/persona.sh`). It must keep existing because the pre-plugin `update` skills abort when the downloaded archive has none.
 

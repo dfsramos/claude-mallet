@@ -12,7 +12,7 @@ In Claude Code:
 /mallet:setup
 ```
 
-`/mallet:setup` registers the statusline, points you at enabling auto-update, and offers to fold any legacy `.mallet/memory.md` or `.mallet/lessons.md` into Claude Code's auto memory. Nothing else needs configuring — the plugin has no version to pin, so you track commits on the marketplace's default branch, and background auto-update is off by default for third-party marketplaces (`/plugin` → **Marketplaces** → **claude-mallet** → **Enable auto-update**, or `/plugin marketplace update claude-mallet` on demand).
+`/mallet:setup` registers the statusline, points you at enabling auto-update, and offers to fold any legacy `.mallet/memory.md` or `.mallet/lessons.md` into Claude Code's auto memory. Nothing else needs configuring — the plugin has no version to pin, so you track commits on the marketplace's default branch — [CHANGELOG.md](CHANGELOG.md) lists what each update changes — and background auto-update is off by default for third-party marketplaces (`/plugin` → **Marketplaces** → **claude-mallet** → **Enable auto-update**, or `/plugin marketplace update claude-mallet` on demand).
 
 ## Already have Mallet installed?
 

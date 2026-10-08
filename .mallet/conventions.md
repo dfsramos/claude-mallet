@@ -4,7 +4,7 @@
 
 `plugin/` in this repo is the **payload** — the source of truth for what ships in the `mallet` plugin: `agents/`, `hooks/`, `persona/`, `skills/`, `statusline/`, `workflows/`, plus `plugin/.claude-plugin/plugin.json`. The marketplace manifest, `.claude-plugin/marketplace.json`, points at it as `./plugin`.
 
-`.claude/` in this repo now holds only this repo's own `settings.local.json` (not shipped) plus three files kept solely so an already-installed pre-plugin `update` skill can transition a user-level install to the plugin: `install-payload.sh`, `merge-settings.sh`, `settings.fragment.json`. Their paths and CLI flags must stay stable for that reason — see `docs/structure.md` — but they are not otherwise touched by a fresh install.
+`.claude/` in this repo now holds only this repo's own `settings.local.json` (not shipped) plus three files kept solely so an already-installed pre-plugin `update` skill can transition a user-level install to the plugin: `install-payload.sh`, `merge-settings.sh`, `settings.fragment.json`. Their paths and CLI flags must stay stable for that reason — see `docs/structure.md`, which also records when they and the rest of the transition code can be retired — but they are not otherwise touched by a fresh install.
 
 `.mallet/` is **this repo's own state** and ships nowhere: `conventions.md` (this file), `skill-backlog.md`, `discovery-*.md`, `missions/`, `skills/`, `features/`.
 
@@ -57,6 +57,10 @@ Any change to a skill or hook under `plugin/` must update the corresponding sect
 - Hook changes → `docs/hooks.md`
 - Structural changes → `docs/structure.md`
 - Directive changes (`plugin/persona/PERSONA.md`) → `docs/directives.md`
+
+## Changelog
+
+Colleagues use the plugin, and it has no `version` field: setting one pins every user to it until it is bumped, so a forgotten bump would withhold the change. `CHANGELOG.md` is how they learn what an update brings. Any commit that changes what a user gets — persona, hook, skill, agent model or effort, workflow, statusline, or a default — adds a line under today's date in the same commit, written for the user: what changed, what it costs, and anything to do after updating. Internal changes (tests, this repo's docs, `.mallet/`) get no entry.
 
 ## Session Records
 
