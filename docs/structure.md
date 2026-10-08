@@ -4,7 +4,7 @@ This repository is a Claude Code plugin marketplace. It hosts one plugin, `malle
 
 ## Repository tree
 
-Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` and empty `tests/` directories are collapsed for readability.
+Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` directories are collapsed for readability.
 
 ```
 .

@@ -29,7 +29,7 @@ Use the "Think in Code" principle: write a short script to count inbound referen
 find . \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) \
   ! -path "*/node_modules/*" ! -path "*/dist/*" ! -path "*/.next/*" \
   | xargs grep -h "from ['\"]" 2>/dev/null \
-  | grep -oP "(?<=from ['\"])[./][^'\"]*" \
+  | sed -nE "s/.*from ['\"]([./][^'\"]*)['\"].*/\1/p" \
   | sed 's/\/index$//' | sort | uniq -c | sort -rn | head -10
 ```
 
@@ -37,7 +37,7 @@ find . \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) \
 ```bash
 find . -name "*.py" ! -path "*/__pycache__/*" ! -path "*/venv/*" \
   | xargs grep -hE "^from \.|^import \." 2>/dev/null \
-  | grep -oP "(?<=from |import )\S+" \
+  | sed -nE 's/^(from|import)[[:space:]]+([^[:space:]]+).*/\2/p' \
   | sort | uniq -c | sort -rn | head -10
 ```
 

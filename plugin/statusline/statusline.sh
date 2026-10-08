@@ -60,19 +60,32 @@ emit_line() {
 now=$(date +%s)
 transcript_path=$(echo "$input" | jq -r '.transcript_path // empty' 2>/dev/null)
 
-# Pre-compute token totals from the transcript (single jq pass) ──────────────
-tok_in=0; tok_cw=0; tok_cr=0; tok_out=0
+# Token totals and human prompt count from one streaming pass over the
+# transcript: it is re-read on every render and grows to tens of MB, so it is
+# neither slurped (-s) nor read twice.
+#
+# Human-typed prompts only. Tool results, agent hand-backs and skill expansions
+# are also stored as role "user"; counting them inflated the total roughly 7x.
+# Current transcripts mark typed prompts with origin.kind == "human"; older ones
+# have no origin, so fall back to excluding meta entries and tool results.
+# Twin of the predicate in user-prompt-submit.sh — keep in sync.
+HUMAN_DEF='def human: (.isSidechain != true and .isApiErrorMessage != true and ((.message.role // .role) == "user"))
+  and (if .origin then .origin.kind == "human"
+       else (.isMeta != true and ((.message.content | type) == "string"
+             or ((.message.content | type) == "array" and (any(.message.content[]; .type == "tool_result") | not))))
+       end);'
+tok_in=0; tok_cw=0; tok_cr=0; tok_out=0; TURNS=0
 if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
-  read -r tok_in tok_cw tok_cr tok_out < <(jq -rs '
-    [.[] | select(.message.usage) | .message.usage] as $u |
-    [
-      ([$u[].input_tokens // 0]                  | add // 0),
-      ([$u[].cache_creation_input_tokens // 0]   | add // 0),
-      ([$u[].cache_read_input_tokens // 0]       | add // 0),
-      ([$u[].output_tokens // 0]                 | add // 0)
-    ] | @tsv
+  read -r tok_in tok_cw tok_cr tok_out TURNS < <(jq -rn "$HUMAN_DEF"'
+    reduce inputs as $e ([0,0,0,0,0];
+      ($e.message.usage // null) as $u
+      | (if $u then .[0] += ($u.input_tokens // 0) | .[1] += ($u.cache_creation_input_tokens // 0)
+                  | .[2] += ($u.cache_read_input_tokens // 0) | .[3] += ($u.output_tokens // 0)
+         else . end)
+      | (if ($e | human) then .[4] += 1 else . end))
+    | @tsv
   ' "$transcript_path" 2>/dev/null | tr -d '\r')
-  tok_in=${tok_in:-0}; tok_cw=${tok_cw:-0}; tok_cr=${tok_cr:-0}; tok_out=${tok_out:-0}
+  tok_in=${tok_in:-0}; tok_cw=${tok_cw:-0}; tok_cr=${tok_cr:-0}; tok_out=${tok_out:-0}; TURNS=${TURNS:-0}
 fi
 tok_total=$(( tok_in + tok_cw + tok_cr + tok_out ))
 
@@ -112,20 +125,7 @@ if [ -n "$five_hour" ]; then
   line2_parts+=("$s")
 fi
 
-# Human-typed prompts only. Tool results, agent hand-backs and skill expansions
-# are also stored as role "user"; counting them inflated the total roughly 7x.
-# Current transcripts mark typed prompts with origin.kind == "human"; older ones
-# have no origin, so fall back to excluding meta entries and tool results.
-# Twin of the filter in statusline.sh / user-prompt-submit.sh — keep in sync.
-HUMAN_PROMPTS='[.[] | select(.isSidechain != true and .isApiErrorMessage != true and ((.message.role // .role) == "user"))
-  | select(if .origin then .origin.kind == "human"
-           else (.isMeta != true and ((.message.content | type) == "string"
-                 or ((.message.content | type) == "array" and (any(.message.content[]; .type == "tool_result") | not))))
-           end)] | length'
-if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
-  TURNS=$(jq -rs "$HUMAN_PROMPTS" "$transcript_path" 2>/dev/null)
-  [ -n "$TURNS" ] && [ "$TURNS" -gt 0 ] && line2_parts+=("T:${TURNS}")
-fi
+[ "$TURNS" -gt 0 ] && line2_parts+=("T:${TURNS}")
 
 emit_line "${line2_parts[@]}"
 

@@ -34,7 +34,23 @@ default_branch() {
 # command. Newlines are parked on \001 because sed works line by line.
 # Redirections like 2>&1 and &> are dropped so the split below does not read
 # their & as a command separator.
-STRIPPED="$(printf '%s' "$CMD" | tr '\n' '\001' | sed -E "s/\"[^\"]*\"//g; s/'[^']*'//g; s/[0-9]*>&[0-9-]*//g; s/&>/>/g" | tr '\001' '\n')"
+#
+# Two things are recovered before that strip, or it would hide them:
+#   - A shell's -c script (bash -c "git push -f") becomes its own command.
+#   - A quoted single word that is not an option ("main") loses its quotes, so
+#     a quoted branch name still counts. Options stay quoted, so a message like
+#     -m "--no-verify" can never read as the flag; the cost is that a quoted
+#     option ("--force") is not seen either. A word holding the other quote
+#     character ("don't") stays quoted, since unquoting it would leave a stray
+#     quote that pairs with a later one and hides the commands between them.
+#   A -c script containing escaped quotes is cut at the first one.
+SOH="$(printf '\001')"
+STRIPPED="$(printf '%s' "$CMD" | tr '\n' '\001' | sed -E \
+  -e "s/(^|[;&|[:space:]$SOH])([^;&|[:space:]$SOH]*\/)?(bash|sh|zsh)([[:space:]]+(-o[[:space:]]+[a-z]+|--?[a-zA-Z-]+))*[[:space:]]+-[a-zA-Z]*c[a-zA-Z]*[[:space:]]+\"([^\"]*)\"/\1;\6;/g" \
+  -e "s/(^|[;&|[:space:]$SOH])([^;&|[:space:]$SOH]*\/)?(bash|sh|zsh)([[:space:]]+(-o[[:space:]]+[a-z]+|--?[a-zA-Z-]+))*[[:space:]]+-[a-zA-Z]*c[a-zA-Z]*[[:space:]]+'([^']*)'/\1;\6;/g" \
+  -e "s/\"([^\"'[:space:];&|$SOH-][^\"'[:space:];&|$SOH]*)\"/\1/g" \
+  -e "s/'([^'\"[:space:];&|$SOH-][^'\"[:space:];&|$SOH]*)'/\1/g" \
+  -e "s/\"[^\"]*\"//g; s/'[^']*'//g; s/[0-9]*>&[0-9-]*//g; s/&>/>/g" | tr '\001' '\n')"
 
 # A quoted hooksPath override would vanish with the quotes, so check the raw text.
 printf '%s' "$CMD" | grep -qiE "(^|[;&|[:space:]])git[^;&|]*[[:space:]](-c[[:space:]]*[\"']?|config[[:space:]]+([^[:space:]]+[[:space:]]+)*[\"']?)core\.hookspath" \
@@ -44,8 +60,9 @@ SQL_CLIENT=""
 
 # Split into simple commands on ; & | and newlines (portable: tr, not sed \n).
 while IFS= read -r SEG; do
-  # Drop leading whitespace, environment assignments, and sudo.
-  SEG="$(printf '%s' "$SEG" | sed -E 's/^[[:space:]]+//; s/^([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)+//; s/^sudo[[:space:]]+//')"
+  # Drop leading whitespace, environment assignments, and sudo, then reduce a
+  # path-qualified command (/usr/bin/git) to its name.
+  SEG="$(printf '%s' "$SEG" | sed -E 's/^[[:space:]]+//; s/^([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)+//; s/^sudo[[:space:]]+//; s#^[^[:space:]]*/([^/[:space:]]+)#\1#')"
   [ -n "$SEG" ] || continue
 
   case "$SEG" in

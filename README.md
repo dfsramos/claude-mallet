@@ -19,7 +19,7 @@ A project only gains a `.mallet/` directory when Mallet has something project-sp
 
 Three workflows anchor the plugin and return the most value per session:
 
-- **Discovery (`/mallet:discover`)** — structured codebase analysis that surfaces setup opportunities: detected stacks and services, highest-centrality files (god nodes), MCP and skill-pack suggestions, conventions worth capturing, and quick wins Claude can implement immediately.
+- **Discovery (`/mallet:discover`)** — structured codebase analysis that surfaces setup opportunities: detected stacks and services, highest-centrality files, suggested MCP servers, skill packs, and code-intelligence (LSP) plugins, conventions worth capturing, and quick wins Claude can implement immediately.
 - **Session wrap-up (`/mallet:reviewing-sessions`, or "wrap up")** — end-of-session retrospective covering what went well, what went wrong, token-efficiency patterns, and applied improvements to skills and project memory.
 - **Architecture decisions (`/mallet:adr`)** — captures significant architectural choices in Nygard format (`docs/adr/NNNN-title.md`) so the rationale survives beyond the session. Offered at `/mallet:plan-feature`'s design gate when the approved design makes a significant architectural choice.
 
