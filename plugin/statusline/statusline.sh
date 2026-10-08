@@ -41,7 +41,7 @@ format_remaining() {
 format_tokens() {
   local n=$1
   if   [ "$n" -ge 1000000 ]; then LC_ALL=C awk "BEGIN{printf \"%.2fM\", $n/1000000}"
-  elif [ "$n" -ge 1000 ];    then LC_ALL=C awk "BEGIN{printf \"%.1fk\", $n/1000}"
+  elif [ "$n" -ge 1000 ];    then echo "$(( (n + 500) / 1000 ))k"
   else                            echo "$n"
   fi
 }
@@ -58,35 +58,6 @@ emit_line() {
 }
 
 now=$(date +%s)
-transcript_path=$(echo "$input" | jq -r '.transcript_path // empty' 2>/dev/null)
-
-# Token totals and human prompt count from one streaming pass over the
-# transcript: it is re-read on every render and grows to tens of MB, so it is
-# neither slurped (-s) nor read twice.
-#
-# Human-typed prompts only. Tool results, agent hand-backs and skill expansions
-# are also stored as role "user"; counting them inflated the total roughly 7x.
-# Current transcripts mark typed prompts with origin.kind == "human"; older ones
-# have no origin, so fall back to excluding meta entries and tool results.
-HUMAN_DEF='def human: (.isSidechain != true and .isApiErrorMessage != true and ((.message.role // .role) == "user"))
-  and (if .origin then .origin.kind == "human"
-       else (.isMeta != true and ((.message.content | type) == "string"
-             or ((.message.content | type) == "array" and (any(.message.content[]; .type == "tool_result") | not))))
-       end);'
-tok_in=0; tok_cw=0; tok_cr=0; tok_out=0; TURNS=0
-if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
-  read -r tok_in tok_cw tok_cr tok_out TURNS < <(jq -rn "$HUMAN_DEF"'
-    reduce inputs as $e ([0,0,0,0,0];
-      ($e.message.usage // null) as $u
-      | (if $u then .[0] += ($u.input_tokens // 0) | .[1] += ($u.cache_creation_input_tokens // 0)
-                  | .[2] += ($u.cache_read_input_tokens // 0) | .[3] += ($u.output_tokens // 0)
-         else . end)
-      | (if ($e | human) then .[4] += 1 else . end))
-    | @tsv
-  ' "$transcript_path" 2>/dev/null | tr -d '\r')
-  tok_in=${tok_in:-0}; tok_cw=${tok_cw:-0}; tok_cr=${tok_cr:-0}; tok_out=${tok_out:-0}; TURNS=${TURNS:-0}
-fi
-tok_total=$(( tok_in + tok_cw + tok_cr + tok_out ))
 
 # Line 1: model · effort · branch ─────────────────────────────────────────────
 line1_parts=()
@@ -99,14 +70,26 @@ if [ -n "$PROJECT_DIR" ] && command -v git &>/dev/null; then
 fi
 emit_line "${line1_parts[@]}"
 
-# Line 2: cost · context % · 7d · 5h · turns ─────────────────────────────────
+# Line 2: cost · context · 7d · 5h ───────────────────────────────────────────
 line2_parts=()
 
 cost=$(echo "$input" | jq -r '.cost.total_cost_usd // empty' 2>/dev/null)
 [ -n "$cost" ] && line2_parts+=("\$$(LC_ALL=C printf '%.4f' "$cost")")
 
+# Context size in tokens: what every turn re-reads, so what each turn costs.
+# total_input_tokens is input + cache writes + cache reads from the latest
+# response, the same figure session-watch reads from the transcript. 0 before
+# the first response.
+ctx_tokens=$(echo "$input" | jq -r '.context_window.total_input_tokens // empty' 2>/dev/null)
+case "$ctx_tokens" in ''|*[!0-9]*) ctx_tokens=0 ;; esac
 session_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty' 2>/dev/null)
-[ -n "$session_pct" ] && line2_parts+=("◷ $(LC_ALL=C printf '%.0f' "$session_pct")%")
+if [ "$ctx_tokens" -gt 0 ]; then
+  s="ctx $(format_tokens "$ctx_tokens")"
+  [ -n "$session_pct" ] && s+=" ($(LC_ALL=C printf '%.0f' "$session_pct")%)"
+  line2_parts+=("$s")
+elif [ -n "$session_pct" ]; then
+  line2_parts+=("ctx $(LC_ALL=C printf '%.0f' "$session_pct")%")
+fi
 
 seven_day=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty' 2>/dev/null)
 if [ -n "$seven_day" ]; then
@@ -124,18 +107,4 @@ if [ -n "$five_hour" ]; then
   line2_parts+=("$s")
 fi
 
-[ "$TURNS" -gt 0 ] && line2_parts+=("T:${TURNS}")
-
 emit_line "${line2_parts[@]}"
-
-# Line 3: token totals + breakdown ───────────────────────────────────────────
-if [ "$tok_total" -gt 0 ]; then
-  line3_parts=(
-    "Σ $(format_tokens "$tok_total")"
-    "in: $(format_tokens "$tok_in")"
-    "cache_w: $(format_tokens "$tok_cw")"
-    "cache_r: $(format_tokens "$tok_cr")"
-    "out: $(format_tokens "$tok_out")"
-  )
-  emit_line "${line3_parts[@]}"
-fi

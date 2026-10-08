@@ -5,6 +5,7 @@ What changed for people using the `mallet` plugin: behaviour, cost, defaults, an
 ## 2026-10-08
 
 **Changed (cost)**
+- The statusline is two lines: model, effort and branch, then cost, context size, and your 5-hour and 7-day limits. Context now shows in tokens with the window percentage beside it (`ctx 351k (35%)`), since token count is what each turn costs. The prompt count (`T:`) and the cumulative token line are gone: the token line counted each API call two or three times over, and was mostly cache reads anyway. The statusline no longer reads the transcript, so it renders faster on long sessions. Nothing to do after updating; the new statusline arrives with the next session start.
 - The session-watch compaction reminder now fires on context size in tokens: at 150k, then at each further 50k (200k, 250k, …). It used to fire on window percentage (60/75/90%) or, without the Mallet statusline, on prompt count. Cost tracks context size because every turn re-reads all of it, and on a 1M window a session could pass 350k tokens without a percentage warning. You also see a one-line notice of your own. Set `CLAUDE_CTX_WARN_THRESHOLD` / `CLAUDE_CTX_WARN_STEP` to change the trigger points. Nothing to do after updating.
 
 **Fixed**

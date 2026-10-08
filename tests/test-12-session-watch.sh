@@ -1,8 +1,6 @@
 #!/bin/bash
 # Test: session-watch warns on context size in tokens, read from the last real
-# assistant usage in the transcript tail, once per step; and the statusline turn
-# segment counts only human-typed prompts — not tool results, agent hand-backs,
-# or skill expansions.
+# assistant usage in the transcript tail, once per step.
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SCRATCH=$(mktemp -d)
 trap 'rm -rf "$SCRATCH"' EXIT
@@ -110,27 +108,6 @@ hasnt "calibrate not in the user line"     "$(echo "$OUT" | jq -r .systemMessage
 echo '{"model":"claude-opus-5-5","effort":"max"}' > "$TMPDIR/mallet-calibrate-c1.json"
 OUT=$(run "$SCRATCH/big.jsonl" c1)
 ck    "calibrate alone stays plain text"   "$OUT" "[calibrate] active model: claude-opus-5-5; effort: max"
-
-echo "== statusline.sh =="
-T="$SCRATCH/t.jsonl"
-{
-  echo '{"type":"user","origin":{"kind":"human"},"message":{"role":"user","content":"first typed prompt"}}'
-  echo '{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"ok"}]}}'
-  for i in 1 2 3 4 5; do echo '{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"x","content":"r"}]}}'; done
-  echo '{"type":"user","isMeta":true,"origin":{"kind":"peer"},"message":{"role":"user","content":"Another Claude session sent a message"}}'
-  echo '{"type":"user","isMeta":true,"message":{"role":"user","content":[{"type":"text","text":"Base directory for this skill"}]}}'
-  echo '{"type":"user","isSidechain":true,"message":{"role":"user","content":"subagent prompt"}}'
-  echo '{"type":"user","origin":{"kind":"human"},"message":{"role":"user","content":[{"type":"text","text":"second typed prompt with attachment"}]}}'
-} > "$T"
-L="$SCRATCH/legacy.jsonl"
-{
-  echo '{"type":"user","message":{"role":"user","content":"typed"}}'
-  echo '{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"x","content":"r"}]}}'
-  echo '{"type":"user","isMeta":true,"message":{"role":"user","content":"meta"}}'
-} > "$L"
-SL() { jq -n --arg t "$1" '{transcript_path:$t, workspace:{project_dir:"'"$CLAUDE_PROJECT_DIR"'"}}' | bash "$REPO/plugin/statusline/statusline.sh" | sed 's/\x1b\[[0-9;]*m//g'; }
-OUT=$(SL "$T");  has "counts 2 human prompts" "$OUT" "T:2"
-OUT=$(SL "$L");  has "legacy: counts 1"       "$OUT" "T:1"
 
 echo "pass=$pass fail=$fail"
 [ "$fail" -eq 0 ]

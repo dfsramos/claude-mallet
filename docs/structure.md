@@ -69,7 +69,7 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` di
 │   │       ├── migrate-repo.sh        #   migrate one repo (dry-run unless --yes)
 │   │       └── mallet-gitignore       #   optional .mallet/.gitignore template
 │   ├── statusline/
-│   │   └── statusline.sh              # Model, effort, branch, cost, context %, rate limits, tokens
+│   │   └── statusline.sh              # Model, effort, branch, cost, context tokens, rate limits
 │   └── workflows/
 │       └── feature-pipeline.js        # The spec→plan→critique→implement→test→validate→review pipeline
 ├── tests/

@@ -10,6 +10,7 @@ trap 'rm -rf "$SCRATCH"' EXIT
 pass=0; fail=0
 ck() { if [ "$2" = "$3" ]; then echo "  PASS $1"; pass=$((pass+1)); else echo "  FAIL $1 (got '$2' want '$3')"; fail=$((fail+1)); fi; }
 has() { if echo "$2" | grep -q "$3"; then echo "  PASS $1"; pass=$((pass+1)); else echo "  FAIL $1 (missing '$3')"; fail=$((fail+1)); fi; }
+hasnt() { if echo "$2" | grep -q "$3"; then echo "  FAIL $1 (unexpected '$3')"; fail=$((fail+1)); else echo "  PASS $1"; pass=$((pass+1)); fi; }
 
 echo "== bash 4+ constructs =="
 # Prints file:line:text for each match in code, ignoring comments, so a script
@@ -30,20 +31,26 @@ ck "no case modification (\${v^^})"  "$(hits '\$\{[A-Za-z_][A-Za-z0-9_]*(\^|,)')
 echo "== locale-independent float formatting =="
 ck "every printf/awk %f runs under LC_ALL=C" "$(hits '%[0-9]*\.?[0-9]*f' | grep -vE 'LC_ALL=C (printf|awk)')" ""
 
-echo "== statusline renders all three lines =="
-TRANSCRIPT="$SCRATCH/t.jsonl"
-echo '{"message":{"role":"assistant","usage":{"input_tokens":1200,"cache_creation_input_tokens":0,"cache_read_input_tokens":3400,"output_tokens":560}}}' > "$TRANSCRIPT"
+echo "== statusline renders both lines =="
 export TMPDIR="$SCRATCH"
-OUT=$(jq -n --arg t "$TRANSCRIPT" '{session_id:"port-test", transcript_path:$t,
-  model:{id:"m", display_name:"ModelX"}, effort:{level:"high"},
-  cost:{total_cost_usd:0.12345}, context_window:{used_percentage:41.6}}' \
-  | bash "$REPO/plugin/statusline/statusline.sh" 2>&1)
+SL() { # $1 context_window JSON
+  jq -n --argjson cw "$1" '{session_id:"port-test",
+    model:{id:"m", display_name:"ModelX"}, effort:{level:"high"},
+    cost:{total_cost_usd:0.12345}, context_window:$cw,
+    rate_limits:{five_hour:{used_percentage:12.4}}}' \
+    | bash "$REPO/plugin/statusline/statusline.sh" 2>&1
+}
+OUT=$(SL '{"total_input_tokens":351400,"used_percentage":35.1}')
 ck "exit 0" "$?" "0"
-has "line 1: model and effort" "$OUT" "ModelX · effort: high"
-has "line 2: cost"             "$OUT" '\$0.1235'
-has "line 2: context %"        "$OUT" "◷ 42%"
-has "line 3: token totals"     "$OUT" "Σ 5.2k"
-ck "three lines" "$(echo "$OUT" | wc -l | tr -d ' ')" "3"
+has   "line 1: model and effort" "$OUT" "ModelX · effort: high"
+has   "line 2: cost"             "$OUT" '\$0.1235'
+has   "line 2: context tokens"   "$OUT" "ctx 351k (35%)"
+has   "line 2: 5h limit"         "$OUT" "5h: 12%"
+ck    "two lines" "$(echo "$OUT" | wc -l | tr -d ' ')" "2"
+hasnt "no turn count"            "$OUT" "T:"
+has   "1M+ context in M"         "$(SL '{"total_input_tokens":1020000,"used_percentage":102}')" "ctx 1.02M (102%)"
+has   "percentage only, before tokens are known" "$(SL '{"total_input_tokens":0,"used_percentage":8}')" "ctx 8%"
+hasnt "no context segment without data"          "$(SL '{}')" "ctx"
 
 echo "pass=$pass fail=$fail"
 [ "$fail" -eq 0 ]
