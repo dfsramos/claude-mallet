@@ -20,7 +20,11 @@ export CLAUDE_PROJECT_DIR="$SCRATCH/ts"
 mkdir -p "$CLAUDE_PROJECT_DIR/.mallet" "$SCRATCH/bin"
 echo '{}' > "$CLAUDE_PROJECT_DIR/tsconfig.json"
 touch "$CLAUDE_PROJECT_DIR/.mallet/typecheck.enabled"
-printf '#!/bin/sh\necho "src/a.ts(1,1): error TS2322: bad type"\necho "src/old.ts(9,9): error TS2304: pre-existing"\n' > "$SCRATCH/bin/npx"; chmod +x "$SCRATCH/bin/npx"
+# Local tsc stub; a PATH npx stub records any call, which must never happen.
+mkdir -p "$CLAUDE_PROJECT_DIR/node_modules/.bin"
+TSC_STUB='#!/bin/sh\necho "src/a.ts(1,1): error TS2322: bad type"\necho "src/old.ts(9,9): error TS2304: pre-existing"\n'
+printf "$TSC_STUB" > "$CLAUDE_PROJECT_DIR/node_modules/.bin/tsc"; chmod +x "$CLAUDE_PROJECT_DIR/node_modules/.bin/tsc"
+printf '#!/bin/sh\ntouch "%s/npx-called"\n' "$SCRATCH" > "$SCRATCH/bin/npx"; chmod +x "$SCRATCH/bin/npx"
 LIST="$TMPDIR/mallet-typecheck-s1.list"
 edit() { echo '{"session_id":"s1","tool_name":"'"$1"'","tool_input":{"file_path":"'"$2"'"}}' | PATH="$SCRATCH/bin:$PATH" bash "$H/typecheck.sh"; }
 stop() { echo '{"session_id":"s1","stop_hook_active":'"${1:-false}"'}' | PATH="$SCRATCH/bin:$PATH" bash "$H/typecheck-stop.sh"; }
@@ -39,6 +43,36 @@ ck    "list cleared" "$([ -e "$LIST" ] && echo present || echo cleared)" "cleare
 OUT=$(stop); ck "nothing edited: silent" "$OUT" ""
 edit Edit "$CLAUDE_PROJECT_DIR/src/clean.ts" >/dev/null
 OUT=$(stop); ck "no errors in edited files: silent" "$OUT" ""
+
+# The project path is stripped literally, never as a regex: '|' would break a
+# sed s||| expression, and '.' would match any character.
+WEIRD="$SCRATCH/we|ird.dir"
+mkdir -p "$WEIRD/.mallet" "$WEIRD/node_modules/.bin"
+echo '{}' > "$WEIRD/tsconfig.json"; touch "$WEIRD/.mallet/typecheck.enabled"
+printf "$TSC_STUB" > "$WEIRD/node_modules/.bin/tsc"; chmod +x "$WEIRD/node_modules/.bin/tsc"
+OUT=$(CLAUDE_PROJECT_DIR="$WEIRD"; edit Edit "$WEIRD/src/a.ts" >/dev/null; stop 2>&1)
+has "metacharacters in project path: error still matched" "$(echo "$OUT" | jq -r '.hookSpecificOutput.additionalContext // empty' 2>/dev/null)" "TS2322"
+
+# Workspace package: tsc hoisted to the monorepo root is found by walking up.
+PKG="$SCRATCH/mono/packages/app"
+mkdir -p "$PKG/.mallet" "$SCRATCH/mono/node_modules/.bin"
+echo '{}' > "$PKG/tsconfig.json"; touch "$PKG/.mallet/typecheck.enabled"
+printf "$TSC_STUB" > "$SCRATCH/mono/node_modules/.bin/tsc"; chmod +x "$SCRATCH/mono/node_modules/.bin/tsc"
+OUT=$(CLAUDE_PROJECT_DIR="$PKG"; edit Edit "$PKG/src/a.ts" >/dev/null; stop 2>&1)
+has "hoisted tsc found from a workspace package" "$(echo "$OUT" | jq -r '.hookSpecificOutput.additionalContext // empty' 2>/dev/null)" "TS2322"
+
+# A check killed mid-run (hook timeout) must leave the list for the next turn.
+printf '#!/bin/sh\nsleep 10\n' > "$CLAUDE_PROJECT_DIR/node_modules/.bin/tsc"
+edit Edit "$CLAUDE_PROJECT_DIR/src/a.ts" >/dev/null
+echo '{"session_id":"s1"}' | timeout 1 bash "$H/typecheck-stop.sh" >/dev/null 2>&1
+ck "killed check keeps the list" "$([ -s "$LIST" ] && echo kept || echo gone)" "kept"
+rm -f "$LIST"
+
+# No local tsc: skip rather than let npx fetch the unrelated `tsc` package.
+rm "$CLAUDE_PROJECT_DIR/node_modules/.bin/tsc"
+edit Edit "$CLAUDE_PROJECT_DIR/src/a.ts" >/dev/null
+OUT=$(stop); ck "no local tsc: silent" "$OUT" ""
+ck "npx never called" "$([ -e "$SCRATCH/npx-called" ] && echo called || echo no)" "no"
 rm "$CLAUDE_PROJECT_DIR/.mallet/typecheck.enabled"
 edit Edit "$CLAUDE_PROJECT_DIR/src/a.ts" >/dev/null
 ck "no marker, nothing recorded" "$([ -e "$LIST" ] && echo present || echo none)" "none"

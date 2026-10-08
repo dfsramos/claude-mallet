@@ -24,7 +24,7 @@ Also check `.claude/settings.json` and `.claude/settings.local.json` for a pre-p
 
 | Stack | Indicator |
 |---|---|
-| TypeScript | `tsconfig.json` exists (the hook runs `npx tsc --noEmit` only when it does) |
+| TypeScript | `tsconfig.json` exists and `node_modules/.bin/tsc` is in the project or a parent directory (the hook runs `tsc --noEmit` only when both hold; Yarn PnP is not supported) |
 | PHP | `vendor/bin/phpstan` exists |
 
 If neither is present, say typecheck would do nothing here and skip it unless the user still wants it. command-guard applies to any stack.

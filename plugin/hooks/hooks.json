@@ -38,7 +38,7 @@
     ],
     "Stop": [
       {
-        "hooks": [{ "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/typecheck-stop.sh\"" }]
+        "hooks": [{ "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/typecheck-stop.sh\"", "timeout": 120 }]
       }
     ]
   }

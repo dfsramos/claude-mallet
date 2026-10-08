@@ -20,14 +20,26 @@ LIST="${TMPDIR:-/tmp}/mallet-typecheck-${SESSION_ID}.list"
 [ "$(printf '%s' "$INPUT" | jq -r '.stop_hook_active // false')" = "true" ] && exit 0
 
 FILES="$(sort -u "$LIST")"
-rm -f "$LIST"
 OUTPUT=""
 
 TS_FILES="$(printf '%s\n' "$FILES" | grep -E '\.tsx?$')"
-if [ -n "$TS_FILES" ] && [ -f "$PROJECT_DIR/tsconfig.json" ]; then
+# The project's own tsc only: without a local install, `npx tsc` runs
+# non-interactively, assumes --yes, and fetches the unrelated `tsc` package.
+# Walks up so a workspace package finds a tsc hoisted to the monorepo root.
+# Yarn PnP installs have no node_modules/.bin and are skipped.
+TSC=""
+d="$PROJECT_DIR"
+while [ -n "$d" ]; do
+  [ -x "$d/node_modules/.bin/tsc" ] && { TSC="$d/node_modules/.bin/tsc"; break; }
+  [ "$d" = "/" ] && break
+  d="$(dirname "$d")"
+done
+if [ -n "$TS_FILES" ] && [ -f "$PROJECT_DIR/tsconfig.json" ] && [ -n "$TSC" ]; then
   # tsc prints paths relative to the project as "path(line,col): error ...".
-  PATTERNS="$(printf '%s\n' "$TS_FILES" | sed "s|^$PROJECT_DIR/||; s|\$|(|")"
-  TS_OUT="$(cd "$PROJECT_DIR" && npx tsc --noEmit 2>&1 | grep -F -f <(printf '%s\n' "$PATTERNS") | head -20)"
+  # Prefix stripping in bash, not sed, so the path is never read as a regex.
+  PATTERNS=""
+  while IFS= read -r f; do PATTERNS+="${f#"$PROJECT_DIR/"}("$'\n'; done <<< "$TS_FILES"
+  TS_OUT="$(cd "$PROJECT_DIR" && "$TSC" --noEmit 2>&1 | grep -F -f <(printf '%s' "$PATTERNS") | head -20)"
   [ -n "$TS_OUT" ] && OUTPUT+="$TS_OUT"$'\n'
 fi
 
@@ -41,6 +53,9 @@ if [ "${#PHP_ARGS[@]}" -gt 0 ] && [ -f "$PROJECT_DIR/vendor/bin/phpstan" ]; then
   [ -n "$PHP_OUT" ] && OUTPUT+="$PHP_OUT"$'\n'
 fi
 
+# Cleared only once the checks finish: if the hook timeout kills a slow check,
+# the list survives and the next turn's Stop checks these files again.
+rm -f "$LIST"
 [ -n "$OUTPUT" ] || exit 0
 jq -n --arg c "[typecheck] Errors in files edited this turn — fix them before finishing:"$'\n'"$OUTPUT" \
   '{hookSpecificOutput:{hookEventName:"Stop",additionalContext:$c}}'
