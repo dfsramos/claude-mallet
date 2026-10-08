@@ -42,7 +42,7 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` an
 │   ├── agents/
 │   │   ├── code-analyst.md            code-reviewer.md      feature-analyst.md
 │   │   ├── implementer.md             plan-critic.md        scope-validator.md
-│   │   ├── test-runner.md             # the implement-feature pipeline (above)
+│   │   ├── test-runner.md             # the feature-pipeline workflow (above)
 │   │   ├── council-contrarian.md      council-executor.md
 │   │   └── council-expansionist.md    council-first-principles.md   # the council skill's advisors
 │   ├── hooks/
@@ -71,7 +71,7 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` an
 │   ├── statusline/
 │   │   └── statusline.sh              # Model, effort, branch, cost, context %, rate limits, tokens
 │   └── workflows/
-│       └── implement-feature.js       # The spec→plan→critique→implement→test→validate→review pipeline
+│       └── feature-pipeline.js        # The spec→plan→critique→implement→test→validate→review pipeline
 ├── tests/
 │   ├── run.sh                         # Runs every test-*.sh, exits non-zero on any failure
 │   └── test-*.sh / test-14-workflow.mjs
@@ -122,7 +122,7 @@ Whether `.mallet/` is tracked by git is the user's own choice. Mallet ships no `
 | `plugin/hooks/hooks.json` | Registers every hook script via `${CLAUDE_PLUGIN_ROOT}` |
 | `plugin/skills/` | Skills, namespaced `mallet:<name>` (`/mallet:<name>`) at runtime |
 | `plugin/agents/` | Sub-agent persona definitions, namespaced `mallet:<name>` |
-| `plugin/workflows/implement-feature.js` | The review pipeline, launched by the `implement-feature` skill |
+| `plugin/workflows/feature-pipeline.js` | The review pipeline, launched by the `implement-feature` skill |
 | `plugin/statusline/statusline.sh` | Copied to `${CLAUDE_PLUGIN_DATA}` by `session-start.sh`; registered by `/mallet:setup` |
 | `${CLAUDE_PLUGIN_ROOT}` | Resolves to the installed plugin version at runtime — always used for script paths |
 | `${CLAUDE_PLUGIN_DATA}` | Persistent per-plugin data directory, survives plugin updates |

@@ -1,5 +1,5 @@
 export const meta = {
-  name: 'implement-feature',
+  name: 'feature-pipeline',
   description: 'Spec, plan, critique, implement, test, validate, and review a feature with the Mallet agent personas',
   whenToUse: 'Launched by the implement-feature skill, which collects the feature, test command, and options and passes them as args',
   phases: [

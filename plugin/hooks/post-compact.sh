@@ -25,14 +25,22 @@ if git -C "$DIR" rev-parse --git-dir >/dev/null 2>&1; then
   git -C "$DIR" log --oneline -5
 fi
 
+# Hook output over 10,000 characters reaches Claude only as a file path and a
+# preview, so the mission is capped well below that alongside the git output.
+# The cap counts bytes, which is stricter than the character limit.
+MISSION_CAP=7000
 MISSIONS="${DIR}/.mallet/missions"
 if ls "$MISSIONS"/*.md >/dev/null 2>&1; then
   echo ""
-  echo "Mission files: $(cd "$MISSIONS" && ls *.md | tr '\n' ' ')"
+  echo "Mission files: $(cd "$MISSIONS" && ls *.md | head -20 | tr '\n' ' ')"
   if [ -f "$MISSIONS/active.md" ]; then
     echo ""
     echo "Active mission:"
-    cat "$MISSIONS/active.md"
+    head -c "$MISSION_CAP" "$MISSIONS/active.md"
+    if [ "$(wc -c < "$MISSIONS/active.md")" -gt "$MISSION_CAP" ]; then
+      echo ""
+      echo "[truncated at $MISSION_CAP bytes — read .mallet/missions/active.md for the rest]"
+    fi
   fi
 fi
 

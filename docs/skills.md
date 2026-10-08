@@ -109,16 +109,16 @@ Intake-to-execution pipeline. Supports resumption across sessions. All planning 
 **Directory:** `plugin/skills/implement-feature/`
 **Triggered by:** "implement this feature", "add X functionality", or any non-trivial code change, including resuming an interrupted run
 
-A thin launcher: this skill only collects inputs, launches the `implement-feature` workflow, and handles what a Workflow script cannot do itself — asking the user a question.
+A thin launcher: this skill only collects inputs, launches the `feature-pipeline` workflow, and handles what a Workflow script cannot do itself — asking the user a question.
 
 1. **Collect inputs** — feature description and test command (both required), working directory (default: project root), and three yes/no options defaulting to yes: plan critique, scope validation, code review
-2. **Launch** — calls the Workflow tool (`implement-feature`, or `mallet:implement-feature` where namespaced) with `feature`, `testCommand`, `workingDir`, optional `context`, and the three booleans as `critique`/`scopeValidation`/`review`; `agentPrefix` defaults to `"mallet:"` and is set to `""` only when the personas are installed outside the plugin namespace
+2. **Launch** — calls the Workflow tool (`feature-pipeline`, or `mallet:feature-pipeline` where namespaced) with `feature`, `testCommand`, `workingDir`, optional `context`, and the three booleans as `critique`/`scopeValidation`/`review`; `agentPrefix` defaults to `"mallet:"` and is set to `""` only when the personas are installed outside the plugin namespace
 3. **Handle the result** — routes on the returned `status`/`stoppedAt`: `done` reports the run log and offers a PR; `blocked` at `spec` puts Frida's unknowns to the user and re-runs with `answers`; `blocked` at `plan` shows the remaining `amendments`; `blocked` at `implement`/`test`/`review` shows the blocker and waits for direction; `revise` at `validate` shows Sylvie's `gaps` and asks whether to re-plan or re-implement
 4. **Resume** — an interrupted or re-run pipeline resumes via the Workflow tool's `resumeFromRunId`; completed agent calls return cached results and only the changed step onward re-runs
 
 ### The workflow itself
 
-**File:** `plugin/workflows/implement-feature.js`
+**File:** `plugin/workflows/feature-pipeline.js`
 
 Runs the pipeline across seven named agents, each bound via `agentType: <agentPrefix><agent-name>`:
 

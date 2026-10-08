@@ -29,6 +29,12 @@ has "uncommitted"      "$OUT" "untracked.txt"
 has "active mission"   "$OUT" "MISSION-SENTINEL"
 has "other missions listed" "$OUT" "side-quest.md"
 
+echo "== post-compact.sh with an oversized mission =="
+awk 'BEGIN{for(i=0;i<600;i++) print "- [ ] pending task number " i " with some detail"}' > "$CLAUDE_PROJECT_DIR/.mallet/missions/active.md"
+OUT=$(bash "$H/post-compact.sh" 2>&1); ck "exit 0" "$?" "0"
+ck "output under 10,000 chars" "$([ ${#OUT} -lt 10000 ] && echo yes || echo "no (${#OUT})")" "yes"
+has "truncation notice" "$OUT" "truncated at"
+
 echo "== post-compact.sh outside a git repo, no .mallet =="
 export CLAUDE_PROJECT_DIR="$SCRATCH/plain"; mkdir -p "$CLAUDE_PROJECT_DIR"
 OUT=$(bash "$H/post-compact.sh" 2>&1); ck "exit 0" "$?" "0"

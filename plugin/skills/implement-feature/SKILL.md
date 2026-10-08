@@ -4,7 +4,7 @@ description: Invoke when the user asks to implement a feature, add functionality
 ---
 # Implement Feature
 
-Runs the `implement-feature` workflow, which passes the work through the Mallet personas — Frida (spec), Callum (plan), Percy (critique), Ingrid (implement), Tobias (test), Sylvie (scope), Clifford (review) — each in its own subagent. This skill only collects inputs, launches the workflow, and handles what the workflow cannot: questions for the user.
+Runs the `feature-pipeline` workflow, which passes the work through the Mallet personas — Frida (spec), Callum (plan), Percy (critique), Ingrid (implement), Tobias (test), Sylvie (scope), Clifford (review) — each in its own subagent. This skill only collects inputs, launches the workflow, and handles what the workflow cannot: questions for the user.
 
 ---
 
@@ -23,7 +23,7 @@ Gather short context for Frida if it is cheap: the stack, the relevant directory
 
 ## 2. Launch
 
-Call the Workflow tool with `name: "implement-feature"` (or `mallet:implement-feature` where the plugin namespaces it) and:
+Call the Workflow tool with `name: "feature-pipeline"` (or `mallet:feature-pipeline` where the plugin namespaces it) and:
 
 ```json
 {

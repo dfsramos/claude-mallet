@@ -104,7 +104,7 @@ Manual-only skills carry `disable-model-invocation: true` — Claude will not in
 
 ### Agents
 
-Sub-agents, namespaced `mallet:<name>` at runtime. These are used by the `implement-feature` workflow:
+Sub-agents, namespaced `mallet:<name>` at runtime. These are used by the `feature-pipeline` workflow:
 
 | Agent | Persona | Role | Model / Effort |
 |---|---|---|---|
@@ -129,7 +129,7 @@ Every agent except `implementer` is restricted to `disallowedTools: Edit, Write,
 
 ### Workflow
 
-`implement-feature` (`plugin/workflows/implement-feature.js`) runs the full spec → plan → critique → implement → test → validate → review pipeline as a single Workflow, launched by the `implement-feature` skill. Blocked results end the run and hand back to the launching skill, which asks the user and resumes via `resumeFromRunId`.
+`feature-pipeline` (`plugin/workflows/feature-pipeline.js`) runs the full spec → plan → critique → implement → test → validate → review pipeline as a single Workflow, launched by the `implement-feature` skill. Blocked results end the run and hand back to the launching skill, which asks the user and resumes via `resumeFromRunId`.
 
 ### Hooks
 
@@ -153,7 +153,7 @@ For `PreToolUse`/`PostToolUse`/`PreCompact`, plain stdout only reaches the debug
 - `jq`
 - `git`
 
-Node is not required — the `implement-feature` workflow runs through Claude Code's own Workflow tool, not a separate process.
+Node is not required — the `feature-pipeline` workflow runs through Claude Code's own Workflow tool, not a separate process.
 
 ## Documentation
 

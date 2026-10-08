@@ -81,7 +81,7 @@ For non-trivial changes, Claude pauses before presenting and asks whether there 
 
 Subagents contain large intermediate output (search results, logs, reviews) out of the main context when only the conclusion is needed downstream. Independent work — no shared files, no sequential dependency, no mid-task user decision — is dispatched in parallel, one call per task in a single message; afterwards, overlapping edits are checked for and the full test suite runs once. A fast model handles bounded, mechanical subagent work; a stronger one handles reasoning or multi-file coordination.
 
-Workflow scripts (like `implement-feature`) bind agents to the named Mallet personas where the role fits: `code-analyst` (Callum), `code-reviewer` (Clifford), `feature-analyst` (Frida), `implementer` (Ingrid), `plan-critic` (Percy), `scope-validator` (Sylvie), `test-runner` (Tobias). A novel role gets an inline persona in the same style — a name, a narrow role, one job.
+Workflow scripts (like `feature-pipeline`) bind agents to the named Mallet personas where the role fits: `code-analyst` (Callum), `code-reviewer` (Clifford), `feature-analyst` (Frida), `implementer` (Ingrid), `plan-critic` (Percy), `scope-validator` (Sylvie), `test-runner` (Tobias). A novel role gets an inline persona in the same style — a name, a narrow role, one job.
 
 ### Task Calibration
 

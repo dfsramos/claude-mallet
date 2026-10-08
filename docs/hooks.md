@@ -51,7 +51,7 @@ There is no update check here any more — updates arrive through the plugin sys
 **File:** `plugin/hooks/post-compact.sh`
 **Trigger:** `SessionStart`, matcher `compact`
 
-Restores working state immediately after a compaction, in the same session: current git branch, uncommitted changes (`git status --short`, up to 15 lines), the last 5 commits, the list of mission files present, and the full contents of `.mallet/missions/active.md` if one exists.
+Restores working state immediately after a compaction, in the same session: current git branch, uncommitted changes (`git status --short`, up to 15 lines), the last 5 commits, the list of mission files present, and the contents of `.mallet/missions/active.md` if one exists, capped at 7,000 bytes with a truncation notice so the whole output stays under the 10,000-character limit for hook output.
 
 This replaces the old `pre-compact.sh` for two reasons: `PreCompact` stdout never reaches the model (see the fact above), so its context injection was silently doing nothing; and its snapshot file (`.mallet/compact-snapshot.md`) could leak into a later, unrelated session if that session started before the file was consumed. Emitting fresh state from a `SessionStart` hook instead means there is no file to persist and nothing to leak.
 

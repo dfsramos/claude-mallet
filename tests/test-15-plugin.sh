@@ -67,5 +67,16 @@ SREFS=$(printf '%s' "$SREFS" | grep -v 'MALLET-TRANSITION-STUB')
 [ -n "$SREFS" ] && echo "$SREFS" | sed 's/^/    /'
 ck "no skill calls a Mallet skill by its old user-level path" "$(printf '%s' "$SREFS" | grep -c . )" "0"
 
+echo "== workflow names =="
+# Skills and workflows share the mallet: namespace in the skill listing; a
+# workflow named like a skill hides that skill's own trigger description.
+CLASH=""
+for wf in "$P"/workflows/*.js; do
+  WN=$(sed -n "s/^  name: '\([^']*\)'.*/\1/p" "$wf" | head -1)
+  ck "$(basename "$wf") declares a meta name" "$([ -n "$WN" ] && echo yes)" "yes"
+  [ -d "$P/skills/$WN" ] && CLASH="$CLASH $WN"
+done
+ck "no workflow shares a skill's name" "$CLASH" ""
+
 echo "pass=$pass fail=$fail"
 [ "$fail" -eq 0 ]

@@ -12,7 +12,7 @@ Capture a significant architectural decision in the standard Nygard format so th
 
 Check whether `docs/adr/` exists in the project root.
 
-- **Exists**: find the highest existing number (`ls docs/adr/*.md | sort | tail -1`) and increment it.
+- **Exists**: find the highest existing number (`ls docs/adr/[0-9][0-9][0-9][0-9]-*.md | sort | tail -1` — the pattern excludes the `README.md` index) and increment it.
 - **Does not exist**: create it. The first ADR is `0001`.
 
 Number format: four digits, zero-padded — `0001`, `0042`, `0123`.

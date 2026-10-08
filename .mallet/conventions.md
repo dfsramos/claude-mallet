@@ -40,7 +40,7 @@ Tests cover executable code: hooks, the statusline, scripts that edit user files
 
 Plugin hooks reach the model only through the channels each event supports: plain stdout on SessionStart and UserPromptSubmit; JSON `hookSpecificOutput.additionalContext` on PreToolUse and PostToolUse; stderr with exit 2 to block. Anything else goes to the debug log. Inject dynamic content this way, into the message stream, rather than by changing system-prompt material (the persona, CLAUDE.md) mid-session — that invalidates the prompt cache. Keep any single hook's output under 10,000 characters, or Claude receives only a file path and a preview.
 
-Hook scripts must run on macOS as well as Linux, and the tests only run on Linux, so write to the common subset: bash 3.2 (no `mapfile`/`readarray`, no associative arrays), BSD `sed` (no `\n` in a replacement — split with `tr`), and `printf` without locale-dependent `%f`. A hook that parses command strings strips quoted text from the whole command before matching, and its tests include multi-line and heredoc inputs.
+Hook scripts must run on macOS as well as Linux, and the tests only run on Linux, so write to the common subset: bash 3.2 (no `mapfile`/`readarray`, no associative arrays, no `local -n` namerefs), BSD `sed` (no `\n` in a replacement — split with `tr`), and `%.Nf` formatting only under `LC_ALL=C`. `tests/test-20-portability.sh` checks the bash constructs and the `%.Nf` rule statically; to confirm a statusline or hook change on real bash 3.2, run it in the `bash:3.2` Docker image. A hook that parses command strings strips quoted text from the whole command before matching, and its tests include multi-line and heredoc inputs.
 
 ### Mods
 

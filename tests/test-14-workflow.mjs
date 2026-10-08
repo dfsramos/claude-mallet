@@ -1,11 +1,11 @@
-// Test: implement-feature.js routing, run against scripted agent() responses.
-// Run: node .mallet/features/plugin-slim-down/tests/test-14-workflow.mjs
+// Test: feature-pipeline.js routing, run against scripted agent() responses.
+// Run: node tests/test-14-workflow.mjs (test-14-workflow.sh wraps it for run.sh)
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), '..')
-const src = readFileSync(join(repo, 'plugin/workflows/implement-feature.js'), 'utf8')
+const src = readFileSync(join(repo, 'plugin/workflows/feature-pipeline.js'), 'utf8')
   .replace(/^export const meta/m, 'const meta')
 const AsyncFunction = (async () => {}).constructor
 const body = new AsyncFunction('args', 'agent', 'phase', 'log', src)
