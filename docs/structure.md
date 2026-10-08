@@ -27,7 +27,6 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` an
 │   ├── conventions.md                 # Project conventions (this file's sibling)
 │   ├── discovery-2026-03-20.md
 │   ├── discovery-2026-06-04.md
-│   ├── lessons.md
 │   └── skill-backlog.md
 ├── assets/
 │   └── claude-mallet.jpg

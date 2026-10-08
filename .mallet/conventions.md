@@ -6,7 +6,7 @@
 
 `.claude/` in this repo now holds only this repo's own `settings.local.json` (not shipped) plus three files kept solely so an already-installed pre-plugin `update` skill can transition a user-level install to the plugin: `install-payload.sh`, `merge-settings.sh`, `settings.fragment.json`. Their paths and CLI flags must stay stable for that reason — see `docs/structure.md` — but they are not otherwise touched by a fresh install.
 
-`.mallet/` is **this repo's own state** and ships nowhere: `conventions.md` (this file), `lessons.md`, `skill-backlog.md`, `discovery-*.md`, `missions/`, `skills/`, `features/`.
+`.mallet/` is **this repo's own state** and ships nowhere: `conventions.md` (this file), `skill-backlog.md`, `discovery-*.md`, `missions/`, `skills/`, `features/`.
 
 When adding a new skill:
 - **Plugin skill** (ships with every install): `plugin/skills/<name>/`
@@ -58,7 +58,7 @@ Any change to a skill or hook under `plugin/` must update the corresponding sect
 
 ## Session Records
 
-Session wrap-ups are conversational only — no files are written to disk.
+Session wrap-ups are conversational only — no session summary or retrospective file is written to disk. Mission files in `.mallet/missions/` are not session records: `reviewing-sessions` still writes and archives them.
 
 ## Git Workflow Override
 
