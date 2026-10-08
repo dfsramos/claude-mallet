@@ -290,6 +290,20 @@ Reviews a target project for improvements worth pulling back into the plugin bas
 
 Framework drift in the target is intentionally **not** addressed — local edits to plugin-managed files are overwritten on the next plugin update. If a target diverges, the clean path is an override, a project skill, or a direct PR to this repo.
 
+## Self-Assessment (project maintenance, not shipped)
+
+**Directory:** `.mallet/skills/self-assessment/`
+**Triggered by:** a request for a self-assessment, critical assessment, health check, or audit of Mallet, in this repo
+
+Critically reviews the plugin and this repo, verifies findings, and fixes them in groups. A project skill, not part of `plugin/`.
+
+1. **Baseline**: runs the full suite first
+2. **Fan out**: four read-only reviewers in parallel, covering persona and directives, skills and agents, executable code, and repo health
+3. **Verify**: checks each high-severity or change-driving claim against the code, the Claude Code docs, the `bash:3.2` Docker image, or `git ls-remote` before it is reported; unchecked claims are marked unverified
+4. **Report**: one ranked table plus suggested fix groups, with decisions that are the user's last
+5. **Fix by group**: per group, a test proven to fail against the `HEAD` version, a bash 3.2 run for hook and statusline changes, docs parity, a `CHANGELOG.md` entry for user-visible changes, the full suite, an independent `mallet:code-reviewer` pass, then a commit to `master`
+6. **Close out**: commits, findings that proved wrong, and what is left for the user
+
 ## Knowledge Skill Template
 
 **File:** `plugin/skills/plan-feature/knowledge-skill-template.md`

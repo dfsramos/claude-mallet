@@ -23,7 +23,8 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` di
 │   │   └── user-level-install/
 │   ├── missions/
 │   ├── skills/
-│   │   └── harvest/SKILL.md           # Project-only maintenance skill
+│   │   ├── harvest/SKILL.md           # Project-only maintenance skill
+│   │   └── self-assessment/SKILL.md   # Project-only: critical review of Mallet, fixed in groups
 │   ├── conventions.md                 # Project conventions (this file's sibling)
 │   ├── discovery-2026-03-20.md
 │   ├── discovery-2026-06-04.md
