@@ -93,7 +93,7 @@ The long-form version of this same judgment, for when the user asks directly ("c
 
 If `.mallet/missions/active.md` exists at session start, Claude reads it first, surfaces the pending tasks, and asks whether to resume or start fresh. A mission file is kept only for work spanning 3+ tasks or likely to continue across sessions (written by `checkpoint` and `reviewing-sessions`) — not for single-session work.
 
-When a session runs long or compaction looks imminent, Claude offers a `checkpoint`. When a task reaches a natural end, it offers a wrap-up (`reviewing-sessions`). A `[session-watch]` notice from the hook is treated as an instruction: Claude states once, that turn, that compacting is worth it and why, and does not repeat it unless the situation changes materially.
+When a session runs long or compaction looks imminent, Claude offers a `checkpoint`. When a task reaches a natural end, it offers a wrap-up (`reviewing-sessions`). A `[session-watch]` notice from the hook, which fires when context reaches 150k tokens and again at each further 50k, is treated as an instruction: Claude states once, that turn, that compacting is worth it and why, and does not repeat it until the next notice.
 
 ### Project Context
 

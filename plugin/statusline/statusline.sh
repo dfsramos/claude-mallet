@@ -10,13 +10,13 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(echo "$input" | jq -r '.workspace.project_d
 # jq is required by every segment below.
 command -v jq &>/dev/null || exit 0
 
-# Calibrate and session-watch: record the live model, effort, and context usage
-# for user-prompt-submit.sh, which cannot see any of them in its own hook input.
+# Calibrate: record the live model and effort for user-prompt-submit.sh, which
+# cannot see either in its own hook input.
 # effort.level tracks mid-session /effort changes; it is absent when the model
 # has no effort parameter.
 cal_sid=$(echo "$input" | jq -r '.session_id // empty' 2>/dev/null | tr -cd 'A-Za-z0-9_-')
 if [ -n "$cal_sid" ]; then
-  echo "$input" | jq -c '{model: (.model.id // null), effort: (.effort.level // null), ctx: (.context_window.used_percentage // null)}' \
+  echo "$input" | jq -c '{model: (.model.id // null), effort: (.effort.level // null)}' \
     > "${TMPDIR:-/tmp}/mallet-calibrate-${cal_sid}.json" 2>/dev/null
 fi
 
@@ -68,7 +68,6 @@ transcript_path=$(echo "$input" | jq -r '.transcript_path // empty' 2>/dev/null)
 # are also stored as role "user"; counting them inflated the total roughly 7x.
 # Current transcripts mark typed prompts with origin.kind == "human"; older ones
 # have no origin, so fall back to excluding meta entries and tool results.
-# Twin of the predicate in user-prompt-submit.sh — keep in sync.
 HUMAN_DEF='def human: (.isSidechain != true and .isApiErrorMessage != true and ((.message.role // .role) == "user"))
   and (if .origin then .origin.kind == "human"
        else (.isMeta != true and ((.message.content | type) == "string"

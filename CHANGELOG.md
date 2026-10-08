@@ -4,6 +4,9 @@ What changed for people using the `mallet` plugin: behaviour, cost, defaults, an
 
 ## 2026-10-08
 
+**Changed (cost)**
+- The session-watch compaction reminder now fires on context size in tokens: at 150k, then at each further 50k (200k, 250k, …). It used to fire on window percentage (60/75/90%) or, without the Mallet statusline, on prompt count. Cost tracks context size because every turn re-reads all of it, and on a 1M window a session could pass 350k tokens without a percentage warning. You also see a one-line notice of your own. Set `CLAUDE_CTX_WARN_THRESHOLD` / `CLAUDE_CTX_WARN_STEP` to change the trigger points. Nothing to do after updating.
+
 **Fixed**
 - The statusline was blank on macOS. It used a bash 4.3 feature that the system bash 3.2 lacks; it now renders all three lines there.
 - `/mallet:implement-feature` was hidden behind its own workflow, which shared its name, so its trigger description never reached Claude. The workflow is now `feature-pipeline`; the skill keeps its name.

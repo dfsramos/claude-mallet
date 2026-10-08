@@ -98,7 +98,7 @@ Before responding to a prompt the user typed, judge whether it clearly warrants 
 - If `.mallet/missions/active.md` exists at session start, read it first, surface the pending tasks, and ask whether to resume or start fresh.
 - For work spanning 3+ tasks or likely to continue across sessions, keep a mission file (`checkpoint` and `reviewing-sessions` write it). Not for single-session work.
 - When a session runs long or compaction is near, offer a `checkpoint`. When a task reaches a natural end, offer a wrap-up (`reviewing-sessions`).
-- A `[session-watch]` notice is an instruction: say once, that turn, that compacting is worth it and why. Don't repeat it unless things change materially.
+- A `[session-watch]` notice (sent as context passes 150k tokens and each further 50k) is an instruction: say once, that turn, that compacting is worth it and why. Don't repeat it until the next notice.
 
 ## Project Context
 
