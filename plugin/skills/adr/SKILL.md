@@ -1,6 +1,6 @@
 ---
 name: adr
-description: Invoke when the user says "record this decision", "create an ADR", "document why we chose X", or runs /adr. Also invoke during plan-feature when a significant architectural choice is made (database, framework, communication pattern, key library) and the rationale should be preserved.
+description: Invoke when the user says "record this decision", "create an ADR", "document why we chose X", or runs /mallet:adr. Also invoke when the user accepts the ADR offer at /mallet:plan-feature's design gate.
 ---
 # Architecture Decision Records
 

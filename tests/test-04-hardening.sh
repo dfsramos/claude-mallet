@@ -62,7 +62,7 @@ export CURL_LOG="$SCRATCH/curl.log"
 echo '{"repo":"a/b","version":"deadbeefcafe1234","installed_at":"2026-01-01"}' > "$HOME/.claude/framework.json"
 
 echo "== session-start makes no update check (plugin updates replace it) =="
-OUT=$(bash "$SS" 2>&1); ck "exit 0" "$?" "0"
+OUT=$(bash "$SS" </dev/null 2>&1); ck "exit 0" "$?" "0"
 ck    "no network calls"  "$(wc -l < "$CURL_LOG" | tr -d ' ')" "0"
 hasnt "no update notice"  "$OUT" 'Framework Update Available'
 ck    "no cache file"     "$([ -f "$HOME/.claude/.mallet-update-check" ] && echo yes || echo no)" "no"
@@ -70,7 +70,7 @@ ck    "no cache file"     "$([ -f "$HOME/.claude/.mallet-update-check" ] && echo
 echo "== memory.md no longer injected (auto memory replaces it) =="
 mkdir -p "$CLAUDE_PROJECT_DIR/.mallet"
 echo "MEM-SENTINEL" > "$CLAUDE_PROJECT_DIR/.mallet/memory.md"
-OUT=$(bash "$SS" 2>&1)
+OUT=$(bash "$SS" </dev/null 2>&1)
 hasnt "memory not injected" "$OUT" "MEM-SENTINEL"
 
 echo

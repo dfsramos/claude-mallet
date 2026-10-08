@@ -15,7 +15,7 @@ All eight scripts are registered in one file, `plugin/hooks/hooks.json`:
 | Hook | Event | Matcher |
 |---|---|---|
 | `persona.sh` | SessionStart | `startup\|resume\|clear\|compact` |
-| `session-start.sh` | SessionStart | `startup` |
+| `session-start.sh` | SessionStart | `startup\|clear\|compact` |
 | `post-compact.sh` | SessionStart | `compact` |
 | `user-prompt-submit.sh` | UserPromptSubmit | *(none — every prompt)* |
 | `write-guard.sh` | PreToolUse | `Edit\|Write` |
@@ -37,12 +37,14 @@ Hook stdout over 10,000 characters is replaced by a file path and a 2,000-charac
 ## Session Start Hook
 
 **File:** `plugin/hooks/session-start.sh`
-**Trigger:** `SessionStart`, matcher `startup`
+**Trigger:** `SessionStart`, matcher `startup|clear|compact`; the hook reads `source` from its input (with `sed`, so it works without `jq`) to decide which jobs run
 
-Two independent jobs, both cheap and network-free:
+Four independent jobs, all cheap and network-free:
 
-1. **Statusline refresh.** A `statusLine` command cannot reference `${CLAUDE_PLUGIN_ROOT}`, which changes with every plugin version, so `/mallet:setup` points `statusLine` at a copy in `${CLAUDE_PLUGIN_DATA}` instead. This hook keeps that copy current by comparing it against `${CLAUDE_PLUGIN_ROOT}/statusline/statusline.sh` on every startup and overwriting it (via a temp file + `mv`) when they differ, so a plugin update reaches the statusline without a manual step.
-2. **Legacy per-project install detection.** If the current project still carries a per-project Mallet payload — `.claude/framework.json`, or both `.claude/skills/update/SKILL.md` and `.claude/agents/_contract.md` — prints a notice offering the `migrate` skill. Two exemptions prevent it nagging forever: the install's own project root (identified by `.claude/settings.fragment.json` / `.claude/install-payload.sh`, which only this source repo has), and any project where `.mallet/.migration-declined` exists.
+1. **Statusline refresh** (`startup`). A `statusLine` command cannot reference `${CLAUDE_PLUGIN_ROOT}`, which changes with every plugin version, so `/mallet:setup` points `statusLine` at a copy in `${CLAUDE_PLUGIN_DATA}` instead. This hook keeps that copy current by comparing it against `${CLAUDE_PLUGIN_ROOT}/statusline/statusline.sh` on every startup and overwriting it (via a temp file + `mv`) when they differ, so a plugin update reaches the statusline without a manual step.
+2. **Legacy per-project install detection** (`startup`). If the current project still carries a per-project Mallet payload — `.claude/framework.json`, or both `.claude/skills/update/SKILL.md` and `.claude/agents/_contract.md` — prints a notice offering the `migrate` skill. Two exemptions prevent it nagging forever: the install's own project root (identified by `.claude/settings.fragment.json` / `.claude/install-payload.sh`, which only this source repo has), and any project where `.mallet/.migration-declined` exists.
+3. **Project skills** (all three sources). Claude Code discovers skills only in `.claude/skills/`, so the persona's "treat `.mallet/skills/` as an additional skills directory" needs help: the hook lists each `.mallet/skills/*/SKILL.md` by name with its `description` (first 300 characters, at most 25 skills, keeping the output under the 10,000-character hook limit) and tells Claude to read a skill's file when its trigger applies. It runs on `clear` and `compact` too, because both drop the earlier listing from context.
+4. **Open mission** (`startup`, `clear`). If `.mallet/missions/active.md` exists, and has at least one unchecked `- [ ]` task, prints its `# Mission:` title and that count, and tells Claude to surface them and ask whether to resume — backing the persona's Continuity directive with a signal instead of relying on Claude to look unprompted. After `compact`, `post-compact.sh` restores the mission itself, so this one stays quiet.
 
 There is no update check here any more — updates arrive through the plugin system itself, so the GitHub-polling logic and its 24-hour cache are gone.
 

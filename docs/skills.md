@@ -2,12 +2,12 @@
 
 Skills are reusable capabilities defined as `SKILL.md` files inside `plugin/skills/`, shipped with the `mallet` plugin and available in every project once it is installed. They are namespaced at runtime — `/mallet:<name>`, agent type `mallet:<name>` for the review-pipeline agents. A project can add its own in `.mallet/skills/`, which are not namespaced and not part of the plugin.
 
-Skills marked **manual-only** below carry `disable-model-invocation: true` in their frontmatter: Claude will not invoke them on its own judgment, only when the user explicitly asks or runs the slash command.
+Skills marked **manual-only** below carry `disable-model-invocation: true` in their frontmatter: Claude will not invoke them on its own judgment; they run only from their slash command, so their descriptions name the command rather than trigger phrases.
 
 ## Setup
 
 **Directory:** `plugin/skills/setup/`
-**Triggered by:** `/mallet:setup` (or `/setup`), "set up Mallet", "install the Mallet statusline", or right after installing the plugin — **manual-only**
+**Triggered by:** `/mallet:setup` (or `/setup`), right after installing the plugin or to install the Mallet statusline — **manual-only**
 
 One-time setup for what a plugin cannot configure by itself. Each step is independent — the user can decline any of them — and the skill reports what was done at the end.
 
@@ -44,7 +44,7 @@ Flow:
 ## Hooks Setup
 
 **Directory:** `plugin/skills/hooks-setup/`
-**Triggered by:** `/mallet:hooks-setup`, "set up hooks", "enable typecheck", "disable typecheck", turning the command guard on or off — **manual-only**
+**Triggered by:** `/mallet:hooks-setup`, to turn the typecheck or command-guard hooks on or off — **manual-only**
 
 Turns the optional hooks on or off for the current project. The plugin registers every hook globally; an optional hook only *acts* in projects carrying its marker, so this skill edits no settings file — it only creates or removes the marker.
 
@@ -98,7 +98,7 @@ Intake-to-execution pipeline. Supports resumption across sessions. All planning 
 
 1. **Pre-check** — reads existing plans from the default branch; surfaces overlaps before creating anything new
 2. **Intake** — broad questions (problem, users, success criteria, constraints, remote system involvement)
-3. **Design approval gate** — a one-paragraph design summary must be explicitly approved before decomposition begins; when the design commits to something expensive to reverse, offers to test it with `/mallet:council` first
+3. **Design approval gate** — a one-paragraph design summary must be explicitly approved before decomposition begins; when the design commits to something expensive to reverse, offers to test it with `/mallet:council` first; once approved, a design with a significant architectural choice (database, framework, communication pattern, key library) gets an offer to record it with `/mallet:adr`
 4. **Knowledge skill assessment** — if the feature touches a domain with strong conventions (API design, auth, data modelling, security, accessibility, performance, domain rules), offers to scaffold a knowledge skill by copying `${CLAUDE_SKILL_DIR}/knowledge-skill-template.md` to `.mallet/skills/<domain>-knowledge/SKILL.md`
 5. **Decompose** — confirms a slug; writes `plan.md`, `state.md`, and per-task stubs, each with a task-content discipline check (no TBD, every step names a concrete file or command)
 6. **Execute (wave model)** — identifies tasks whose dependencies are satisfied (a wave); when parallel, dispatches each task to its own subagent so only results surface to the main context
@@ -139,7 +139,7 @@ Every agent call is scored against a shared JSON contract (`status: approve|revi
 ## Architecture Decision Records
 
 **Directory:** `plugin/skills/adr/`
-**Triggered by:** "record this decision", "create an ADR", "document why we chose X", `/mallet:adr`, or during `plan-feature` when a significant architectural choice is made
+**Triggered by:** "record this decision", "create an ADR", "document why we chose X", `/mallet:adr`, or accepting the ADR offer at `plan-feature`'s design gate
 
 Captures a significant architectural decision in Nygard format so the rationale survives beyond the session.
 
@@ -187,16 +187,16 @@ Persists in-progress session state so it survives compaction or a restart. No su
 **Directory:** `plugin/skills/reviewing-sessions/`
 **Triggered by:** "wrap up", "all done", "end session"
 
-Structured end-of-session retrospective. No session record files are written — skill and directive updates (step 4) do write to framework files.
+Structured end-of-session retrospective. No session record files are written — skill and rule fixes (step 4) and mission state (step 4b) do write files.
 
 1. **Session summary** — goal, approach, outcome
 2. **What went well** — efficient tasks, effective patterns, good tool use
 3. **What went poorly** — mistakes, user corrections, rule violations (with specific references)
-3a. **Token efficiency** — flags patterns that drove unnecessary cost (long sessions without compaction, Write on existing files, verbose post-Bash responses, oversized subagents); proposes a persona/skill addition for any gap found
-4. **Skill and directive improvements** — updates to skills based on session observations; skill backlog reviewed and actioned; **docs parity check** — any change to a skill or hook must reflect in the corresponding `docs/` section before the work counts as done
+3a. **Token efficiency** — flags patterns that drove unnecessary cost (long sessions without compaction, Write on existing files, verbose post-Bash responses, oversized subagents); saves a `feedback` memory for any gap no directive or memory covers
+4. **Skill and rule improvements** — project and personal skills are edited directly; a Mallet skill is never edited (the plugin cache is overwritten on update) but amended through `.mallet/overrides/<name>.md` plus a **Skill Overrides** entry in `.mallet/conventions.md`, with a proposed upstream change if it would help every project; project rules go to `.mallet/conventions.md`, never straight into the project's `CLAUDE.md` (proposed to the user instead), and rules for every project become `feedback` memories; skill backlog reviewed and actioned
 4a. **Review memory entries** — checks the auto memory entries written or updated this session; adds new ones only if something significant was missed
 4b. **Mission state** — if the mission is complete, archives `active.md`; if work continues, writes or updates it, and if a *different* open mission already occupies it, consolidates deliberately or keeps this session's mission in its own file with a cross-reference
-5. **Close out** — clear any scratchpad used; confirm the correct working branch; present the full wrap-up to the user
+5. **Close out** — confirm the correct working branch; present the full wrap-up to the user
 
 ## Next Steps
 
@@ -215,7 +215,7 @@ Reports outstanding work as a numbered table the user can refer to by number. Re
 ## Calibrate
 
 **Directory:** `plugin/skills/calibrate/`
-**Triggered by:** `/mallet:calibrate`, "check model for this", "is this the right model?", "what effort should I use?" — **manual-only**
+**Triggered by:** `/mallet:calibrate`, for a long-form model and effort check — **manual-only**
 
 The long-form version of the always-on Task Calibration directive (see [`directives.md`](directives.md#task-calibration)), for when the user asks directly.
 

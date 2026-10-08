@@ -4,7 +4,8 @@ cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1
 failed=0
 for t in test-*.sh; do
   printf '%-30s ' "$t"
-  out=$(bash "$t" 2>&1); rc=$?
+  # Closed stdin: a hook that reads its input must never wait on the terminal.
+  out=$(bash "$t" </dev/null 2>&1); rc=$?
   echo "$out" | tail -1
   [ $rc -eq 0 ] || failed=$((failed + 1))
 done

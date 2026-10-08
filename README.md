@@ -21,7 +21,7 @@ Three workflows anchor the plugin and return the most value per session:
 
 - **Discovery (`/mallet:discover`)** — structured codebase analysis that surfaces setup opportunities: detected stacks and services, highest-centrality files (god nodes), MCP and skill-pack suggestions, conventions worth capturing, and quick wins Claude can implement immediately.
 - **Session wrap-up (`/mallet:reviewing-sessions`, or "wrap up")** — end-of-session retrospective covering what went well, what went wrong, token-efficiency patterns, and applied improvements to skills and project memory.
-- **Architecture decisions (`/mallet:adr`)** — captures significant architectural choices in Nygard format (`docs/adr/NNNN-title.md`) so the rationale survives beyond the session. Triggered automatically during feature planning when a significant choice is made.
+- **Architecture decisions (`/mallet:adr`)** — captures significant architectural choices in Nygard format (`docs/adr/NNNN-title.md`) so the rationale survives beyond the session. Offered at `/mallet:plan-feature`'s design gate when the approved design makes a significant architectural choice.
 
 ## Installation
 
@@ -100,7 +100,7 @@ Even older Mallet versions installed into each repository individually. The `mig
 | `/mallet:write-task` | "create a ticket", "write the task description", "write a handover as a task" |
 | `/mallet:migrate` | "clean up the old Mallet installs" |
 
-Manual-only skills carry `disable-model-invocation: true` — Claude will not invoke them on its own; they run only when explicitly asked for.
+Manual-only skills carry `disable-model-invocation: true` — Claude will not invoke them on its own; they run only from their slash command.
 
 ### Agents
 
@@ -136,7 +136,7 @@ Every agent except `implementer` is restricted to `disallowedTools: Edit, Write,
 | Hook | Event | What it does |
 |---|---|---|
 | `persona.sh` | SessionStart (`startup\|resume\|clear\|compact`) | Injects `PERSONA.md` — the only way a plugin can deliver directives |
-| `session-start.sh` | SessionStart (`startup`) | Refreshes the statusline copy in `${CLAUDE_PLUGIN_DATA}`; flags a leftover per-project install |
+| `session-start.sh` | SessionStart (`startup\|clear\|compact`) | On startup, refreshes the statusline copy in `${CLAUDE_PLUGIN_DATA}` and flags a leftover per-project install; lists `.mallet/skills/` project skills; flags an open mission with pending tasks |
 | `post-compact.sh` | SessionStart (`compact`) | Prints branch, uncommitted changes, recent commits, and any active mission right after compaction |
 | `user-prompt-submit.sh` | UserPromptSubmit | Compaction reminder at 60% context usage and every 15% after (prompt count when no statusline is in use); injects the active model/effort line for calibrate when it changes |
 | `write-guard.sh` | PreToolUse (`Edit\|Write`) | Blocks `Write` on files that already exist — enforces `Edit`; asks before edits to lint or type-check config |

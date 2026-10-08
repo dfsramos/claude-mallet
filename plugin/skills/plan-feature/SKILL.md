@@ -53,6 +53,8 @@ Before decomposing into tasks, present a one-paragraph design summary to the use
 
 When the design commits to something expensive to reverse — a data model, a framework or vendor, a public API, removing a capability — also offer to test it with `/mallet:council` before approval, and run it once the user agrees.
 
+Once the user approves a design that makes a significant architectural choice — a database, framework, communication pattern, or key library — offer to record it with `/mallet:adr` before decomposing, so the rationale outlives the plan.
+
 Do not proceed to decomposition until the user explicitly approves. Rationalizations to reject:
 - "The intake was thorough so we can proceed" — intake gathers facts; the design summary is the synthesis that can still be wrong
 - "I'll adjust during implementation if needed" — misaligned decomposition produces misaligned tasks; a one-sentence correction now saves N task rewrites later

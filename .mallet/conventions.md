@@ -8,6 +8,8 @@
 
 `.mallet/` is **this repo's own state** and ships nowhere: `conventions.md` (this file), `skill-backlog.md`, `discovery-*.md`, `missions/`, `skills/`, `features/`.
 
+In this repo the Mallet skills are source, not an installed plugin: edit `plugin/skills/` directly. The `reviewing-sessions` rule against editing Mallet skills, and its routing to `.mallet/overrides/`, applies to installed copies only.
+
 When adding a new skill:
 - **Plugin skill** (ships with every install): `plugin/skills/<name>/`
 - **Project skill** (only this repo): `.mallet/skills/<name>/`

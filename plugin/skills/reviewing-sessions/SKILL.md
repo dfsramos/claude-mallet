@@ -28,7 +28,7 @@ Review the session and identify:
 - Mistakes, misunderstandings, or incorrect assumptions made
 - Cases where the user had to correct course or reject a tool call
 - Unnecessary back-and-forth that could have been avoided
-- Rules from CLAUDE.md that were not followed correctly
+- Directives from the persona, `CLAUDE.md`, or `.mallet/conventions.md` that were not followed correctly
 
 Be specific. Reference the actual exchange, not a generalisation.
 
@@ -41,9 +41,9 @@ Note any patterns that drove unnecessary token use this session:
 - Long session without a `/compact` — flag in "What Went Poorly"
 - Write used on an existing file (should have been Edit) — adds ~2× the output tokens per operation
 - Verbose response written after a routine Bash command (summarising output, writing unsolicited plans)
-- Subagent calls that used Sonnet when Haiku would have sufficed (file reads, grep, lookups)
+- Subagent calls on a stronger model than the work needed (file reads, grep, lookups)
 
-If any of these occurred and there is no CLAUDE.md directive already covering it, add one now.
+If any of these occurred and no directive or memory already covers it, save a `feedback` memory for it.
 
 ---
 
@@ -51,11 +51,13 @@ If any of these occurred and there is no CLAUDE.md directive already covering it
 
 Based on what went poorly and what was learned:
 
-- **Update existing skills**: fix missing commands, outdated instructions, or unclear steps that caused issues during the session. Apply the changes — do not just list them.
-- **Create new skills**: if a knowledge gap came up repeatedly or a new reusable pattern emerged, create the skill file now. Project-specific skills go to `.mallet/skills/<skill-name>/SKILL.md`; skills useful across every project go to `~/.claude/skills/<skill-name>/SKILL.md`. When unsure, prefer project-specific — promoting later is cheap, and a half-general skill in the user-level install applies everywhere.
-- **Update CLAUDE.md**: if a behavioural rule was missing, ambiguous, or not followed correctly, fix it at `CLAUDE.md` at the project root directly.
+- **Fix skills that caused issues** — missing commands, outdated instructions, unclear steps. Where the fix goes depends on whose skill it is:
+  - A project skill (`.mallet/skills/` or `.claude/skills/`) or a personal one (`~/.claude/skills/`): edit it directly.
+  - A Mallet skill (`/mallet:<name>`): never edit its files. They live in the plugin cache and the next update overwrites them. Write the amendment to `.mallet/overrides/<name>.md` and list the skill under **Skill Overrides** in `.mallet/conventions.md`. If the fix would help every project, also describe it to the user as a proposed change to Mallet itself.
+- **Create new skills**: if a knowledge gap came up repeatedly or a new reusable pattern emerged, create the skill file now. Project-specific skills go to `.mallet/skills/<skill-name>/SKILL.md`; skills useful across every project go to `~/.claude/skills/<skill-name>/SKILL.md`. When unsure, prefer project-specific — promoting later is cheap, and a half-general personal skill applies everywhere.
+- **Fix missing or unclear rules**: a rule for this project goes in `.mallet/conventions.md`. Do not edit the project's `CLAUDE.md` — it is often tracked and shared with a team — but propose the change to the user if it belongs there. A rule for every project is a `feedback` memory.
 
-If any changes were made to framework files with corresponding docs (`docs/`), verify those docs are up to date before considering the work complete. Check that new features have dedicated sections, tables are updated, and examples reflect the current behaviour.
+Apply the changes — do not just list them.
 
 Then open `.mallet/skill-backlog.md`. For each item logged during this session:
 - Evaluate whether it is still relevant given what was actually done
@@ -119,7 +121,6 @@ Keep entries terse. The next session reads this cold — each pending task must 
 
 ## 5. Close Out
 
-- If `.mallet/task-notes.md` exists and was used during this session, clear its contents — the scratchpad is no longer needed.
 - Confirm you are on the correct working branch (not a feature branch left over from this session).
 - Present the completed wrap-up (sections 1–4b) to the user as a single formatted response.
 

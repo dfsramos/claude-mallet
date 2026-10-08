@@ -1,6 +1,6 @@
 ---
 name: hooks-setup
-description: Invoke when the user runs /hooks-setup, asks to "set up hooks", "enable typecheck", "disable typecheck", "enable the command guard", or wants to turn optional Mallet hooks on or off in the current project.
+description: Runs only from /mallet:hooks-setup, when the user wants to turn the optional typecheck or command-guard hooks on or off in the current project.
 disable-model-invocation: true
 ---
 # Hooks Setup

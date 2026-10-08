@@ -1,6 +1,6 @@
 ---
 name: calibrate
-description: Invoke when the user runs /calibrate, or asks which model or effort level suits the current task, e.g. "check model for this", "is this the right model?", "what effort should I use?".
+description: Runs only from /mallet:calibrate, when the user wants a long-form check of whether the active model and effort suit the current task.
 disable-model-invocation: true
 ---
 # Calibrate

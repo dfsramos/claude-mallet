@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Invoke when the user runs /mallet:setup or /setup, asks to "set up Mallet" or "install the Mallet statusline".
+description: Runs only from /mallet:setup (or /setup), right after installing the plugin or to install the Mallet statusline.
 disable-model-invocation: true
 allowed-tools: Bash(mkdir -p ${CLAUDE_PLUGIN_DATA}) Bash(cp ${CLAUDE_PLUGIN_ROOT}/statusline/statusline.sh ${CLAUDE_PLUGIN_DATA}/statusline.sh) Bash(jq *)
 ---

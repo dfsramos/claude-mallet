@@ -24,12 +24,43 @@ echo "report" > "$CLAUDE_PROJECT_DIR/.mallet/discovery-2026-01-01.md"
 echo '{"installed_at":"2026-01-01"}' > "$HOME/.claude/framework.json"
 
 echo "== session-start.sh =="
-OUT=$(bash "$H/session-start.sh" 2>&1); ck "exit 0" "$?" "0"
+OUT=$(bash "$H/session-start.sh" </dev/null 2>&1); ck "exit 0" "$?" "0"
 hasnt "no .mallet/memory.md injection (auto memory replaces it)" "$OUT" "MEMORY-SENTINEL"
+
+echo "== session-start.sh: open mission and project skills =="
+printf '# Mission: Ship the widget\n\n## Pending\n- [ ] one\n- [ ] two\n- [x] done\n' > "$CLAUDE_PROJECT_DIR/.mallet/missions/active.md"
+mkdir -p "$CLAUDE_PROJECT_DIR/.mallet/skills/deploy-app"
+printf -- '---\nname: deploy-app\ndescription: Invoke when the user says "deploy".\n---\n# Deploy\n' > "$CLAUDE_PROJECT_DIR/.mallet/skills/deploy-app/SKILL.md"
+ss() { echo "{\"source\":\"$1\"}" | bash "$H/session-start.sh" 2>&1; }
+OUT=$(ss startup)
+has   "startup: mission title and pending count" "$OUT" "Ship the widget: 2 pending task(s)"
+has   "startup: project skill listed with trigger" "$OUT" 'deploy-app: Invoke when the user says "deploy".'
+OUT=$(ss clear)
+has   "clear: mission notice" "$OUT" "Open Mission"
+has   "clear: project skills" "$OUT" "deploy-app"
+OUT=$(ss compact)
+hasnt "compact: no mission notice (post-compact.sh restores it)" "$OUT" "Open Mission"
+has   "compact: project skills" "$OUT" "deploy-app"
+mkdir -p "$CLAUDE_PROJECT_DIR/.claude"; echo '{}' > "$CLAUDE_PROJECT_DIR/.claude/framework.json"
+has   "startup: legacy notice" "$(ss startup)" "Legacy Mallet Install"
+hasnt "clear: no legacy notice (startup only)" "$(ss clear)" "Legacy Mallet Install"
+NOJQ="$SCRATCH/nojq"; mkdir -p "$NOJQ"
+for b in bash sed tr grep head cut ls dirname basename cat cmp cp mv mkdir pwd; do ln -sf "$(command -v $b)" "$NOJQ/$b"; done
+hasnt "no jq: clear still skips the legacy notice" "$(echo '{"source":"clear"}' | PATH="$NOJQ" bash "$H/session-start.sh" 2>&1)" "Legacy Mallet Install"
+printf '# Mission: Done thing\n- [x] all\n' > "$CLAUDE_PROJECT_DIR/.mallet/missions/active.md"
+hasnt "nothing pending: no mission notice" "$(ss startup)" "Open Mission"
+printf -- '---\ndescription: "Invoke on quoted."\r\n---\n' > "$CLAUDE_PROJECT_DIR/.mallet/skills/deploy-app/SKILL.md"
+ck "quoted CRLF description cleaned" "$(ss startup | grep '^- deploy-app')" "- deploy-app: Invoke on quoted."
+rm -rf "$CLAUDE_PROJECT_DIR/.claude" "$CLAUDE_PROJECT_DIR/.mallet/skills"
+for i in $(seq 1 40); do mkdir -p "$CLAUDE_PROJECT_DIR/.mallet/skills/s$i"; printf 'description: %0300d\n' 0 > "$CLAUDE_PROJECT_DIR/.mallet/skills/s$i/SKILL.md"; done
+OUT=$(ss startup)
+ck "many skills: capped at 25" "$(echo "$OUT" | grep -c '^- s[0-9]')" "25"
+ck "many skills: output under 10,000 chars" "$([ ${#OUT} -lt 10000 ] && echo yes || echo "no (${#OUT})")" "yes"
+rm -rf "$CLAUDE_PROJECT_DIR/.mallet/skills"
 
 echo "== session-start.sh with .mallet absent =="
 rm -rf "$CLAUDE_PROJECT_DIR/.mallet"
-OUT=$(bash "$H/session-start.sh" 2>&1); ck "exit 0" "$?" "0"
+OUT=$(bash "$H/session-start.sh" </dev/null 2>&1); ck "exit 0" "$?" "0"
 ck "emits nothing" "$(echo -n "$OUT" | wc -c)" "0"
 
 echo "== user-prompt-submit.sh never emits [ultracode] =="

@@ -18,17 +18,17 @@ SS="$CLAUDE_PLUGIN_ROOT/hooks/session-start.sh"
 COPY="$CLAUDE_PLUGIN_DATA/statusline.sh"
 
 echo "== first startup =="
-bash "$SS" >/dev/null 2>&1; ck "exit 0" "$?" "0"
+bash "$SS" </dev/null >/dev/null 2>&1; ck "exit 0" "$?" "0"
 ck "copy created" "$(cmp -s "$COPY" "$CLAUDE_PLUGIN_ROOT/statusline/statusline.sh" && echo same)" "same"
 
 echo "== plugin update =="
 echo "# v2" >> "$CLAUDE_PLUGIN_ROOT/statusline/statusline.sh"
-bash "$SS" >/dev/null 2>&1
+bash "$SS" </dev/null >/dev/null 2>&1
 ck "copy refreshed" "$(tail -1 "$COPY")" "# v2"
 
 echo "== no plugin environment =="
 unset CLAUDE_PLUGIN_DATA
-OUT=$(bash "$SS" 2>&1); ck "exit 0 without CLAUDE_PLUGIN_DATA" "$?" "0"
+OUT=$(bash "$SS" </dev/null 2>&1); ck "exit 0 without CLAUDE_PLUGIN_DATA" "$?" "0"
 ck "silent" "$OUT" ""
 
 echo "pass=$pass fail=$fail"
