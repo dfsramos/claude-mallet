@@ -30,7 +30,17 @@ The statusline also records the live model and effort level for the calibrate ho
 
 ## 2. Auto-update
 
-Background auto-update is off by default for third-party marketplaces and cannot be enabled from here. Tell the user: `/plugin` → **Marketplaces** → **claude-mallet** → **Enable auto-update**. Without it, `/plugin marketplace update claude-mallet` fetches new versions.
+Background auto-update is off by default for third-party marketplaces. With it on, Claude Code refreshes the marketplace after each session starts and updates Mallet in the background; without it, the user runs `/plugin marketplace update claude-mallet` to get new versions. Offer to turn it on:
+
+1. If `~/.claude/settings.json` already has `extraKnownMarketplaces["claude-mallet"].autoUpdate` set to `true`, report it as done and move on.
+2. Find the marketplace's source. Use `extraKnownMarketplaces["claude-mallet"].source` in `~/.claude/settings.json` if present; otherwise use the `claude-mallet` entry's `source` in `~/.claude/plugins/known_marketplaces.json`, which records how the user added it (it may be a fork or a local path, not `dfsramos/claude-mallet`). If neither has one, skip writing and give the manual route below.
+3. With the user's agreement, back up `~/.claude/settings.json` as in step 1, then set only this key, keeping the source found above and leaving every other key untouched:
+   ```json
+   "extraKnownMarketplaces": { "claude-mallet": { "source": <source>, "autoUpdate": true } }
+   ```
+   Merge into an existing `extraKnownMarketplaces` object rather than replacing it. Verify with `jq -e . ~/.claude/settings.json` afterwards.
+
+It takes effect from the next session start. The manual route, if the user prefers it: `/plugin` → **Marketplaces** → **claude-mallet** → **Enable auto-update**.
 
 ## 3. Legacy Mallet memory files
 

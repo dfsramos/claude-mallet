@@ -12,7 +12,23 @@ In Claude Code:
 /mallet:setup
 ```
 
-`/mallet:setup` registers the statusline, points you at enabling auto-update, and offers to fold any legacy `.mallet/memory.md` or `.mallet/lessons.md` into Claude Code's auto memory. Nothing else needs configuring — the plugin has no version to pin, so you track commits on the marketplace's default branch — [CHANGELOG.md](CHANGELOG.md) lists what each update changes — and background auto-update is off by default for third-party marketplaces (`/plugin` → **Marketplaces** → **claude-mallet** → **Enable auto-update**, or `/plugin marketplace update claude-mallet` on demand).
+`/mallet:setup` registers the statusline, offers to turn on auto-update, and offers to fold any legacy `.mallet/memory.md` or `.mallet/lessons.md` into Claude Code's auto memory. Nothing else needs configuring. The plugin has no version to pin, so you track commits on the marketplace's default branch; [CHANGELOG.md](CHANGELOG.md) lists what each update changes.
+
+**Auto-update** is off by default for third-party marketplaces. `/mallet:setup` can turn it on for you, or do it yourself in either of these ways:
+
+- In a session: `/plugin` → **Marketplaces** → **claude-mallet** → **Enable auto-update**.
+- In `~/.claude/settings.json`: add `"autoUpdate": true` to the marketplace's entry under `extraKnownMarketplaces`, keeping its `source`:
+
+  ```json
+  "extraKnownMarketplaces": {
+    "claude-mallet": {
+      "source": { "source": "github", "repo": "dfsramos/claude-mallet" },
+      "autoUpdate": true
+    }
+  }
+  ```
+
+Either way, Claude Code updates Mallet in the background after each session starts. Without it, run `/plugin marketplace update claude-mallet` to update on demand.
 
 ## Already have Mallet installed?
 
