@@ -136,7 +136,7 @@ Every agent except `implementer` is restricted to `disallowedTools: Edit, Write,
 | Hook | Event | What it does |
 |---|---|---|
 | `persona.sh` | SessionStart (`startup\|resume\|clear\|compact`) | Injects `PERSONA.md` — the only way a plugin can deliver directives |
-| `session-start.sh` | SessionStart (`startup\|clear\|compact`) | On startup, refreshes the statusline copy in `${CLAUDE_PLUGIN_DATA}` and flags a leftover per-project install; lists `.mallet/skills/` project skills; flags an open mission with pending tasks |
+| `session-start.sh` | SessionStart (`startup\|resume\|clear\|compact`) | On startup and resume, refreshes the statusline copy in `${CLAUDE_PLUGIN_DATA}` and flags a leftover per-project install; lists `.mallet/skills/` project skills; flags an open mission with pending tasks |
 | `post-compact.sh` | SessionStart (`compact`) | Prints branch, uncommitted changes, recent commits, and any active mission right after compaction |
 | `user-prompt-submit.sh` | UserPromptSubmit | Compaction reminder when context reaches 150k tokens and at each further 50k (`CLAUDE_CTX_WARN_THRESHOLD` / `CLAUDE_CTX_WARN_STEP`); injects the active model/effort line for calibrate when it changes |
 | `write-guard.sh` | PreToolUse (`Edit\|Write`) | Blocks `Write` on files that already exist — enforces `Edit`; asks before edits to lint or type-check config |

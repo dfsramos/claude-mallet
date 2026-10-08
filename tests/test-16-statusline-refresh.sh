@@ -26,6 +26,25 @@ echo "# v2" >> "$CLAUDE_PLUGIN_ROOT/statusline/statusline.sh"
 bash "$SS" </dev/null >/dev/null 2>&1
 ck "copy refreshed" "$(tail -1 "$COPY")" "# v2"
 
+echo "== resume =="
+mkdir -p "$CLAUDE_PROJECT_DIR/.mallet/skills/demo" "$CLAUDE_PROJECT_DIR/.mallet/missions"
+printf -- '---\nname: demo\ndescription: Invoke for demos.\n---\n' > "$CLAUDE_PROJECT_DIR/.mallet/skills/demo/SKILL.md"
+printf '# Mission: Demo\n- [ ] one\n' > "$CLAUDE_PROJECT_DIR/.mallet/missions/active.md"
+echo "# v3" >> "$CLAUDE_PLUGIN_ROOT/statusline/statusline.sh"
+OUT=$(echo '{"source":"resume"}' | bash "$SS" 2>&1); ck "exit 0 on resume" "$?" "0"
+ck "copy refreshed on resume" "$(tail -1 "$COPY")" "# v3"
+ck "resume prints nothing (no repeated skills or mission notice)" "$OUT" ""
+echo "# v4" >> "$CLAUDE_PLUGIN_ROOT/statusline/statusline.sh"
+OUT=$(echo '{"source":"clear"}' | bash "$SS" 2>&1)
+ck "clear does not refresh" "$(tail -1 "$COPY")" "# v3"
+ck "clear still lists project skills" "$(echo "$OUT" | grep -c 'demo: Invoke for demos.')" "1"
+rm -rf "$CLAUDE_PROJECT_DIR/.mallet"
+
+echo "== registered for resume =="
+ck "hooks.json matcher includes resume" \
+  "$(jq -r '.hooks.SessionStart[] | select(.hooks[0].command | test("session-start.sh")) | .matcher' "$REPO/plugin/hooks/hooks.json")" \
+  "startup|resume|clear|compact"
+
 echo "== no plugin environment =="
 unset CLAUDE_PLUGIN_DATA
 OUT=$(bash "$SS" </dev/null 2>&1); ck "exit 0 without CLAUDE_PLUGIN_DATA" "$?" "0"

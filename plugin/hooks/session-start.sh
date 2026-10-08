@@ -1,8 +1,11 @@
 #!/bin/bash
-# SessionStart hook (matcher: startup|clear|compact):
-#   1. Keeps the statusline copy in CLAUDE_PLUGIN_DATA current.     (startup)
+# SessionStart hook (matcher: startup|resume|clear|compact):
+#   1. Keeps the statusline copy in CLAUDE_PLUGIN_DATA current.
+#                                                         (startup, resume)
 #   2. Detects a legacy per-project Mallet install and offers the migrate skill.
 #                                                                    (startup)
+#   On resume nothing else runs: the resumed conversation already holds the
+#   notices below from when it started.
 #   3. Lists project skills in .mallet/skills/, which Claude Code does not load
 #      itself.                                                       (all three)
 #   4. Points at an open mission in .mallet/missions/active.md.  (startup, clear;
@@ -22,15 +25,17 @@ SOURCE=${SOURCE:-startup}
 # A statusLine command cannot reference CLAUDE_PLUGIN_ROOT, which changes with
 # every plugin version. /mallet:setup points statusLine at this copy in the
 # persistent data directory instead, and refreshing it here on every startup
-# carries plugin updates through to it.
+# and resume carries plugin updates through to it. A resume loads the current
+# plugin version too, so skipping it left the old statusline running.
 
-if [ "$SOURCE" = "startup" ] && [ -n "${CLAUDE_PLUGIN_DATA:-}" ] && [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+if { [ "$SOURCE" = "startup" ] || [ "$SOURCE" = "resume" ]; } && [ -n "${CLAUDE_PLUGIN_DATA:-}" ] && [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
   SRC="${CLAUDE_PLUGIN_ROOT}/statusline/statusline.sh"
   DST="${CLAUDE_PLUGIN_DATA}/statusline.sh"
   if [ -f "$SRC" ] && ! cmp -s "$SRC" "$DST"; then
     mkdir -p "$CLAUDE_PLUGIN_DATA" && cp "$SRC" "$DST.tmp" && mv "$DST.tmp" "$DST"
   fi
 fi
+[ "$SOURCE" = "resume" ] && exit 0
 
 # ── Legacy per-project install detection ────────────────────────────────────
 # Mallet now ships as a plugin. A framework payload inside the project

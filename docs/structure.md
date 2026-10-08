@@ -49,7 +49,7 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` di
 │   │   ├── hooks.json                 # Registers every hook below via ${CLAUDE_PLUGIN_ROOT}
 │   │   ├── command-guard.sh           # PreToolUse (Bash): opt-in guard for hook bypasses and destructive commands
 │   │   ├── persona.sh                 # SessionStart: injects PERSONA.md
-│   │   ├── session-start.sh           # SessionStart (startup|clear|compact): statusline, legacy detect, project skills, open mission
+│   │   ├── session-start.sh           # SessionStart (startup|resume|clear|compact): statusline, legacy detect, project skills, open mission
 │   │   ├── post-compact.sh            # SessionStart (compact): restores state after compaction
 │   │   ├── typecheck.sh               # PostToolUse: opt-in, records edited TS/PHP files
 │   │   ├── typecheck-stop.sh          # Stop: opt-in, checks the turn's files once, JSON additionalContext
