@@ -97,6 +97,21 @@ seed d; printf '{bad' > "$D/framework.json"
 bash "$T" --from x >/dev/null 2>&1; ck "corrupt framework.json aborts" "$?" "1"
 ck "nothing removed on abort" "$(exists "$D/skills/adr")" "yes"
 
+echo "== CRLF jq output (Windows jq.exe) =="
+mkdir -p "$SCRATCH/crlf-bin"
+cat > "$SCRATCH/crlf-bin/jq" <<STUB
+#!/bin/bash
+set -o pipefail
+"$(command -v jq)" "\$@" | tr -d '\r' | sed 's/\$/\r/'
+STUB
+chmod +x "$SCRATCH/crlf-bin/jq"
+seed f
+OUT=$(PATH="$SCRATCH/crlf-bin:$PATH" bash "$T" --from x --repo dfsramos/claude-mallet --sha s 2>&1)
+ck "manifest skill removed"  "$(exists "$D/skills/adr")" "no"
+ck "manifest agent removed"  "$(exists "$D/agents/code-reviewer.md")" "no"
+ck "manifest hook removed"   "$(exists "$D/hooks/session-start.sh")" "no"
+ck "user skill preserved"    "$(exists "$D/skills/my-own-skill")" "yes"
+
 echo "== update skill flow: payload script, then settings merge, then detect.sh =="
 seed e
 cat > "$D/settings.json" <<'JSON'

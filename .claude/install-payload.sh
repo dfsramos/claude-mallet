@@ -79,6 +79,8 @@ echo "backup: $BACKUP"
 REMOVED=""
 for k in skills agents templates hooks; do
   while read -r name; do
+    # Windows jq.exe emits CRLF, and the trailing \r survives `read -r`.
+    name="${name%$'\r'}"
     # A manifest entry is a bare directory or file name. Anything else is not
     # something this installer wrote, so it is never acted on.
     case "$name" in ''|.|..|*/*) continue ;; esac
