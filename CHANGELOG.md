@@ -2,6 +2,11 @@
 
 What changed for people using the `mallet` plugin: behaviour, cost, defaults, and anything to do after updating. Newest first. The plugin has no version field, so entries are dated; update with `/plugin marketplace update claude-mallet`. Changes before 2026-10-07 are in the git history.
 
+## 2026-10-14
+
+**Fixed**
+- On Windows, the transition from the user-level install removed none of Mallet's old skills, agents, templates or hooks, and listed them all as "preserved (not Mallet's)". The native `jq.exe` ends each manifest line with `\r`, so no entry matched a file. The transition now strips it. If you already transitioned on Windows, delete the entries the transition backup's `framework.json` manifest lists from `~/.claude/skills`, `agents`, `templates` and `hooks`; leave `skills/migrate` for `/mallet:setup`.
+
 ## 2026-10-08
 
 **Changed (cost)**
