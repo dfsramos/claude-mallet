@@ -8,3 +8,6 @@
 !.mallet/
 # Legacy: pre-auto-memory project memory, if one is still lying around.
 .mallet/memory.md
+
+# plugin eval runs (claude plugin eval)
+plugin/evals/results/
