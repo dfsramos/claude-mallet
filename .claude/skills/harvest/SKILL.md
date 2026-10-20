@@ -9,9 +9,9 @@ Review a target project for improvements worth pulling back into the framework b
 Two phases:
 
 1. **Project skills** — lift selected project-specific skills from the target into the framework
-2. **Overrides** — surface skill overrides present in the target for review; never auto-promote
+2. **Skill amendments** — surface the target's amendments to Mallet skills for review; never auto-promote
 
-Target projects hold no framework files — Mallet reaches them as the `mallet` plugin — so there is no drift to reconcile. A project that needs different behaviour uses (a) a project skill, (b) an override, or (c) a PR to the framework.
+Target projects hold no framework files — Mallet reaches them as the `mallet` plugin — so there is no drift to reconcile. A project that needs different behaviour uses (a) a project skill in `.claude/skills/`, (b) an amendment in `.claude/rules/<skill>.md`, or (c) a PR to the framework.
 
 ---
 
@@ -44,7 +44,7 @@ If the local branch is behind the remote, tell the user and run `git pull --ff-o
 
 ## 2. Project Skills
 
-Scan `TARGET/.mallet/skills/` for skill directories (one level deep). If empty or absent, note "No project skills found." and continue to Phase 3.
+Scan `TARGET/.claude/skills/` for skill directories (one level deep). Also scan `TARGET/.mallet/skills/`, where earlier Mallet versions kept them: that directory is no longer listed at session start, so a skill still there is worth moving to `.claude/skills/` even when it is not promoted. If both are empty or absent, note "No project skills found." and continue to Phase 3.
 
 List discovered skills with a one-line summary of each (read the `description` field). Ask:
 
@@ -55,7 +55,7 @@ AskUserQuestion: "Which project skills do you want to promote to the framework b
 
 **For each selected skill:**
 
-- Source: `TARGET/.mallet/skills/<skill>/`
+- Source: the skill's directory in `TARGET`
 - Destination: `FRAMEWORK_ROOT/plugin/skills/<skill>/`
 
 If the destination already exists:
@@ -69,34 +69,34 @@ If overwriting or new:
 - Adapt it to the plugin layout:
   - it will be invoked as `/mallet:<skill>`; the `name` field must equal the directory name
   - the `description` states trigger conditions only
-  - paths to files bundled with the skill use `${CLAUDE_SKILL_DIR}`; paths into the project (`.mallet/...`) stay relative
+  - paths to files bundled with the skill use `${CLAUDE_SKILL_DIR}`; paths into the project (`.mallet/...`, `.claude/...`) stay relative
   - nothing project-specific remains (hostnames, repo names, credentials) — generalise or stop and ask
 - Run `bash tests/run.sh`; `test-15-plugin.sh` checks skill structure
-- Ask before removing the original from `TARGET/.mallet/skills/`: the plugin copy replaces it, but deleting it is the user's call. Remove it only on an explicit yes.
+- Ask before removing the original from `TARGET`: the plugin copy replaces it, but deleting it is the user's call. Remove it only on an explicit yes.
 - Log: `Promoted: <skill>`
 
 ---
 
-## 3. Overrides
+## 3. Skill Amendments
 
-Scan `TARGET/.mallet/overrides/` for `*.md` files. If empty or absent, note "No overrides found." and continue to Phase 4.
+Scan `TARGET/.claude/rules/*.md` for lines amending a Mallet skill ("When running `/mallet:<skill>`, ..."). Also scan `TARGET/.mallet/overrides/*.md`, where earlier Mallet versions kept them: those files are no longer read, so an amendment still there is worth moving to `.claude/rules/<skill>.md` even when it is not folded in. If none, note "No amendments found." and continue to Phase 4.
 
-For each override file:
-1. Read the override
+For each amendment:
+1. Read it
 2. Read the matching base skill at `FRAMEWORK_ROOT/plugin/skills/<skill-name>/SKILL.md`
-3. Summarise what the override changes (one or two lines)
+3. Summarise what the amendment changes (one or two lines)
 
 Present the list with summaries, then ask:
 
 ```
-AskUserQuestion: "Do any of these overrides reveal gaps worth fixing in the base skill?"
-(per override: [fold into base skill] [leave as project-specific] [skip])
+AskUserQuestion: "Do any of these amendments reveal gaps worth fixing in the base skill?"
+(per amendment: [fold into base skill] [leave as project-specific] [skip])
 ```
 
 For each "fold" selection:
-- Propose a concrete edit to the base skill that incorporates the override's intent (generalised, not project-specific)
+- Propose a concrete edit to the base skill that incorporates the amendment's intent (generalised, not project-specific)
 - Apply the edit only after user confirmation
-- Remove the override file and its entry from `TARGET/.mallet/conventions.md` Skill Overrides list
+- Offer to remove the amendment from `TARGET` once the plugin change has reached it; a rule file that held nothing else goes with it
 - Log: `Folded: <skill-name>`
 
 For "leave" or "skip": log and continue.
@@ -112,12 +112,12 @@ For "leave" or "skip": log and continue.
   Skills promoted:    <list or "none">
   Skills skipped:     <list or "none">
 
-  Overrides folded:   <list or "none">
-  Overrides retained: <list or "none">
+  Amendments folded:  <list or "none">
+  Amendments kept:    <list or "none">
 ─────────────────────────────────────────────────────────
 ```
 
 If anything was promoted or folded:
-- update `docs/skills.md` and the README skills table (Docs Parity in `.mallet/conventions.md`)
+- update `docs/skills.md` and the README skills table (Docs Parity in the root `CLAUDE.md`)
 - remind the user that the change reaches machines only after it is pushed and the plugin updates there (auto-update, or `/plugin marketplace update claude-mallet`)
 - if an original project skill was kept in `TARGET`, note that it duplicates `/mallet:<skill>` and can be removed once the plugin version is confirmed working

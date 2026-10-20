@@ -5,14 +5,13 @@
 #   2. Detects a legacy per-project Mallet install and offers the migrate skill.
 #                                                                    (startup)
 #   On resume nothing else runs: the resumed conversation already holds the
-#   notices below from when it started.
-#   3. Lists project skills in .mallet/skills/, which Claude Code does not load
-#      itself.                                                       (all three)
-#   4. Points at an open mission in .mallet/missions/active.md.  (startup, clear;
-#      after compact, post-compact.sh restores the mission itself)
-#   5. In a git repository with no Git conventions of its own, prints Mallet's
-#      default rules (rules/git.md) and asks Claude to offer them.  (all three)
+#   notice below from when it started.
+#   3. In a git repository with no Git conventions of its own, prints Mallet's
+#      default rules (rules/git.md) and asks Claude to offer them.
+#                                                      (startup, clear, compact)
 # Updates arrive through the plugin system, so there is no update check here.
+# Project skills and open missions are no longer announced here: Claude Code
+# loads .claude/skills/ itself, and open work lives in auto memory.
 #
 # Project memory is not injected here: Claude Code's auto memory loads its own
 # MEMORY.md index at session start.
@@ -67,43 +66,6 @@ if [ "$SOURCE" = "startup" ] && [ -n "${CLAUDE_PROJECT_DIR:-}" ] \
     echo "${CLAUDE_PROJECT_DIR}/.mallet/.migration-declined so this notice stops."
     echo "--- End Legacy Mallet Install Detected ---"
   fi
-fi
-
-# ── Project skills ──────────────────────────────────────────────────────────
-# The persona treats .mallet/skills/ as an extra skills directory, but Claude
-# Code only discovers .claude/skills/. Listing each skill's trigger description
-# here is what lets the model notice when one applies. Capped so a large
-# directory cannot push the output past the 10,000-character hook limit.
-
-MALLET_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}/.mallet"
-if ls "$MALLET_DIR"/skills/*/SKILL.md >/dev/null 2>&1; then
-  echo "--- Project Skills (.mallet/skills/) ---"
-  echo "Claude Code does not load these itself. When one's trigger applies, read its SKILL.md and follow it."
-  n=0
-  for f in "$MALLET_DIR"/skills/*/SKILL.md; do
-    n=$((n + 1)); [ "$n" -gt 25 ] && break
-    name=$(basename "$(dirname "$f")")
-    # Single-line descriptions only; CRLF and surrounding quotes are stripped.
-    desc=$(sed -n 's/^description:[[:space:]]*//p' "$f" | head -1 | tr -d '\r' | sed 's/^["'"'"']//; s/["'"'"']$//' | cut -c1-300)
-    echo "- ${name}: ${desc}"
-  done
-  echo "--- End Project Skills ---"
-fi
-
-# ── Open mission ────────────────────────────────────────────────────────────
-# Backs the persona's Continuity directive with a signal instead of relying on
-# the model to look for the file unprompted.
-
-ACTIVE="$MALLET_DIR/missions/active.md"
-pending=0
-[ -f "$ACTIVE" ] && pending=$(grep -c '^[[:space:]]*- \[ \]' "$ACTIVE")
-# A mission with nothing pending is finished, not something to resume.
-if [ "$SOURCE" != "compact" ] && [ "$pending" -gt 0 ]; then
-  title=$(sed -n 's/^# Mission:[[:space:]]*//p' "$ACTIVE" | head -1 | tr -d '\r' | cut -c1-120)
-  echo "--- Open Mission ---"
-  echo "${title:-Untitled}: ${pending} pending task(s) in .mallet/missions/active.md."
-  echo "Read it, surface the pending tasks, and ask whether to resume or start fresh."
-  echo "--- End Open Mission ---"
 fi
 
 # ── Git conventions ─────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 {
   "name": "mallet",
-  "description": "Personal engineering standards for Claude Code: an evidence-first persona, feature planning, missions, a spec-to-review agent pipeline, and hooks that keep sessions honest.",
+  "description": "Personal engineering standards for Claude Code: an evidence-first persona, feature planning, ADRs and a decision council, session wrap-ups, a code review agent, and default Git conventions for projects that state none.",
   "author": { "name": "Daniel Ramos" },
   "homepage": "https://github.com/dfsramos/claude-mallet",
   "repository": "https://github.com/dfsramos/claude-mallet",

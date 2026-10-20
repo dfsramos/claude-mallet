@@ -10,16 +10,6 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(echo "$input" | jq -r '.workspace.project_d
 # jq is required by every segment below.
 command -v jq &>/dev/null || exit 0
 
-# Calibrate: record the live model and effort for user-prompt-submit.sh, which
-# cannot see either in its own hook input.
-# effort.level tracks mid-session /effort changes; it is absent when the model
-# has no effort parameter.
-cal_sid=$(echo "$input" | jq -r '.session_id // empty' 2>/dev/null | tr -cd 'A-Za-z0-9_-')
-if [ -n "$cal_sid" ]; then
-  echo "$input" | jq -c '{model: (.model.id // null), effort: (.effort.level // null)}' \
-    > "${TMPDIR:-/tmp}/mallet-calibrate-${cal_sid}.json" 2>/dev/null
-fi
-
 model_name=$(echo "$input" | jq -r '.model.display_name // empty' 2>/dev/null)
 effort_level=$(echo "$input" | jq -r '.effort.level // empty' 2>/dev/null)
 
@@ -78,8 +68,7 @@ cost=$(echo "$input" | jq -r '.cost.total_cost_usd // empty' 2>/dev/null)
 
 # Context size in tokens: what every turn re-reads, so what each turn costs.
 # total_input_tokens is input + cache writes + cache reads from the latest
-# response, the same figure session-watch reads from the transcript. 0 before
-# the first response.
+# response; 0 before the first response.
 ctx_tokens=$(echo "$input" | jq -r '.context_window.total_input_tokens // empty' 2>/dev/null)
 case "$ctx_tokens" in ''|*[!0-9]*) ctx_tokens=0 ;; esac
 session_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty' 2>/dev/null)

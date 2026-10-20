@@ -95,7 +95,7 @@ Never assume a tracker exists. Find out from the environment:
 
 - an issue tracker exposed as an MCP server: read the available tool list to see which, rather than guessing
 - `gh`, for GitHub issues, when the repository has a GitHub remote
-- whatever the project names as its source of work in `CLAUDE.md`, `.mallet/conventions.md`, or auto memory, which also decides between several candidates
+- whatever the project names as its source of work in `CLAUDE.md`, `.claude/rules/`, or auto memory, which also decides between several candidates
 
 If more than one tracker is available and nothing says which applies, ask. If none is available, return the body in chat as in step 4.
 

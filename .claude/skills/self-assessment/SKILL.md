@@ -6,7 +6,7 @@ description: Invoke when the user asks for a self-assessment, critical assessmen
 
 Critically review the Mallet plugin and this repo, verify every finding that drives a recommendation, rank the results, and fix them in groups the user approves. Runs inside the claude-mallet repo only.
 
-Read `.mallet/conventions.md` first: Git Workflow Override (commit to `master`), Hook Authoring, Docs Parity, and Changelog all apply to the fixes.
+The root `CLAUDE.md` and `.claude/rules/hooks.md`, which Claude Code loads itself, carry the conventions the fixes must follow: commit to `master`, hook authoring, docs parity, and the changelog.
 
 ---
 
@@ -23,13 +23,13 @@ Record the suite count and check count. A failing suite is the first finding, no
 
 ## 2. Fan Out Four Reviewers
 
-Dispatch four read-only `general-purpose` agents in one message. Each reads `.mallet/conventions.md` first, edits nothing, and returns a ranked list: severity (high, medium, low), `file:line` evidence, and a one-line fix, under about 700 words.
+Dispatch four read-only `general-purpose` agents in one message. Each reads the root `CLAUDE.md` and `.claude/rules/hooks.md` first, edits nothing, and returns a ranked list: severity (high, medium, low), `file:line` evidence, and a one-line fix, under about 700 words.
 
 | Area | Files | Look for |
 |---|---|---|
 | Persona and directives | `plugin/persona/PERSONA.md`, `plugin/hooks/persona.sh`, `docs/directives.md` | Contradictions between directives and with what skills do; drift from `docs/directives.md`; references to hooks, files, or skills that do not exist; size against the `test-15` cap; directives that duplicate Claude Code built-ins or a hook |
-| Skills and agents | `plugin/skills/`, `plugin/agents/`, `plugin/workflows/`, `docs/skills.md`, `.mallet/skills/`, `.mallet/skill-backlog.md` | Descriptions that summarise instead of stating triggers, or overlap; triggers that cannot fire (`disable-model-invocation`); broken paths and names; skills and workflows sharing a name; drift from `docs/skills.md`; overlap with built-in Claude Code features |
-| Executable code | `plugin/hooks/`, `plugin/statusline/`, `plugin/workflows/`, `.claude/*.sh`, `tests/`, `docs/hooks.md`, `docs/structure.md` | Correctness, bash 3.2 and BSD portability, output channel per hook event, output over 10,000 characters, stdin handling, timeouts, per-prompt cost, test gaps, docs drift |
+| Skills and agents | `plugin/skills/`, `plugin/agents/`, `docs/skills.md`, `.claude/skills/` | Descriptions that summarise instead of stating triggers, or overlap; triggers that cannot fire (`disable-model-invocation`); broken paths and names; drift from `docs/skills.md`; overlap with built-in Claude Code features |
+| Executable code | `plugin/hooks/`, `plugin/statusline/`, `.claude/*.sh`, `tests/`, `docs/hooks.md`, `docs/structure.md` | Correctness, bash 3.2 and BSD portability, output channel per hook event, output over 10,000 characters, stdin handling, timeouts, per-prompt cost, test gaps, docs drift |
 | Repo health | `README.md`, `install.md`, `CHANGELOG.md`, `.mallet/features/`, `.mallet/discovery-*.md`, git history and branches | Stale plans and discovery items, transitional code against its retirement condition in `docs/structure.md`, changelog gaps for user-visible commits, README accuracy, churn hotspots |
 
 ---

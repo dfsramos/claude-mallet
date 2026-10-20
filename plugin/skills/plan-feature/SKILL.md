@@ -70,7 +70,7 @@ Signals — the feature touches API design, auth flows, data modelling, security
 If any signals are present, ask: "This feature touches [domain] — would a knowledge skill help guide implementation? I can scaffold one alongside the plan."
 
 If yes:
-- Copy `${CLAUDE_SKILL_DIR}/knowledge-skill-template.md` to `.mallet/skills/<domain>-knowledge/SKILL.md`
+- Copy `${CLAUDE_SKILL_DIR}/knowledge-skill-template.md` to `.claude/skills/<domain>-knowledge/SKILL.md`, where Claude Code loads it itself
 - Fill in what is already known from intake; leave the rest as placeholders
 - Note the skill in `plan.md` under a **Supporting Skills** section
 

@@ -72,7 +72,7 @@ The persona loads in every session, in every project, once the plugin is install
 | `~/.claude/CLAUDE.md`, `~/.claude/rules/*.md` | every project, for this user | Claude Code |
 | `plugin/rules/git.md` | a git repository with no Git conventions of its own, for that session | `plugin/hooks/session-start.sh` |
 
-Project conventions that used to live in `.mallet/conventions.md`, and skill amendments in `.mallet/overrides/`, are no longer read: the persona section that instructed it is gone (table below). Their content belongs in `CLAUDE.md` or `.claude/rules/<topic>.md`, which Claude Code loads without any instruction from Mallet; an amendment to a Mallet skill is `.claude/rules/<skill>.md` with "When running `/mallet:<skill>`, ..." lines. This repository's root `CLAUDE.md` points at its own `.mallet/conventions.md` explicitly, so that file still applies here.
+Project conventions that used to live in `.mallet/conventions.md`, and skill amendments in `.mallet/overrides/`, are no longer read: the persona section that instructed it is gone (table below). Their content belongs in `CLAUDE.md` or `.claude/rules/<topic>.md`, which Claude Code loads without any instruction from Mallet; an amendment to a Mallet skill is `.claude/rules/<skill>.md` with "When running `/mallet:<skill>`, ..." lines.
 
 ### Directives removed 2026-10-20
 
@@ -89,9 +89,9 @@ The persona went from 9,312 to 2,870 characters. Each section below was dropped 
 | Skills (check before every request, trigger-only descriptions, skill backlog) | Native loads skill descriptions and invokes on match; `.mallet/skill-backlog.md` is no longer written, and `reviewing-sessions` drains a leftover one |
 | Verification Before Done | Native system prompt requires verification before reporting completion |
 | Subagents | Native Agent tool guidance covers when and how to delegate |
-| Task Calibration | The `[calibrate]` line from `user-prompt-submit.sh` is informational until that hook is removed |
-| Continuity (missions, checkpoint, session-watch) | `session-start.sh` still flags an open mission and says what to do with it; `autoCompactWindow` in settings replaces session-watch; the wrap-up offer stays under Session |
-| Project Context (`.mallet/conventions.md`, `.mallet/skills/`, Skill Overrides, skill routing) | `CLAUDE.md` and `.claude/rules/` are loaded natively; `.mallet/conventions.md` and `.mallet/overrides/` are no longer read; `session-start.sh` still lists `.mallet/skills/` |
+| Task Calibration | The `[calibrate]` line went with `user-prompt-submit.sh` on 2026-10-20; which model and effort a task deserves is a judgment Claude makes without a hook line |
+| Continuity (missions, checkpoint, session-watch) | Missions and `checkpoint` are gone (2026-10-20): work that continues across sessions is an auto memory `project` entry, written by `reviewing-sessions`; `autoCompactWindow` in settings replaces session-watch; the wrap-up offer stays under Session |
+| Project Context (`.mallet/conventions.md`, `.mallet/skills/`, Skill Overrides, skill routing) | `CLAUDE.md` and `.claude/rules/` are loaded natively; `.mallet/conventions.md`, `.mallet/overrides/` and `.mallet/skills/` are no longer read, and project skills go to `.claude/skills/`, which Claude Code loads itself |
 
 ### Directives removed in the move to a plugin
 
@@ -103,6 +103,6 @@ Several directives that duplicated a Claude Code built-in or an obsolete mechani
 | Ultracode Mode | The Workflow tool is now used directly, without a keyword-triggered opt-in ritual |
 | Project Memory (`.mallet/memory.md`) | Claude Code's own auto memory |
 | Self-Improvement Loop (`.mallet/lessons.md`) | Auto memory `feedback` entries |
-| Mandatory `task-calibrate` invocation on a hook flag | The renamed, manual-only `calibrate` skill, plus the reworked Task Calibration directive above |
+| Mandatory `task-calibrate` invocation on a hook flag | A manual-only `calibrate` skill and a Task Calibration directive, both themselves removed on 2026-10-20 |
 | Several tool-preference bullets duplicated by the built-in system prompt, including "Format output as Markdown" | Not restated |
-| Prefer Edit over Write | The `write-guard` hook, which blocks Write on existing files |
+| Prefer Edit over Write | The `write-guard` hook, itself removed on 2026-10-20: Claude Code prefers `Edit` on an existing file by itself |

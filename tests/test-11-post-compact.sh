@@ -1,6 +1,7 @@
 #!/bin/bash
-# Test: compaction continuity comes from a SessionStart `compact` hook, and the
-# old PreCompact snapshot mechanism is gone from payload and merged settings.
+# Test: compaction continuity comes from a SessionStart `compact` hook that
+# emits fresh git state; the old PreCompact snapshot mechanism is gone from
+# payload and merged settings, and a leftover mission file is not restored.
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SCRATCH=$(mktemp -d)
 trap 'rm -rf "$SCRATCH"' EXIT
@@ -17,8 +18,9 @@ mkdir -p "$CLAUDE_PROJECT_DIR/.mallet/missions"
 git -C "$CLAUDE_PROJECT_DIR" init -q -b trunk-x
 git -C "$CLAUDE_PROJECT_DIR" -c user.email=t@t -c user.name=t commit -q --allow-empty -m "first-commit-sentinel"
 echo "dirty" > "$CLAUDE_PROJECT_DIR/untracked.txt"
+# Earlier versions restored .mallet/missions/active.md here; open work now
+# lives in auto memory, which Claude Code loads itself after compaction.
 echo "MISSION-SENTINEL" > "$CLAUDE_PROJECT_DIR/.mallet/missions/active.md"
-echo "other" > "$CLAUDE_PROJECT_DIR/.mallet/missions/side-quest.md"
 
 echo "== post-compact.sh =="
 [ -f "$H/post-compact.sh" ] || { echo "  FAIL post-compact.sh missing"; echo "pass=$pass fail=1"; exit 1; }
@@ -26,14 +28,8 @@ OUT=$(bash "$H/post-compact.sh" 2>&1); ck "exit 0" "$?" "0"
 has "branch"           "$OUT" "trunk-x"
 has "recent commits"   "$OUT" "first-commit-sentinel"
 has "uncommitted"      "$OUT" "untracked.txt"
-has "active mission"   "$OUT" "MISSION-SENTINEL"
-has "other missions listed" "$OUT" "side-quest.md"
-
-echo "== post-compact.sh with an oversized mission =="
-awk 'BEGIN{for(i=0;i<600;i++) print "- [ ] pending task number " i " with some detail"}' > "$CLAUDE_PROJECT_DIR/.mallet/missions/active.md"
-OUT=$(bash "$H/post-compact.sh" 2>&1); ck "exit 0" "$?" "0"
+hasnt "leftover mission file not restored" "$OUT" "MISSION-SENTINEL"
 ck "output under 10,000 chars" "$([ ${#OUT} -lt 10000 ] && echo yes || echo "no (${#OUT})")" "yes"
-has "truncation notice" "$OUT" "truncated at"
 
 echo "== post-compact.sh outside a git repo, no .mallet =="
 export CLAUDE_PROJECT_DIR="$SCRATCH/plain"; mkdir -p "$CLAUDE_PROJECT_DIR"

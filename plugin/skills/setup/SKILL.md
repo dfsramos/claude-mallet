@@ -26,8 +26,6 @@ Plugins cannot set the main `statusLine`, so it is registered in `~/.claude/sett
    ```
    Write the expanded path, not the placeholder. Verify with `jq -e . ~/.claude/settings.json` afterwards.
 
-The statusline also records the live model and effort level for the calibrate hook; without it, calibrate falls back to the `effortLevel` in settings.
-
 ## 2. Auto-update
 
 Background auto-update is off by default for third-party marketplaces. With it on, Claude Code refreshes the marketplace after each session starts and updates Mallet in the background; without it, the user runs `/plugin marketplace update claude-mallet` to get new versions. Offer to turn it on:

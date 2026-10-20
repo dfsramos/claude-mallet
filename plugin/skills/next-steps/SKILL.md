@@ -6,7 +6,7 @@ description: Invoke when the user asks what is pending, what is left, what is ne
 
 Report what is still outstanding as a numbered table the user can refer to by number.
 
-Read only. This skill does not create tickets, write code, or persist state — `checkpoint` writes state, `reviewing-sessions` reflects on the session, this one only reports what remains. The single exception is step 6, and only when the user prunes items in reply.
+Read only. This skill does not create tickets, write code, or persist state — `reviewing-sessions` records continuing work, this one only reports what remains. The single exception is step 6, and only when the user prunes items in reply.
 
 ---
 
@@ -15,16 +15,16 @@ Read only. This skill does not create tickets, write code, or persist state — 
 Never assume a tracker exists. Establish what this environment actually has before collecting anything.
 
 Always check:
-- `.mallet/missions/*.md` — every file, not only `active.md`. More than one mission can be live at once, and they frequently overlap.
+- Auto memory: the `project` entries where `reviewing-sessions` records work that continues across sessions, and any entry holding a deferred item. More than one piece of work can be live at once, and they frequently overlap.
 - The current session, for work agreed verbally but not yet recorded anywhere.
-- `.mallet/skill-backlog.md` if present, and auto memory, for deferred items.
+- Leftovers from earlier Mallet versions, if present: `.mallet/missions/*.md` (every file, not only `active.md`) and `.mallet/skill-backlog.md`.
 
 Environment dependent, use whichever exist:
 - An issue tracker exposed as an MCP server. Read the available tool list to find out which, rather than guessing — it may be Jira, Linear, Notion, or nothing.
 - `gh` for GitHub issues and open pull requests, if the repo has a remote.
-- Whatever the project names as its source of work in `CLAUDE.md`, `.mallet/conventions.md`, or auto memory — a Miro board, a spreadsheet, a shared document.
+- Whatever the project names as its source of work in `CLAUDE.md`, `.claude/rules/`, or auto memory — a Miro board, a spreadsheet, a shared document.
 
-If nothing exists beyond the mission files, say so and carry on. A personal project with no tracker is a normal case, not a gap to apologise for.
+If nothing exists beyond memory and the session, say so and carry on. A personal project with no tracker is a normal case, not a gap to apologise for.
 
 Note which sources you consulted. Report them in step 5.
 
@@ -33,23 +33,23 @@ Note which sources you consulted. Report them in step 5.
 ## 2. Collect the candidate items
 
 Gather outstanding work from every source found. Include:
-- pending items from mission files
+- pending items from memory entries, and from any leftover mission file
 - work agreed in this session that was never written down
 - open tracker items that belong to this thread of work
 
 Exclude:
 - anything already completed, unless the user asked for a full picture
-- items the user has previously declared done or not needed, which live in a `## Cleared` section of the mission file and stay there
+- items the user has previously declared done or not needed, which are recorded as cleared (step 6) and stay that way
 - unrelated backlog. If a tracker sweep pulls in items with no connection to the current thread, keep them out of the main table and mention the count separately.
 
 ---
 
 ## 3. Verify before reporting
 
-The mission file records what was true when it was written. Check the current state rather than trusting it.
+A memory entry or mission file records what was true when it was written. Check the current state rather than trusting it.
 
 - Re-read each referenced tracker item's real status. Items recorded as "needs reopening" are often already reopened, and items recorded as open are sometimes closed.
-- Search the tracker for items covering work the mission file lists as untracked. An item may have been raised by someone else in the meantime.
+- Search the tracker for items covering work recorded as untracked. An item may have been raised by someone else in the meantime.
 - Where a claim about the system justifies the work, confirm it still holds if that is cheap to do. Say when a claim is carried forward unverified.
 
 Every correction found here is worth stating explicitly, because it changes what the user does next.
@@ -107,8 +107,8 @@ State which sources were consulted, in one line. If a source that would normally
 
 The usual response to this table is instructions by number: some items are done, some are not needed, the rest stay. When that happens, persist it.
 
-- Move pruned items into a `## Cleared <date>` section of the mission file they came from, with a one line note on why. Do not delete them — "not needed now" is not "never needed", and the detail is expensive to reconstruct.
-- Leave the surviving items in `Pending`.
+- Record pruned items as cleared where they came from, with a one line note on why: a `Cleared <date>:` line in the auto memory `project` entry, or a `## Cleared <date>` section of a leftover mission file. Do not delete them — "not needed now" is not "never needed", and the detail is expensive to reconstruct.
+- Leave the surviving items pending.
 - Re-issue the table, renumbered, covering only what remains.
 
 ---

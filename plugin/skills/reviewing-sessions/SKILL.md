@@ -38,7 +38,7 @@ Be specific. Reference the actual exchange, not a generalisation.
 
 Note any patterns that drove unnecessary token use this session:
 
-- Long session without a `/compact` — flag in "What Went Poorly"
+- Large output pulled into context when a filtered view would have done (whole files, raw logs, unbounded search results) — every later turn re-reads it
 - Write used on an existing file (should have been Edit) — adds ~2× the output tokens per operation
 - Verbose response written after a routine Bash command (summarising output, writing unsolicited plans)
 - Subagent calls on a stronger model than the work needed (file reads, grep, lookups)
@@ -75,41 +75,17 @@ Do not add new entries here unless something significant was missed during the s
 
 ---
 
-## 4b. Mission State
+## 4b. Continuing Work
 
-Assess whether work from this session is part of a larger mission that will continue in a future session.
+Assess whether work from this session continues in a future session. Open multi-session work is carried by Claude Code's auto memory, which loads its index at every session start; Mallet keeps no mission file of its own.
 
-**If the mission is complete** (all tasks done, goal achieved):
-- If `.mallet/missions/active.md` exists, read it, write the contents to `.mallet/missions/archive/<session-id>.md`, then delete the original.
+**If work is ongoing** (clearly unfinished, or a goal spanning several sessions):
+- Write or update one `project` memory for it, named after the goal: what it is for, what is done, what is pending, what is blocked, and the decisions taken with their `[firm]`/`[tentative]` tags. Update the existing entry rather than adding a second; dates absolute, not relative.
+- Keep it terse. The next session reads it cold — each pending item must be self-contained enough to act on without re-reading code.
 
-**If work is ongoing** (3+ steps total, or clearly unfinished):
-- Read `.mallet/missions/active.md` first if it exists. If it holds a *different* mission that is still open, do not overwrite it. Either consolidate the two deliberately, or leave this session's mission in its own `.mallet/missions/<short-name>.md` and cross-reference them, then tell the user which you did. Two concurrent missions is a normal state that a single `active.md` does not model well.
-- Otherwise write or update `.mallet/missions/active.md` using the format below, overwriting rather than appending.
+**If the work is complete** (goal achieved): remove or close out its `project` memory, so finished work stops loading at every session start.
 
-```markdown
-# Mission: <name>
-session: <current-session-id>
-started: YYYY-MM-DD
-project: <project or repo name>
-
-## Goal
-<1-2 sentences — what are we building and why>
-
-## Completed
-- [x] <task> _(session: <id>)_
-
-## Pending
-- [ ] <task>
-
-## Blocked
-<describe blockers, or remove this section if none>
-
-## Decisions
-- **<decision>** — <rationale> `[firm]`
-- **<decision>** — <rationale> `[tentative]`
-```
-
-Keep entries terse. The next session reads this cold — each pending task must be self-contained enough to act on without re-reading code.
+**Leftover mission file.** Earlier Mallet versions kept this state in `.mallet/missions/active.md`. If one exists, fold its pending items and decisions into the `project` memory, then offer to archive it under `.mallet/missions/archive/` or delete it; remove the directory once it is empty.
 
 **If work was single-session with no continuation expected**: skip this step entirely.
 

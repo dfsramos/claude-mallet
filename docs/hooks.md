@@ -2,28 +2,23 @@
 
 Hooks are shell scripts that run automatically in response to Claude Code events. They live at `plugin/hooks/` and ship with the plugin — every user runs the same scripts, registered in `plugin/hooks/hooks.json` via `${CLAUDE_PLUGIN_ROOT}`, which resolves to the installed plugin version at runtime.
 
-Each hook locates its *data* through `$CLAUDE_PROJECT_DIR`, so the one global script reads whichever project's `.mallet/` state is current.
+Each hook locates its *data* through `$CLAUDE_PROJECT_DIR`, so the one global script reads whichever project is current.
 
 ## A fact that shapes every hook here
 
-**For `PreToolUse`, `PostToolUse`, and `PreCompact`, plain stdout on exit 0 is written only to the debug log — it never reaches the model.** Only `UserPromptSubmit` and `SessionStart` stdout is added to context. This is why `typecheck-stop.sh` (Stop) returns its findings as JSON `additionalContext` instead of printing them, why `write-guard.sh` and `command-guard.sh` (PreToolUse) answer with a JSON `permissionDecision` (`deny` reasons go to the model, `ask` reasons to the user's permission prompt), and why `write-guard.sh` blocks Write by writing to stderr and exiting `2` — a blocking exit's stderr is fed back to the model as the reason, regardless of event type.
+**For `PreToolUse`, `PostToolUse`, and `PreCompact`, plain stdout on exit 0 is written only to the debug log — it never reaches the model.** Only `UserPromptSubmit` and `SessionStart` stdout is added to context. Every Mallet hook is now a `SessionStart` hook, the one event where a plugin can put text in front of the model without a JSON envelope. A hook on any other event has to answer with JSON `additionalContext` or a `permissionDecision`, or block by writing to stderr and exiting `2` (a blocking exit's stderr is fed back to the model as the reason, regardless of event type). The removed hooks below worked that way, and the rule applies to any new one.
 
 ## Registration
 
-All eight scripts are registered in one file, `plugin/hooks/hooks.json`:
+Three scripts are registered in one file, `plugin/hooks/hooks.json`:
 
 | Hook | Event | Matcher |
 |---|---|---|
 | `persona.sh` | SessionStart | `startup\|resume\|clear\|compact` |
 | `session-start.sh` | SessionStart | `startup\|resume\|clear\|compact` |
 | `post-compact.sh` | SessionStart | `compact` |
-| `user-prompt-submit.sh` | UserPromptSubmit | *(none — every prompt)* |
-| `write-guard.sh` | PreToolUse | `Edit\|Write` |
-| `command-guard.sh` | PreToolUse | `Bash` |
-| `typecheck.sh` | PostToolUse | `Edit\|Write` |
-| `typecheck-stop.sh` | Stop | *(none)* |
 
-There is no separate opt-in registration tier at the settings level any more — the plugin registers everything globally. `typecheck.sh`, `typecheck-stop.sh`, and `command-guard.sh` are opt-in in effect only, gated on a per-project marker file (see below), because a per-project `settings.json` registration would need a stable script path, which a versioned plugin cache does not provide.
+The plugin registers every hook globally; there is no per-project opt-in tier, because a per-project `settings.json` registration would need a stable script path, which a versioned plugin cache does not provide. A behaviour that should not run everywhere does not belong in a plugin hook: a user-level `permissions` rule or setting does that job natively (see Removed Hooks).
 
 ## Persona Hook
 
@@ -37,96 +32,50 @@ Hook stdout over 10,000 characters is replaced by a file path and a 2,000-charac
 ## Session Start Hook
 
 **File:** `plugin/hooks/session-start.sh`
-**Trigger:** `SessionStart`, matcher `startup|resume|clear|compact`; the hook reads `source` from its input (with `sed`, so it works without `jq`) to decide which jobs run. On `resume` only the statusline refresh runs: the resumed conversation already holds the other notices from when it started
+**Trigger:** `SessionStart`, matcher `startup|resume|clear|compact`; the hook reads `source` from its input (with `sed`, so it works without `jq`) to decide which jobs run. On `resume` only the statusline refresh runs: the resumed conversation already holds the Git conventions notice from when it started
 
-Five independent jobs, all cheap and network-free:
+Three independent jobs, all cheap and network-free:
 
 1. **Statusline refresh** (`startup`, `resume`). A `statusLine` command cannot reference `${CLAUDE_PLUGIN_ROOT}`, which changes with every plugin version, so `/mallet:setup` points `statusLine` at a copy in `${CLAUDE_PLUGIN_DATA}` instead. This hook keeps that copy current by comparing it against `${CLAUDE_PLUGIN_ROOT}/statusline/statusline.sh` on every startup and resume and overwriting it (via a temp file + `mv`) when they differ, so a plugin update reaches the statusline without a manual step. A resume loads the current plugin version too, so it refreshes as well; otherwise `claude --resume` kept the old statusline.
 2. **Legacy per-project install detection** (`startup`). If the current project still carries a per-project Mallet payload — `.claude/framework.json`, or both `.claude/skills/update/SKILL.md` and `.claude/agents/_contract.md` — prints a notice offering the `migrate` skill. Two exemptions prevent it nagging forever: the install's own project root (identified by `.claude/settings.fragment.json` / `.claude/install-payload.sh`, which only this source repo has), and any project where `.mallet/.migration-declined` exists.
-3. **Project skills** (all three sources). Claude Code discovers skills only in `.claude/skills/`, so the persona's "treat `.mallet/skills/` as an additional skills directory" needs help: the hook lists each `.mallet/skills/*/SKILL.md` by name with its `description` (first 300 characters, at most 25 skills, keeping the output under the 10,000-character hook limit) and tells Claude to read a skill's file when its trigger applies. It runs on `clear` and `compact` too, because both drop the earlier listing from context.
-4. **Open mission** (`startup`, `clear`). If `.mallet/missions/active.md` exists, and has at least one unchecked `- [ ]` task, prints its `# Mission:` title and that count, and tells Claude to surface them and ask whether to resume — backing the persona's Continuity directive with a signal instead of relying on Claude to look unprompted. After `compact`, `post-compact.sh` restores the mission itself, so this one stays quiet.
-5. **Git conventions** (all three sources). The persona carries no Git rules: a project states its own in `CLAUDE.md` or `.claude/rules/`, which Claude Code loads itself and re-reads after compaction. In a git repository (`git rev-parse --is-inside-work-tree` on the project directory; silent without `git`), the hook looks for a markdown heading naming Git as a word (`## Git`, `## Git workflow`; `## GitHub Actions` does not count) or the `<!-- mallet:git-conventions -->` marker that `plugin/rules/git.md` carries, in `CLAUDE.md`, `CLAUDE.local.md`, `.claude/CLAUDE.md`, and every `.md` under `.claude/rules/` (recursive, as Claude Code reads it), in the project directory, each directory above it (capped at 32 levels), and `$HOME`. When nothing matches it prints `plugin/rules/git.md` without its marker line as the session's defaults, and tells Claude to offer once, after the first request is handled, to copy that file to `.claude/rules/git.md`; a project that wants different rules writes its own Git section instead. It runs on `clear` and `compact` too, because both drop the earlier notice. The pattern is POSIX ERE without `\b`, so BSD grep matches it. Measured cost of the notice when it fires: 221 tokens.
+3. **Git conventions** (`startup`, `clear`, `compact`). The persona carries no Git rules: a project states its own in `CLAUDE.md` or `.claude/rules/`, which Claude Code loads itself and re-reads after compaction. In a git repository (`git rev-parse --is-inside-work-tree` on the project directory; silent without `git`), the hook looks for a markdown heading naming Git as a word (`## Git`, `## Git workflow`; `## GitHub Actions` does not count) or the `<!-- mallet:git-conventions -->` marker that `plugin/rules/git.md` carries, in `CLAUDE.md`, `CLAUDE.local.md`, `.claude/CLAUDE.md`, and every `.md` under `.claude/rules/` (recursive, as Claude Code reads it), in the project directory, each directory above it (capped at 32 levels), and `$HOME`. When nothing matches it prints `plugin/rules/git.md` without its marker line as the session's defaults, and tells Claude to offer once, after the first request is handled, to copy that file to `.claude/rules/git.md`; a project that wants different rules writes its own Git section instead. It runs on `clear` and `compact` too, because both drop the earlier notice. The pattern is POSIX ERE without `\b`, so BSD grep matches it. Measured cost of the notice when it fires: 221 tokens.
 
-There is no update check here any more — updates arrive through the plugin system itself, so the GitHub-polling logic and its 24-hour cache are gone.
+There is no update check here — updates arrive through the plugin system itself, so the GitHub-polling logic and its 24-hour cache are gone.
+
+Two jobs were removed on 2026-10-20. Listing `.mallet/skills/` is gone because project skills belong in `.claude/skills/`, which Claude Code loads itself. Flagging an open `.mallet/missions/active.md` is gone because open multi-session work lives in auto memory, whose index Claude Code loads at every session start; `reviewing-sessions` writes it.
 
 ## Post-Compact Hook
 
 **File:** `plugin/hooks/post-compact.sh`
 **Trigger:** `SessionStart`, matcher `compact`
 
-Restores working state immediately after a compaction, in the same session: current git branch, uncommitted changes (`git status --short`, up to 15 lines), the last 5 commits, the list of mission files present, and the contents of `.mallet/missions/active.md` if one exists, capped at 7,000 bytes with a truncation notice so the whole output stays under the 10,000-character limit for hook output.
+Restores working state immediately after a compaction, in the same session: current git branch, uncommitted changes (`git status --short`, up to 15 lines), and the last 5 commits. Nothing else: Claude Code re-reads `CLAUDE.md`, `.claude/rules/` and auto memory after compaction itself, and the persona hook re-injects the persona. It no longer prints a mission file (2026-10-20).
 
 This replaces the old `pre-compact.sh` for two reasons: `PreCompact` stdout never reaches the model (see the fact above), so its context injection was silently doing nothing; and its snapshot file (`.mallet/compact-snapshot.md`) could leak into a later, unrelated session if that session started before the file was consumed. Emitting fresh state from a `SessionStart` hook instead means there is no file to persist and nothing to leak.
 
-## UserPromptSubmit Hook
-
-**File:** `plugin/hooks/user-prompt-submit.sh`
-**Trigger:** Every user message submitted to Claude
-
-Two independent checks:
-
-**Session-watch.** Suggests compaction as the context grows. Context size is read from the transcript: the last assistant record that has `message.usage` and whose `message.model` is not `<synthetic>` (sidechain records excluded), summing `input_tokens + cache_creation_input_tokens + cache_read_input_tokens`. Only the last 200 lines are read, since transcripts reach several MB, and lines that do not parse are skipped. At 150k tokens, and again at each further 50k (200k, 250k, …), it outputs JSON: a one-line `systemMessage` for the user and a `[session-watch]` `additionalContext` telling Claude the size, that every turn re-reads all of it, and to say once that turn that a checkpoint then `/compact` is worth it, not repeating it until the next step. `CLAUDE_CTX_WARN_THRESHOLD` and `CLAUDE_CTX_WARN_STEP` override the defaults. `${TMPDIR:-/tmp}/mallet-watch-<session_id>.last` records the last step warned, so each step warns once. Dropping below the threshold (after `/compact`) deletes it and re-arms the first warning. If the calibrate line is due on a warning turn, it goes into the same `additionalContext`, because stdout must then be a single JSON object.
-
-The trigger is absolute tokens because cost tracks context size: every turn re-reads the whole context. Prompt counts were a poor proxy, since one prompt can pull in a large file or log. Window percentage was too, since on a 1M window a session can pass 350k tokens below any percentage threshold. In one real project, a single 351k-token session that never compacted caused 73% of all cache reads.
-
-**Calibrate.** Injects a `[calibrate] active model: X; effort: Y` line when either value changes since the last prompt. Neither value is visible to this hook directly, so it reads them from a per-session state file (`${TMPDIR:-/tmp}/mallet-calibrate-<session_id>.json`) that `statusline.sh` writes on every render from the session JSON's `model.id` and `effort.level`. `effort.level` tracks mid-session `/effort` changes and is absent when the active model has no effort parameter. If no such state file exists (no Mallet statusline registered), it falls back to `effortLevel` in the most specific `settings.local.json`/`settings.json` it can find, and says so, since that fallback cannot see live `/effort` changes. The line is written once per change, tracked via a sibling `.last` file, so it costs nothing on unchanged turns.
-
-## Write Guard Hook
-
-**File:** `plugin/hooks/write-guard.sh`
-**Trigger:** `PreToolUse`, matcher `Edit|Write`
-
-Blocks `Write` calls on files that already exist — the persona requires `Edit` for existing files, since `Edit` sends only the changed lines while `Write` re-sends the whole file. Reads `tool_input.file_path`; if it points to an existing file, writes the block reason to **stderr** and exits `2`. Exit 2 is what feeds the message back to the model as the block reason — plain stdout would not, per the fact above. New files (`Write` creating something that doesn't exist) pass through with exit 0.
-
-It also asks before `Edit` changes an existing linter or type-checker config — ESLint, Prettier, Biome, Stylelint, `tsconfig*.json`/`jsconfig.json`, Ruff, mypy, Flake8, Pylint, PHPStan, Psalm, PHP-CS-Fixer, golangci-lint — returning `permissionDecision: "ask"`, whose reason appears in the user's permission prompt. A failing check should be fixed in the code, not loosened in its config; when the config change is intended, the user allows it. Creating a new config file is not asked about. A hook `ask` forces the prompt even in auto mode.
-
-## Typecheck Hooks
-
-**Files:** `plugin/hooks/typecheck.sh`, `plugin/hooks/typecheck-stop.sh`
-**Trigger:** `PostToolUse`, matcher `Edit|Write` (record); `Stop` (check)
-**Activation:** opt-in per project via a marker file, not a settings registration
-
-The plugin registers both hooks for every project, but they do nothing unless `.mallet/typecheck.enabled` exists at the project root (created by the `hooks-setup` skill). A per-project `settings.json` hook registration would need to reference a stable script path, and the plugin cache path changes with every version — the marker file is what makes the opt-in per-project instead.
-
-`typecheck.sh` only records each edited `.ts`, `.tsx`, or `.php` file in `${TMPDIR:-/tmp}/mallet-typecheck-<session_id>.list`. When Claude finishes the turn, `typecheck-stop.sh` checks them once: the project's own `tsc --noEmit` (if `tsconfig.json` exists and `node_modules/.bin/tsc` is found in the project or a parent directory, so a monorepo package finds a hoisted install; never `npx tsc`, which without a local install fetches the unrelated `tsc` package; Yarn PnP projects have no `node_modules/.bin` and are skipped) filtered to errors in the recorded files, and `vendor/bin/phpstan analyse --error-format=raw <files>` (if the binary exists), each capped to 20 lines. The Stop registration sets a 120-second `timeout`, so a slow full-project `tsc` cannot hold the turn open for the 600-second default. The list of edited files is cleared only after the checks finish, so a check the timeout kills runs again at the next turn's end. Checking once per turn replaced a full-project check after every edit, which repeated the same work and reported half-finished multi-edit states as errors. Filtering to the turn's files keeps pre-existing errors elsewhere from stopping every turn.
-
-Errors come back as Stop `additionalContext` — non-error feedback that continues the turn so Claude fixes them. When `stop_hook_active` is set (the turn is already continuing because of a Stop hook), it lets the turn end and keeps the list, so the next turn's check still covers those files without any risk of a loop.
-
-## Command Guard Hook
-
-**File:** `plugin/hooks/command-guard.sh`
-**Trigger:** `PreToolUse`, matcher `Bash`
-**Activation:** opt-in per project via `.mallet/command-guard.enabled`
-
-A narrow safety net for commands that bypass checks or destroy work, applied to each simple command in a `;`/`&&`/`||`/`|` chain:
-
-| Decision | Commands |
-|---|---|
-| `deny` (reason to Claude) | `--no-verify`, `git commit -n`, `core.hooksPath` overrides; force-pushing the default branch (named, or pushed from while checked out) |
-| `ask` (reason to the user) | other force-pushes, `git reset --hard`, `git clean -f…`, `git checkout/restore .`, `git branch -D`, `git stash drop/clear`, `rm` with `-r` and `-f` (unless every target is a build directory such as `node_modules` or `dist`), `DROP`/`TRUNCATE`/`DELETE FROM`/`ALTER TABLE … DROP` passed to a SQL client, `kubectl delete`, `terraform destroy` |
-
-Quoted strings are removed from the whole command before it is split, so a commit message — single-line, multi-line, or heredoc-fed — cannot trigger a git or `rm` rule. Destructive SQL needs a database client (`psql`, `mysql`, `sqlcmd`, …) running as a command, while the statement itself is matched anywhere, so `-c` arguments, heredocs, and piped input are covered. Git's global options are skipped to find the real subcommand, leading environment assignments and `sudo` are ignored, redirections such as `2>&1` are not mistaken for separators, and a quoted `core.hooksPath` override is checked against the raw command. Three forms are recovered before the quote strip would hide them: a shell's `-c` script (`bash -c "git push -f"`, also `sh`, `zsh`, a path such as `/bin/bash`, and options such as `-lc`, `--norc`, or `-o pipefail`) is split out as its own command; a quoted single word that is not an option (`"main"`) loses its quotes, so a quoted branch name still counts, while `-m "--no-verify"` stays a message; and a path-qualified command (`/usr/bin/git`) is reduced to its name. A quoted word containing the other quote character (`"don't"`) stays quoted, because a stray apostrophe would pair with a later one and hide the commands between them. Known gaps: a quoted option (`git push "--force"`) is not seen, and a `-c` script containing escaped quotes is cut at the first one. Pattern matching on command strings is never complete — variables, aliases, `eval`, and scripts that run these commands internally defeat it — so the hook asks rather than judges, and complements permission rules rather than replacing them. It is opt-in because it adds permission prompts, and some workflows run these commands routinely.
-
 ## Removed Hooks
 
-Three hooks from earlier versions are gone, not carried forward as opt-in:
+Hooks from earlier versions are gone, not carried forward as opt-in. Each one's job is done natively now:
 
-| Hook | Why removed |
-|---|---|
-| `pre-compact.sh` | Its `PreCompact` stdout never reached the model, and its snapshot file could leak into an unrelated later session — see Post-Compact Hook above |
-| `push-confirm.sh` | Superseded by a `permissions.ask` rule (`"Bash(git push *)"`) in settings, which Claude Code enforces natively |
-| `explore-redirect.sh` | Superseded by the built-in Explore agent for broad search; its Graphify pointer was niche enough not to warrant a dedicated hook |
-
-Regex-based complexity scoring (the old `task-calibrate` trigger) and `[ultracode]` scoring are also gone from `user-prompt-submit.sh`. Calibration is now a model-side judgment call — see the Task Calibration directive in [`directives.md`](directives.md) — because hooks cannot see the active model or effort level, and a prompt-type hook cannot itself decide whether a task's *content* warrants a change; only the model can.
+| Hook | Removed | Replacement |
+|---|---|---|
+| `pre-compact.sh` | 2026-10 | `post-compact.sh` above: its `PreCompact` stdout never reached the model, and its snapshot file could leak into an unrelated later session |
+| `push-confirm.sh` | 2026-10 | A `permissions.ask` rule (`"Bash(git push *)"`) in settings, which Claude Code enforces natively |
+| `explore-redirect.sh` | 2026-10 | The built-in Explore agent for broad search; its Graphify pointer was niche enough not to warrant a dedicated hook |
+| `user-prompt-submit.sh` | 2026-10-20 | Its session-watch reminder (a `[session-watch]` notice at 150k context tokens and each further 50k) is replaced by the `autoCompactWindow` setting or `/autocompact`, which compacts at a chosen context size instead of asking. Its `[calibrate]` model-and-effort line went with the Task Calibration directive; nothing replaces it |
+| `write-guard.sh` | 2026-10-20 | Claude Code prefers `Edit` over `Write` on an existing file by itself. Its ask before edits to lint or type-check config is a set of `permissions.ask` rules such as `Edit(//**/.eslintrc*)`, `Edit(//**/tsconfig*.json)`, `Edit(//**/phpstan.neon*)` |
+| `command-guard.sh` | 2026-10-20 | `permissions.deny` for `Bash(git * --no-verify*)` and `Bash(git commit -n *)` (the one rule native permissions did not already cover), `permissions.ask` for the destructive commands a prompt is wanted for (`Bash(git push --force*)`, `Bash(git reset --hard*)`, `Bash(rm -rf *)`, …). The `.mallet/command-guard.enabled` marker is inert |
+| `typecheck.sh`, `typecheck-stop.sh` | 2026-10-20 | The official language server plugins, `claude plugin install typescript-lsp@claude-plugins-official` and `php-lsp@claude-plugins-official`, which report diagnostics after every edit; they need `typescript-language-server` and `intelephense` on `PATH`, as the hooks needed a local `tsc` and `phpstan`. The `.mallet/typecheck.enabled` marker is inert |
 
 ## Adding New Hooks
 
-1. Create the script in `plugin/hooks/`.
-2. Register it in `plugin/hooks/hooks.json` under the right event, using an explicit `bash "${CLAUDE_PLUGIN_ROOT}/hooks/<script>.sh"` command:
+1. Check first that nothing native does the job: a `permissions` rule, a setting, an official plugin. `.claude/rules/hooks.md` in this repo states the bar a hook has to clear, and the portability and output-channel rules it must follow.
+2. Create the script in `plugin/hooks/`.
+3. Register it in `plugin/hooks/hooks.json` under the right event, using an explicit `bash "${CLAUDE_PLUGIN_ROOT}/hooks/<script>.sh"` command:
    ```json
    { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/my-hook.sh\"" }
    ```
    Always use `${CLAUDE_PLUGIN_ROOT}` for the script's own path — it resolves to the installed plugin version. Use `$CLAUDE_PROJECT_DIR` *inside* the script to locate that project's data, never for the script path itself.
-3. If the hook should be opt-in per project rather than always active, gate it on a `.mallet/<name>.enabled` marker file the way `typecheck.sh` does, and extend the `hooks-setup` skill to toggle it. Do not try to register it only in some projects' `settings.json` — the plugin cache path is not stable enough for that.
-4. Remember which event types reach the model as plain stdout (`UserPromptSubmit`, `SessionStart`) and which do not (`PreToolUse`, `PostToolUse`, `PreCompact`) — pick the delivery mechanism (stdout, JSON `additionalContext`, or stderr + exit 2) accordingly.
-5. Update this file and `tests/` — hook and script behaviour is covered by `tests/test-*.sh`; run `bash tests/run.sh` before committing.
+4. Every plugin hook is always-on in every project. A behaviour that only some projects want belongs in the user's or project's settings, not in the plugin; do not try to register a hook only in some projects' `settings.json`, since the plugin cache path is not stable enough for that.
+5. Remember which event types reach the model as plain stdout (`UserPromptSubmit`, `SessionStart`) and which do not (`PreToolUse`, `PostToolUse`, `PreCompact`) — pick the delivery mechanism (stdout, JSON `additionalContext`, or stderr + exit 2) accordingly.
+6. Update this file and `tests/` — hook and script behaviour is covered by `tests/test-*.sh`; run `bash tests/run.sh` before committing.
