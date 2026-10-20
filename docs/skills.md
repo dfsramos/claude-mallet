@@ -193,7 +193,7 @@ Structured end-of-session retrospective. No session record files are written —
 2. **What went well** — efficient tasks, effective patterns, good tool use
 3. **What went poorly** — mistakes, user corrections, rule violations (with specific references)
 3a. **Token efficiency** — flags patterns that drove unnecessary cost (long sessions without compaction, Write on existing files, verbose post-Bash responses, oversized subagents); saves a `feedback` memory for any gap no directive or memory covers
-4. **Skill and rule improvements** — project and personal skills are edited directly; a Mallet skill is never edited (the plugin cache is overwritten on update) but amended through `.mallet/overrides/<name>.md` plus a **Skill Overrides** entry in `.mallet/conventions.md`, with a proposed upstream change if it would help every project; project rules go to `.mallet/conventions.md`, never straight into the project's `CLAUDE.md` (proposed to the user instead), and rules for every project become `feedback` memories; skill backlog reviewed and actioned
+4. **Skill and rule improvements** — project and personal skills are edited directly, and new project skills go to `.claude/skills/`; a Mallet skill is never edited (the plugin cache is overwritten on update) but amended through `.claude/rules/<name>.md`, proposed to the user and written on agreement, with a proposed upstream change if it would help every project; project rules go to `.claude/rules/<topic>.md` or `CLAUDE.md`, proposed first since both are usually shared with a team, and rules for every project become `feedback` memories; a leftover `.mallet/skill-backlog.md` is actioned, pruned, and deleted once empty
 4a. **Review memory entries** — checks the auto memory entries written or updated this session; adds new ones only if something significant was missed
 4b. **Mission state** — if the mission is complete, archives `active.md`; if work continues, writes or updates it, and if a *different* open mission already occupies it, consolidates deliberately or keeps this session's mission in its own file with a cross-reference
 5. **Close out** — confirm the correct working branch; present the full wrap-up to the user
@@ -313,9 +313,9 @@ Template for creating domain knowledge skills — skills that inject expertise (
 
 ## Skill Backlog
 
-**File:** `.mallet/skill-backlog.md` (created on demand)
+**File:** `.mallet/skill-backlog.md` (no longer written as of 2026-10-20)
 
-Silent log of potential new skills or improvements captured during sessions. Reviewed during wrap-up.
+Earlier versions of the persona logged skill ideas here silently. The Skills section that did so is gone from the persona; where the file still exists, `reviewing-sessions` step 4 actions or removes its items and deletes it once empty.
 
 ## Project Skills
 
@@ -325,11 +325,7 @@ Project-specific skills that sit alongside plugin skills but are not shipped to 
 
 ## Skill Overrides
 
-**Directory:** `.mallet/overrides/` (optional, one file per overridden skill)
-
-Per-skill amendments to base plugin skills, indexed via a "Skill Overrides" section in `.mallet/conventions.md`. Before executing a listed skill, Claude reads `.mallet/overrides/<skill-name>.md` and applies its contents as amendments — overrides win on conflict.
-
-Override files are created and maintained by Claude on user request. Because the index lives in `.mallet/conventions.md` (already in context), Claude never probes the filesystem for absent overrides. See the [Skill Overrides section of Project Context](directives.md#project-context).
+**Removed 2026-10-20.** `.mallet/overrides/<skill>.md` and the "Skill Overrides" list in `.mallet/conventions.md` are no longer read: the persona's Project Context section, which instructed it, is gone. A project amendment to a Mallet skill now lives in `.claude/rules/<skill>.md` as "When running `/mallet:<skill>`, ..." lines, which Claude Code loads in every session without any instruction from Mallet. Move any existing override there. See [Where directives come from](directives.md#where-directives-come-from).
 
 ## Adding New Skills
 

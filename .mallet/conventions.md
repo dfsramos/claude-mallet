@@ -8,7 +8,7 @@
 
 `.mallet/` is **this repo's own state** and ships nowhere: `conventions.md` (this file), `skill-backlog.md`, `discovery-*.md`, `missions/`, `skills/`, `features/`.
 
-In this repo the Mallet skills are source, not an installed plugin: edit `plugin/skills/` directly. The `reviewing-sessions` rule against editing Mallet skills, and its routing to `.mallet/overrides/`, applies to installed copies only.
+In this repo the Mallet skills are source, not an installed plugin: edit `plugin/skills/` directly. The `reviewing-sessions` rule against editing Mallet skills, and its routing of amendments to `.claude/rules/`, applies to installed copies only.
 
 When adding a new skill:
 - **Plugin skill** (ships with every install): `plugin/skills/<name>/`
@@ -66,9 +66,6 @@ Colleagues use the plugin, and it has no `version` field: setting one pins every
 
 Session wrap-ups are conversational only — no session summary or retrospective file is written to disk. Mission files in `.mallet/missions/` are not session records: `reviewing-sessions` still writes and archives them.
 
-## Git Workflow Override
+## Git
 
-Overrides the main CLAUDE.md "Git Workflow" section for this repo only:
-
-- Commit and push directly to `master` — do not create feature branches or PRs.
-- The `b/` and `f/` branch-naming rules do not apply here.
+This repo's Git conventions are the `## Git` section of the root `CLAUDE.md`, which Claude Code loads itself and which also satisfies the session-start conventions check. They are not repeated here.

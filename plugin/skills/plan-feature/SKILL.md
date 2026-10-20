@@ -151,7 +151,7 @@ git -C <plans> commit -m "Add feature plan: <slug>." -- .mallet/features/<slug>/
 
 ## 4. Execute
 
-Create the feature branch from the default branch, following the persona's branch naming: `git checkout -b f/<slug> <DEFAULT>` (`b/<slug>` for a bug fix). Update the Branch field in `plan.md` and commit it in `<plans>`.
+Create the feature branch from the default branch, following the project's Git conventions (Mallet's default rule file names branches `f/<slug>`, or `b/<slug>` for a bug fix): `git checkout -b f/<slug> <DEFAULT>`. Update the Branch field in `plan.md` and commit it in `<plans>`.
 
 For each wave:
 

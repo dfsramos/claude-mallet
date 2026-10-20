@@ -1,5 +1,5 @@
 {
-  "description": "Mallet: persona, continuity after compaction, calibrate and session-watch, write-guard, opt-in typecheck and command guard",
+  "description": "Mallet: persona, Git conventions check, continuity after compaction, calibrate and session-watch, write-guard, opt-in typecheck and command guard",
   "hooks": {
     "SessionStart": [
       {

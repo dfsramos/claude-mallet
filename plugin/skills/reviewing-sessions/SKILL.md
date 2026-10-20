@@ -28,7 +28,7 @@ Review the session and identify:
 - Mistakes, misunderstandings, or incorrect assumptions made
 - Cases where the user had to correct course or reject a tool call
 - Unnecessary back-and-forth that could have been avoided
-- Directives from the persona, `CLAUDE.md`, or `.mallet/conventions.md` that were not followed correctly
+- Directives from the persona, `CLAUDE.md`, or `.claude/rules/` that were not followed correctly
 
 Be specific. Reference the actual exchange, not a generalisation.
 
@@ -52,18 +52,14 @@ If any of these occurred and no directive or memory already covers it, save a `f
 Based on what went poorly and what was learned:
 
 - **Fix skills that caused issues** — missing commands, outdated instructions, unclear steps. Where the fix goes depends on whose skill it is:
-  - A project skill (`.mallet/skills/` or `.claude/skills/`) or a personal one (`~/.claude/skills/`): edit it directly.
-  - A Mallet skill (`/mallet:<name>`): never edit its files. They live in the plugin cache and the next update overwrites them. Write the amendment to `.mallet/overrides/<name>.md` and list the skill under **Skill Overrides** in `.mallet/conventions.md`. If the fix would help every project, also describe it to the user as a proposed change to Mallet itself.
-- **Create new skills**: if a knowledge gap came up repeatedly or a new reusable pattern emerged, create the skill file now. Project-specific skills go to `.mallet/skills/<skill-name>/SKILL.md`; skills useful across every project go to `~/.claude/skills/<skill-name>/SKILL.md`. When unsure, prefer project-specific — promoting later is cheap, and a half-general personal skill applies everywhere.
-- **Fix missing or unclear rules**: a rule for this project goes in `.mallet/conventions.md`. Do not edit the project's `CLAUDE.md` — it is often tracked and shared with a team — but propose the change to the user if it belongs there. A rule for every project is a `feedback` memory.
+  - A project skill (`.claude/skills/`, or `.mallet/skills/` from an earlier Mallet version) or a personal one (`~/.claude/skills/`): edit it directly.
+  - A Mallet skill (`/mallet:<name>`): never edit its files. They live in the plugin cache and the next update overwrites them. Propose the amendment to the user as a project rule and, on agreement, write it to `.claude/rules/<name>.md` as "When running `/mallet:<name>`, ..." lines; Claude Code loads that file in every session. If the fix would help every project, also describe it to the user as a proposed change to Mallet itself.
+- **Create new skills**: if a knowledge gap came up repeatedly or a new reusable pattern emerged, create the skill file now. Project-specific skills go to `.claude/skills/<skill-name>/SKILL.md`, which Claude Code discovers itself; skills useful across every project go to `~/.claude/skills/<skill-name>/SKILL.md`. When unsure, prefer project-specific — promoting later is cheap, and a half-general personal skill applies everywhere.
+- **Fix missing or unclear rules**: a rule for this project belongs in `.claude/rules/<topic>.md` or `CLAUDE.md`. Both are usually tracked and shared with a team, so propose the exact text to the user and write it only on agreement. A rule for every project is a `feedback` memory.
 
 Apply the changes — do not just list them.
 
-Then open `.mallet/skill-backlog.md`. For each item logged during this session:
-- Evaluate whether it is still relevant given what was actually done
-- If yes, action it: create the skill or apply the improvement
-- Remove actioned items from the backlog
-- Leave items that need more context or a future session
+If `.mallet/skill-backlog.md` exists (earlier Mallet versions logged skill ideas there), go through it: action what is still relevant, remove each actioned or stale item, and delete the file once it is empty.
 
 ---
 

@@ -37,6 +37,9 @@ ck "persona under 9,800 chars (cap 10,000; now $CHARS)" "$([ "$CHARS" -lt 9800 ]
 OUT=$(cd /tmp && env -u CLAUDE_PLUGIN_ROOT bash "$P/hooks/persona.sh" | head -1)
 ck "falls back to script location" "$OUT" "# Persona"
 
+echo "== rules =="
+ck "rules/git.md starts with the marker session-start.sh looks for" "$(head -1 "$P/rules/git.md")" "<!-- mallet:git-conventions -->"
+
 echo "== skills and agents =="
 BAD=0
 for d in "$P"/skills/*/; do

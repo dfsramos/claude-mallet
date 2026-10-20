@@ -13,9 +13,9 @@ A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin that cust
 
 This repository is both a Claude Code plugin **marketplace** (`.claude-plugin/marketplace.json`) and the single plugin it hosts, `mallet` (`plugin/`). Installing the plugin gives every session, in every project, the Mallet persona, its skills and sub-agents, and its hooks — no per-project setup and nothing written into your repositories.
 
-Plugins cannot ship a `CLAUDE.md`, so the persona (`plugin/persona/PERSONA.md`) is injected at session start by a hook instead (`plugin/hooks/persona.sh`), re-injected after `/clear` and `/compact` since those drop earlier context.
+Plugins cannot ship a `CLAUDE.md`, so the persona (`plugin/persona/PERSONA.md`) is injected at session start by a hook instead (`plugin/hooks/persona.sh`), re-injected after `/clear` and `/compact` since those drop earlier context. Git conventions are not in the persona: they are a project matter, so Mallet ships its defaults as `plugin/rules/git.md` and, in a repository that states none of its own, applies them for the session and offers to add them as `.claude/rules/git.md`.
 
-A project only gains a `.mallet/` directory when Mallet has something project-specific to store there — conventions, feature plans, mission state. Your repo's own `CLAUDE.md`, if it has one, is never touched.
+A project only gains a `.mallet/` directory when Mallet has something project-specific to store there — feature plans, mission state. Your repo's own `CLAUDE.md`, if it has one, is never touched; the one file Mallet offers to add is `.claude/rules/git.md`, and only when you agree.
 
 Three workflows anchor the plugin and return the most value per session:
 
@@ -136,7 +136,7 @@ Every agent except `implementer` is restricted to `disallowedTools: Edit, Write,
 | Hook | Event | What it does |
 |---|---|---|
 | `persona.sh` | SessionStart (`startup\|resume\|clear\|compact`) | Injects `PERSONA.md` — the only way a plugin can deliver directives |
-| `session-start.sh` | SessionStart (`startup\|resume\|clear\|compact`) | On startup and resume, refreshes the statusline copy in `${CLAUDE_PLUGIN_DATA}` and flags a leftover per-project install; lists `.mallet/skills/` project skills; flags an open mission with pending tasks |
+| `session-start.sh` | SessionStart (`startup\|resume\|clear\|compact`) | On startup and resume, refreshes the statusline copy in `${CLAUDE_PLUGIN_DATA}` and flags a leftover per-project install; lists `.mallet/skills/` project skills; flags an open mission with pending tasks; in a git repository with no Git conventions of its own, prints Mallet's defaults and has Claude offer them as `.claude/rules/git.md` |
 | `post-compact.sh` | SessionStart (`compact`) | Prints branch, uncommitted changes, recent commits, and any active mission right after compaction |
 | `user-prompt-submit.sh` | UserPromptSubmit | Compaction reminder when context reaches 150k tokens and at each further 50k (`CLAUDE_CTX_WARN_THRESHOLD` / `CLAUDE_CTX_WARN_STEP`); injects the active model/effort line for calibrate when it changes |
 | `write-guard.sh` | PreToolUse (`Edit\|Write`) | Blocks `Write` on files that already exist — enforces `Edit`; asks before edits to lint or type-check config |

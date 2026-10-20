@@ -1,6 +1,6 @@
 ---
 name: receiving-code-review
-description: Invoke when a code review has been returned (from Clifford, a human reviewer, or any review output) and you need to process and act on the feedback.
+description: Invoke when the user asks to apply, address, or respond to code review feedback or reviewer comments ("apply the reviewer's feedback", "address the review comments", "reply to the reviewer", "the reviewer says"), or when a code review has been returned from Clifford, a human reviewer, or any review output.
 ---
 # Receiving Code Review
 

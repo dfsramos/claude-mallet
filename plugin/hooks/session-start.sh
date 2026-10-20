@@ -10,6 +10,8 @@
 #      itself.                                                       (all three)
 #   4. Points at an open mission in .mallet/missions/active.md.  (startup, clear;
 #      after compact, post-compact.sh restores the mission itself)
+#   5. In a git repository with no Git conventions of its own, prints Mallet's
+#      default rules (rules/git.md) and asks Claude to offer them.  (all three)
 # Updates arrive through the plugin system, so there is no update check here.
 #
 # Project memory is not injected here: Claude Code's auto memory loads its own
@@ -102,6 +104,48 @@ if [ "$SOURCE" != "compact" ] && [ "$pending" -gt 0 ]; then
   echo "${title:-Untitled}: ${pending} pending task(s) in .mallet/missions/active.md."
   echo "Read it, surface the pending tasks, and ask whether to resume or start fresh."
   echo "--- End Open Mission ---"
+fi
+
+# ── Git conventions ─────────────────────────────────────────────────────────
+# The persona carries no Git rules: each project states its own in CLAUDE.md or
+# .claude/rules/, which Claude Code loads itself and re-reads after compaction.
+# A git repository with none gets Mallet's defaults (rules/git.md) for this
+# session, and Claude is asked to offer them as .claude/rules/git.md. The check
+# looks where Claude Code looks: the project directory and every directory
+# above it, then the user-level files. "Has conventions" means the marker
+# rules/git.md carries, or a markdown heading naming Git.
+
+RULES="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}/rules/git.md"
+PROJECT="${CLAUDE_PROJECT_DIR:-$(pwd)}"
+GIT_RULES_PATTERN='mallet:git-conventions|^#+ (.*[[:space:]])?git([[:space:]]|$)'
+# $1: a directory. True when its CLAUDE.md, CLAUDE.local.md, .claude/CLAUDE.md,
+# or any .md under .claude/rules/ (recursive, as Claude Code reads it) matches.
+has_git_rules() {
+  for f in "$1/CLAUDE.md" "$1/CLAUDE.local.md" "$1/.claude/CLAUDE.md"; do
+    [ -f "$f" ] && grep -Eiq "$GIT_RULES_PATTERN" "$f" && return 0
+  done
+  [ -d "$1/.claude/rules" ] \
+    && [ -n "$(find "$1/.claude/rules" -name '*.md' -exec grep -Eil "$GIT_RULES_PATTERN" {} + 2>/dev/null)" ] \
+    && return 0
+  return 1
+}
+if [ -f "$RULES" ] && command -v git >/dev/null 2>&1 \
+   && git -C "$PROJECT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  found=no
+  d=$(cd "$PROJECT" && pwd -P); n=0
+  while [ -n "$d" ]; do
+    has_git_rules "$d" && { found=yes; break; }
+    n=$((n + 1)); [ "$n" -ge 32 ] && break
+    parent=$(dirname "$d"); [ "$parent" = "$d" ] && break; d=$parent
+  done
+  [ "$found" = no ] && has_git_rules "$HOME" && found=yes
+  if [ "$found" = no ]; then
+    echo "--- Git Conventions ---"
+    echo "This project states no Git conventions (no heading naming Git in CLAUDE.md, CLAUDE.local.md, or .claude/rules/, here or in a parent directory or ~/.claude). Mallet's defaults apply for this session:"
+    grep -v '^<!-- mallet:git-conventions -->$' "$RULES"
+    echo "Once the user's first request is handled, offer once to make them the project's own by copying ${RULES} to .claude/rules/git.md (Claude Code loads that file in every session). A project that wants different rules writes its own Git section instead; either stops this notice."
+    echo "--- End Git Conventions ---"
+  fi
 fi
 
 exit 0

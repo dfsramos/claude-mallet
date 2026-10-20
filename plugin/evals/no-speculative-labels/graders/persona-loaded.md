@@ -1,6 +1,6 @@
 ---
 type: regex
 target: trace
-pattern: 'Evidence-Based Approach'
+pattern: 'A name is a hypothesis'
 arm: with-only
 ---

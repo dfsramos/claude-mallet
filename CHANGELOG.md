@@ -2,6 +2,18 @@
 
 What changed for people using the `mallet` plugin: behaviour, cost, defaults, and anything to do after updating. Newest first. The plugin has no version field, so entries are dated; update with `/plugin marketplace update claude-mallet`. Changes before 2026-10-07 are in the git history.
 
+## 2026-10-20
+
+**Changed (cost)**
+- The persona is a third of its former size: 2,870 characters, measured at 971 input tokens per request against 3,109 before (`claude -p` with and without it; every request re-reads it). What stays was kept on evidence. A plugin eval suite (`plugin/evals/`, seven cases, run on Fable with a Sonnet judge, three runs per arm) scored the trimmed persona at a mean +0.48 over no persona, against +0.31 for the full one. Kept: evidence and no speculation about a resource from its name (+1.00), calm tone (+0.22), the tool preferences, scope and reuse, explicit confirmation before database mutations (+0.33), a rewritten production check that asks whether a remote target is production before any side-effecting command (+1.00; the old wording measured no effect), the `[tentative]`/`[firm]`/`[re-evaluate]` tags, and the wrap-up offer. Dropped because Claude Code's own system prompt covers them or they measured no effect: Interaction Style, Implementation Depth, destructive-operation rules beyond database mutations, Memory and Self-Improvement, Skills, Verification Before Done, Subagents, Task Calibration (the `[calibrate]` line is now informational), and most of Continuity. Section by section in `docs/directives.md`.
+
+**Changed**
+- Git conventions moved out of the persona into `plugin/rules/git.md` (same rules: branch per task as `b/…` or `f/…`, PR then switch back, one-line subject ending with a period). In a git repository that states no Git conventions of its own (no heading naming Git in `CLAUDE.md`, `CLAUDE.local.md`, or `.claude/rules/`, there, in a parent directory, or in `~/.claude`), session start prints those defaults for the session (221 tokens) and Claude offers once to copy them to `.claude/rules/git.md`, which Claude Code loads itself from then on. Accept, or write your own Git section; either stops the notice. A project whose `CLAUDE.md` already has a Git section sees nothing new. The `.mallet/features/` exception (plans committed to the default branch directly) is no longer in the rule; `/mallet:plan-feature` still states it.
+- `.mallet/conventions.md` and `.mallet/overrides/` are no longer read: the persona section that instructed it is gone. Move their content to `CLAUDE.md` or `.claude/rules/<topic>.md`, which Claude Code loads in every session and re-reads after compaction. An amendment to a Mallet skill becomes `.claude/rules/<skill>.md` with "When running `/mallet:<skill>`, …" lines. `.mallet/skills/` is still listed at session start.
+- `/mallet:reviewing-sessions` routes its fixes to native files: new project skills to `.claude/skills/`, project rules and Mallet-skill amendments to `.claude/rules/` (proposed first, written on agreement). It no longer writes `.mallet/skill-backlog.md`; where one exists it actions or drops the items and deletes the file once empty.
+- `/mallet:receiving-code-review` now triggers on "apply the reviewer's feedback" and "address review comments". In the eval it never fired on those phrasings before; it now fires every time.
+- The plugin ships its eval suite in `plugin/evals/`. It does nothing unless you run `claude plugin eval`.
+
 ## 2026-10-14
 
 **Fixed**

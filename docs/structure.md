@@ -49,7 +49,7 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` di
 │   │   ├── hooks.json                 # Registers every hook below via ${CLAUDE_PLUGIN_ROOT}
 │   │   ├── command-guard.sh           # PreToolUse (Bash): opt-in guard for hook bypasses and destructive commands
 │   │   ├── persona.sh                 # SessionStart: injects PERSONA.md
-│   │   ├── session-start.sh           # SessionStart (startup|resume|clear|compact): statusline, legacy detect, project skills, open mission
+│   │   ├── session-start.sh           # SessionStart (startup|resume|clear|compact): statusline, legacy detect, project skills, open mission, Git conventions check
 │   │   ├── post-compact.sh            # SessionStart (compact): restores state after compaction
 │   │   ├── typecheck.sh               # PostToolUse: opt-in, records edited TS/PHP files
 │   │   ├── typecheck-stop.sh          # Stop: opt-in, checks the turn's files once, JSON additionalContext
@@ -57,6 +57,8 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` di
 │   │   └── write-guard.sh             # PreToolUse: blocks Write on existing files, asks before lint-config edits
 │   ├── persona/
 │   │   └── PERSONA.md                 # The persona itself — not CLAUDE.md, plugins can't ship one
+│   ├── rules/
+│   │   └── git.md                     # Default Git conventions; session-start.sh offers them to a repo that states none
 │   ├── skills/
 │   │   ├── adr/                       checkpoint/           council/              create-pr/            discover/
 │   │   ├── hooks-setup/               implement-feature/    next-steps/
@@ -95,21 +97,22 @@ The root `CLAUDE.md` is this repo's own project instructions (not the persona us
 
 ## What a target project looks like
 
-Installing the plugin writes nothing into any repository. A project only gains a `.mallet/` directory, and only once Mallet has something project-specific to store there:
+Installing the plugin writes nothing into any repository. The one file Mallet offers to add is `.claude/rules/git.md`, and only when the user agrees; otherwise a project only gains a `.mallet/` directory, and only once Mallet has something project-specific to store there:
 
 ```
 <any-project>/
 ├── CLAUDE.md                          # The project's own, if any — never touched
 ├── .claude/
+│   ├── rules/git.md                   # Mallet's default Git conventions, only if the user accepted the offer
 │   └── settings.local.json            # User permissions — Mallet never touches this
 └── .mallet/                           # Mallet's project state, all optional
-    ├── conventions.md                 # Project conventions, read at session start
+    ├── conventions.md                 # No longer read (2026-10-20): move its content to CLAUDE.md or .claude/rules/
     ├── typecheck.enabled              # Marker: opt in to the typecheck hook
-    ├── skill-backlog.md               # Candidate skills, reviewed at wrap-up
+    ├── skill-backlog.md               # No longer written; reviewing-sessions drains and deletes it
     ├── discovery-*.md                 # Discovery reports
     ├── missions/                      # Active and archived mission files
-    ├── overrides/<skill-name>.md      # Per-skill amendments to base skills
-    ├── skills/                        # Project-specific skills
+    ├── overrides/<skill-name>.md      # No longer read: a skill amendment is .claude/rules/<skill-name>.md
+    ├── skills/                        # Project-specific skills, listed at session start; new ones go to .claude/skills/
     └── features/<slug>/               # Feature plans
 ```
 
@@ -122,6 +125,7 @@ Whether `.mallet/` is tracked by git is the user's own choice. Mallet ships no `
 | Path | Purpose |
 |---|---|
 | `plugin/persona/PERSONA.md` | The persona, injected by `plugin/hooks/persona.sh` every session |
+| `plugin/rules/git.md` | Default Git conventions; `session-start.sh` prints them in a repository that states none and offers them as `.claude/rules/git.md` |
 | `plugin/hooks/hooks.json` | Registers every hook script via `${CLAUDE_PLUGIN_ROOT}` |
 | `plugin/skills/` | Skills, namespaced `mallet:<name>` (`/mallet:<name>`) at runtime |
 | `plugin/agents/` | Sub-agent persona definitions, namespaced `mallet:<name>` |
@@ -131,7 +135,7 @@ Whether `.mallet/` is tracked by git is the user's own choice. Mallet ships no `
 | `${CLAUDE_PLUGIN_DATA}` | Persistent per-plugin data directory, survives plugin updates |
 | `${CLAUDE_SKILL_DIR}` | The currently-running skill's own directory — used for template/script references |
 | `<project>/.mallet/` | That project's Mallet state |
-| `<project>/.mallet/conventions.md` | Project conventions layered on top of the persona |
+| `<project>/.claude/rules/` | The project's own rules, loaded by Claude Code; where Mallet's Git conventions land if accepted, and where amendments to a Mallet skill go |
 | `.claude/install-payload.sh`, `.claude/merge-settings.sh` | *(this repo)* transition-only, see above |
 | `.mallet/features/` | *(this repo)* feature plans, committed directly to master |
 | `tests/run.sh` | *(this repo)* runs every suite in `tests/`, exits non-zero on failure |
