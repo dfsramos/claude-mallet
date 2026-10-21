@@ -2,14 +2,12 @@
 # SessionStart hook (matcher: startup|resume|clear|compact):
 #   1. Keeps the statusline copy in CLAUDE_PLUGIN_DATA current.
 #                                                         (startup, resume)
-#   2. Detects a legacy per-project Mallet install and offers the migrate skill.
-#                                                                    (startup)
 #   On resume nothing else runs: the resumed conversation already holds the
 #   notices below from when it started.
-#   3. Names leftover .mallet/ files that earlier versions read and nothing
+#   2. Names leftover .mallet/ files that earlier versions read and nothing
 #      reads since 2026-10-20, and asks Claude to offer the move once.
 #                                                             (startup, clear)
-#   4. In a git repository with no Git conventions of its own, prints Mallet's
+#   3. In a git repository with no Git conventions of its own, prints Mallet's
 #      default rules (rules/git.md) and asks Claude to offer them.
 #                                                      (startup, clear, compact)
 # Updates arrive through the plugin system, so there is no update check here.
@@ -41,42 +39,13 @@ if { [ "$SOURCE" = "startup" ] || [ "$SOURCE" = "resume" ]; } && [ -n "${CLAUDE_
 fi
 [ "$SOURCE" = "resume" ] && exit 0
 
-# ── Legacy per-project install detection ────────────────────────────────────
-# Mallet now ships as a plugin. A framework payload inside the project
-# means a pre-migration per-project install is still sitting there. The
-# installer's scan catches most of these; this catches the ones it could not
-# reach — a repo cloned later, or a scan the user declined.
-#
-# Deliberately cheap: three -f tests, no traversal and no network. This runs in
-# every session in every directory.
-
-# Two exemptions, both of which otherwise nag forever:
-#   1. The install itself — a session rooted at $HOME would see ~/.claude/ as a
-#      per-project payload.
-#   2. The framework source repo — its .claude/ IS the payload. Identified by
-#      settings.fragment.json / install-payload.sh, which only the source has.
-if [ "$SOURCE" = "startup" ] && [ -n "${CLAUDE_PROJECT_DIR:-}" ] \
-   && [ "$(cd "${CLAUDE_PROJECT_DIR}" 2>/dev/null && pwd -P)" != "$(cd "${HOME}" 2>/dev/null && pwd -P)" ] \
-   && [ ! -f "${CLAUDE_PROJECT_DIR}/.claude/settings.fragment.json" ] \
-   && [ ! -f "${CLAUDE_PROJECT_DIR}/.claude/install-payload.sh" ] \
-   && [ ! -f "${CLAUDE_PROJECT_DIR}/.mallet/.migration-declined" ]; then
-  if [ -f "${CLAUDE_PROJECT_DIR}/.claude/framework.json" ] \
-     || { [ -f "${CLAUDE_PROJECT_DIR}/.claude/skills/update/SKILL.md" ] \
-          && [ -f "${CLAUDE_PROJECT_DIR}/.claude/agents/_contract.md" ]; }; then
-    echo "--- Legacy Mallet Install Detected ---"
-    echo "This project contains a per-project Mallet payload; Mallet now ships as the mallet plugin."
-    echo "Offer to run the migrate skill to clean it up. If the user declines, create"
-    echo "${CLAUDE_PROJECT_DIR}/.mallet/.migration-declined so this notice stops."
-    echo "--- End Legacy Mallet Install Detected ---"
-  fi
-fi
-
 # ── Leftover project files ──────────────────────────────────────────────────
 # Earlier versions read .mallet/conventions.md and .mallet/overrides/<skill>.md,
-# listed .mallet/skills/, and flagged .mallet/missions/active.md. Since
-# 2026-10-20 nothing does, so a project that still keeps its context there
-# loses it without a word unless this says so. The migrate skill wrote
-# conventions.md into every repo it cleaned, so most older projects have one.
+# injected .mallet/memory.md and .mallet/lessons.md, listed .mallet/skills/,
+# and flagged .mallet/missions/active.md. Since 2026-10-20 nothing does, so a
+# project that still keeps its context there loses it without a word unless
+# this says so. The migrate skill (retired 2026-10-21) wrote conventions.md
+# into every repo it cleaned, so most older projects have one.
 # Name what is left, have Claude apply the conventions for this session, and
 # ask it to offer the moves once. Runs on startup and clear, which both begin a
 # conversation without the earlier notice; stops once the files are gone or
@@ -88,6 +57,12 @@ if { [ "$SOURCE" = "startup" ] || [ "$SOURCE" = "clear" ]; } && [ -d "$M" ] && [
   LEFT=""
   if [ -f "$M/conventions.md" ]; then
     LEFT="$LEFT- \`.mallet/conventions.md\` ($(wc -l < "$M/conventions.md" | tr -d ' ') lines): read it now and apply it for this session. Its content belongs in \`CLAUDE.md\` or \`.claude/rules/<topic>.md\`, which Claude Code loads itself.
+"
+  fi
+  names=""
+  for f in memory.md lessons.md; do [ -f "$M/$f" ] && names="$names${names:+, }\`.mallet/$f\`"; done
+  if [ -n "$names" ]; then
+    LEFT="$LEFT- $names: fold into auto memory (a fact becomes a project or reference entry, a lesson a feedback entry; skip what is already recorded), then the user decides whether to delete them.
 "
   fi
   names=""
@@ -107,9 +82,9 @@ if { [ "$SOURCE" = "startup" ] || [ "$SOURCE" = "clear" ]; } && [ -d "$M" ] && [
 "
   fi
   names=""
-  for f in typecheck.enabled command-guard.enabled; do [ -e "$M/$f" ] && names="$names${names:+, }\`.mallet/$f\`"; done
+  for f in typecheck.enabled command-guard.enabled .migration-declined; do [ -e "$M/$f" ] && names="$names${names:+, }\`.mallet/$f\`"; done
   if [ -n "$names" ]; then
-    LEFT="$LEFT- $names: inert, the hooks they enabled are gone; delete.
+    LEFT="$LEFT- $names: inert now that the hooks and the legacy-install check they belonged to are gone; delete.
 "
   fi
   if [ -n "$LEFT" ]; then

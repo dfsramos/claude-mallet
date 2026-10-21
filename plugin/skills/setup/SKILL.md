@@ -40,14 +40,6 @@ Background auto-update is off by default for third-party marketplaces. With it o
 
 It takes effect from the next session start. The manual route, if the user prefers it: `/plugin` → **Marketplaces** → **claude-mallet** → **Enable auto-update**.
 
-## 3. Legacy Mallet memory files
-
-If the current project has `.mallet/memory.md` or `.mallet/lessons.md` from an earlier Mallet version, offer to fold them into auto memory: each fact becomes a `project` or `reference` memory and each lesson a `feedback` memory, skipping anything already recorded or already covered by the persona. Never delete or edit the source files — tell the user they can remove them once satisfied.
-
-## 4. Transition leftovers
-
-If `~/.claude/skills/migrate/` contains only `detect.sh` and a `MALLET-TRANSITION-STUB` marker (left by the move to the plugin so older update runs finish cleanly), offer to remove that directory. Do not remove it if it contains anything else.
-
-## 5. Report
+## 3. Report
 
 One line per step: done, skipped, or not applicable.

@@ -33,48 +33,11 @@ In Claude Code:
 /mallet:setup
 ```
 
-`/mallet:setup` handles what a plugin cannot configure on its own: registering the statusline (plugins can only set `agent`/`subagentStatusLine`, not the main `statusLine`), offering to turn on auto-update, and offering to fold any legacy `.mallet/memory.md` or `.mallet/lessons.md` into Claude Code's auto memory.
+`/mallet:setup` handles what a plugin cannot configure on its own: registering the statusline (plugins can only set `agent`/`subagentStatusLine`, not the main `statusLine`), and offering to turn on auto-update.
 
 There is no version field: the plugin has no pinned release, so you track commits on the marketplace's default branch. [CHANGELOG.md](CHANGELOG.md) lists what each update changes, newest first.
 
 **Auto-update** is off by default for third-party marketplaces. `/mallet:setup` offers to turn it on; otherwise use `/plugin` → **Marketplaces** → **claude-mallet** → **Enable auto-update**, or set `"autoUpdate": true` on the marketplace's `extraKnownMarketplaces` entry in `~/.claude/settings.json` (see [install.md](install.md)). Without it, update on demand with `/plugin marketplace update claude-mallet`.
-
-## Moving from the user-level install
-
-Earlier versions of Mallet installed directly into `~/.claude/` (skills, agents, hooks, a `CLAUDE.md`, `framework.json`). If that describes your machine, the transition is a single step:
-
-**If you still have the old `update` skill**, say "update the framework" once more. It runs this repo's `install-payload.sh` and `merge-settings.sh` exactly as before, but those scripts now transition the install instead of updating it, and print the three commands above at the end.
-
-**Manual equivalent**, if the skill is already gone:
-
-```bash
-curl -sfL https://github.com/dfsramos/claude-mallet/archive/refs/heads/master.tar.gz | tar -xz -C /tmp
-bash /tmp/claude-mallet-master/.claude/install-payload.sh \
-  --from /tmp/claude-mallet-master --repo dfsramos/claude-mallet --sha "$(git ls-remote https://github.com/dfsramos/claude-mallet master | cut -f1)"
-bash /tmp/claude-mallet-master/.claude/merge-settings.sh \
-  /tmp/claude-mallet-master/.claude/settings.fragment.json
-```
-
-Then run the three `/plugin` commands above.
-
-What the transition does:
-
-| Action | Detail |
-|---|---|
-| Backs up first | `~/.claude/mallet-pretransition-backup-<timestamp>.tar.gz` |
-| Removes | only the skills/agents/templates/hooks entries `framework.json`'s manifest says Mallet installed |
-| Removes | `~/.claude/statusline.sh`, but only if it is still Mallet's |
-| Removes | `~/.claude/CLAUDE.md`, but only if it is byte-identical (ignoring line endings) to the installed version's own copy |
-| Keeps | anything you authored yourself under `skills/`, `agents/`, `hooks/`, `templates/` |
-| Keeps | a modified `~/.claude/CLAUDE.md` — and warns that the persona will now load twice unless you remove Mallet's sections from it yourself (the backup has the original for reference) |
-| Leaves | a `~/.claude/skills/migrate/` stub (`detect.sh` + a marker file) so an in-progress `update` run finishes cleanly; `/mallet:setup` offers to remove it once the plugin is installed |
-| Marks | `framework.json` as transitioned, so re-running the same script a second time is a no-op |
-
-One follow-up to check yourself: a **project-level** hook registration pointing at `~/.claude/hooks/typecheck.sh` breaks after the transition, since that script no longer exists there. Remove that entry from the project's `.claude/settings.json` or `settings.local.json` yourself.
-
-## Moving from a per-project install
-
-Even older Mallet versions installed into each repository individually. The `migrate` skill still handles cleaning those up — say "clean up the old Mallet installs" or run `/mallet:migrate`. It moves each repo's state into `.mallet/`, removes only the untracked framework payload, leaves every git-tracked file alone, and takes a backup per repo before touching anything. See [`docs/skills.md`](docs/skills.md#migrate) for the full mechanics.
 
 ## What's Included
 
@@ -92,7 +55,6 @@ Even older Mallet versions installed into each repository individually. The `mig
 | `/mallet:receiving-code-review` | A code review has just been returned |
 | `/mallet:next-steps` | "what's left", "what's next" |
 | `/mallet:write-task` | "create a ticket", "write the task description", "write a handover as a task" |
-| `/mallet:migrate` | "clean up the old Mallet installs" |
 
 Manual-only skills carry `disable-model-invocation: true` — Claude will not invoke them on its own; they run only from their slash command.
 
@@ -121,7 +83,7 @@ Every agent is restricted to `disallowedTools: Edit, Write, NotebookEdit`.
 | Hook | Event | What it does |
 |---|---|---|
 | `persona.sh` | SessionStart (`startup\|resume\|clear\|compact`) | Injects `PERSONA.md` — the only way a plugin can deliver directives |
-| `session-start.sh` | SessionStart (`startup\|resume\|clear\|compact`) | On startup and resume, refreshes the statusline copy in `${CLAUDE_PLUGIN_DATA}` and flags a leftover per-project install; names leftover `.mallet/` files that nothing reads since 2026-10-20, with where their content belongs now; in a git repository with no Git conventions of its own, prints Mallet's defaults and has Claude offer them as `.claude/rules/git.md` |
+| `session-start.sh` | SessionStart (`startup\|resume\|clear\|compact`) | On startup and resume, refreshes the statusline copy in `${CLAUDE_PLUGIN_DATA}` and names leftover `.mallet/` files that nothing reads since 2026-10-20, with where their content belongs now; in a git repository with no Git conventions of its own, prints Mallet's defaults and has Claude offer them as `.claude/rules/git.md` |
 | `post-compact.sh` | SessionStart (`compact`) | Prints branch, uncommitted changes, and recent commits right after compaction |
 
 Every Mallet hook is a `SessionStart` hook, the one event where plain stdout reaches the model without a JSON envelope. What earlier hooks did — compaction reminders, blocking `Write` on existing files, guarding destructive commands, type checking after edits — is now a Claude Code setting or an official plugin; [`docs/hooks.md`](docs/hooks.md#removed-hooks) lists each replacement.

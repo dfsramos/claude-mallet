@@ -1,7 +1,7 @@
 #!/bin/bash
-# Test: session-start.sh injects no legacy memory file, flags a legacy
-# per-project install on startup only, names leftover .mallet/ files that
-# nothing reads any more, and offers Git conventions where a repo states none.
+# Test: session-start.sh injects no legacy memory file, names leftover
+# .mallet/ files that nothing reads any more, and offers Git conventions where
+# a repo states none.
 # Portable: resolves the repo from this script's location and uses a temp dir.
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SCRATCH=$(mktemp -d)
@@ -28,26 +28,22 @@ echo "== session-start.sh =="
 OUT=$(bash "$H/session-start.sh" </dev/null 2>&1); ck "exit 0" "$?" "0"
 hasnt "no .mallet/memory.md injection (auto memory replaces it)" "$OUT" "MEMORY-SENTINEL"
 
-echo "== session-start.sh: legacy notice =="
 ss() { echo "{\"source\":\"$1\"}" | bash "$H/session-start.sh" 2>&1; }
-mkdir -p "$CLAUDE_PROJECT_DIR/.claude"; echo '{}' > "$CLAUDE_PROJECT_DIR/.claude/framework.json"
-has   "startup: legacy notice" "$(ss startup)" "Legacy Mallet Install"
-hasnt "clear: no legacy notice (startup only)" "$(ss clear)" "Legacy Mallet Install"
+# A PATH without jq (and without git): the hook must still tell sources apart.
 NOJQ="$SCRATCH/nojq"; mkdir -p "$NOJQ"
-for b in bash sed tr grep head cut ls dirname basename cat cmp cp mv mkdir pwd; do ln -sf "$(command -v $b)" "$NOJQ/$b"; done
-hasnt "no jq: clear still skips the legacy notice" "$(echo '{"source":"clear"}' | PATH="$NOJQ" bash "$H/session-start.sh" 2>&1)" "Legacy Mallet Install"
-rm -rf "$CLAUDE_PROJECT_DIR/.claude"
+for b in bash sed tr grep head cut ls dirname basename cat cmp cp mv mkdir pwd wc; do ln -sf "$(command -v $b)" "$NOJQ/$b"; done
 
 echo "== session-start.sh: leftover files notice =="
-# Earlier versions read conventions.md and overrides/, listed skills/, and
-# flagged missions/active.md. Nothing does now, so startup names what is left
+# Earlier versions read conventions.md and overrides/, injected memory.md and
+# lessons.md, listed skills/, and flagged missions/active.md. Nothing does now, so startup names what is left
 # and asks Claude to offer the move; content is never printed.
 mkdir -p "$CLAUDE_PROJECT_DIR/.mallet/missions" "$CLAUDE_PROJECT_DIR/.mallet/skills/deploy-app" "$CLAUDE_PROJECT_DIR/.mallet/overrides"
 printf '# Mission: Ship the widget\n\n## Pending\n- [ ] one\n' > "$CLAUDE_PROJECT_DIR/.mallet/missions/active.md"
 printf -- '---\nname: deploy-app\ndescription: Invoke when the user says "deploy".\n---\n' > "$CLAUDE_PROJECT_DIR/.mallet/skills/deploy-app/SKILL.md"
 printf '# Conventions\n- rule one\n- rule two\n' > "$CLAUDE_PROJECT_DIR/.mallet/conventions.md"
 printf 'When running /mallet:adr, use docs/decisions/.\n' > "$CLAUDE_PROJECT_DIR/.mallet/overrides/adr.md"
-touch "$CLAUDE_PROJECT_DIR/.mallet/typecheck.enabled"
+touch "$CLAUDE_PROJECT_DIR/.mallet/typecheck.enabled" "$CLAUDE_PROJECT_DIR/.mallet/.migration-declined"
+printf 'lesson one\n' > "$CLAUDE_PROJECT_DIR/.mallet/lessons.md"
 OUT=$(ss startup)
 has   "startup: notice" "$OUT" "Leftover Mallet Files"
 has   "names conventions.md with its size" "$OUT" 'conventions.md` (3 lines)'
@@ -55,19 +51,25 @@ has   "names each override" "$OUT" "overrides/\` (adr.md)"
 has   "names each skill directory" "$OUT" "skills/\` (deploy-app)"
 has   "names the open mission" "$OUT" "missions/active.md"
 has   "names the inert marker" "$OUT" "typecheck.enabled"
+has   "names the declined-migration marker as inert" "$OUT" ".migration-declined"
+has   "names memory.md and lessons.md" "$OUT" 'memory.md`, `.mallet/lessons.md`'
 has   "names the declined marker" "$OUT" "$CLAUDE_PROJECT_DIR/.mallet/.leftovers-declined"
 hasnt "no mission content" "$OUT" "Ship the widget"
 hasnt "no conventions content" "$OUT" "rule one"
+hasnt "no memory content" "$OUT" "MEMORY-SENTINEL"
 hasnt "no skill listing (Claude Code loads .claude/skills itself)" "$OUT" "Invoke when the user says"
 hasnt "no old-form mission notice" "$OUT" "Open Mission"
 has   "clear: notice (a new conversation)" "$(ss clear)" "Leftover Mallet Files"
 hasnt "compact: no notice" "$(ss compact)" "Leftover Mallet Files"
 hasnt "resume: no notice" "$(ss resume)" "Leftover Mallet Files"
+has   "no jq: startup still prints it" "$(echo '{"source":"startup"}' | PATH="$NOJQ" bash "$H/session-start.sh" 2>&1)" "Leftover Mallet Files"
+hasnt "no jq: compact still skips it" "$(echo '{"source":"compact"}' | PATH="$NOJQ" bash "$H/session-start.sh" 2>&1)" "Leftover Mallet Files"
 touch "$CLAUDE_PROJECT_DIR/.mallet/.leftovers-declined"
 hasnt "declined marker silences it" "$(ss startup)" "Leftover Mallet Files"
 rm "$CLAUDE_PROJECT_DIR/.mallet/.leftovers-declined"
 rm -rf "$CLAUDE_PROJECT_DIR/.mallet/missions" "$CLAUDE_PROJECT_DIR/.mallet/skills" "$CLAUDE_PROJECT_DIR/.mallet/overrides"
-rm "$CLAUDE_PROJECT_DIR/.mallet/conventions.md" "$CLAUDE_PROJECT_DIR/.mallet/typecheck.enabled"
+rm "$CLAUDE_PROJECT_DIR/.mallet/conventions.md" "$CLAUDE_PROJECT_DIR/.mallet/typecheck.enabled" "$CLAUDE_PROJECT_DIR/.mallet/.migration-declined"
+rm "$CLAUDE_PROJECT_DIR/.mallet/memory.md" "$CLAUDE_PROJECT_DIR/.mallet/lessons.md"
 hasnt "files moved: notice gone" "$(ss startup)" "Leftover Mallet Files"
 mkdir -p "$CLAUDE_PROJECT_DIR/.mallet/skills" "$CLAUDE_PROJECT_DIR/.mallet/overrides"
 hasnt "empty skills/ and overrides/: no notice" "$(ss startup)" "Leftover Mallet Files"

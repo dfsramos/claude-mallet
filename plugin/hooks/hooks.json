@@ -1,5 +1,5 @@
 {
-  "description": "Mallet: persona, statusline refresh, legacy-install check, Git conventions check, git state after compaction",
+  "description": "Mallet: persona, statusline refresh, Git conventions check, git state after compaction",
   "hooks": {
     "SessionStart": [
       {

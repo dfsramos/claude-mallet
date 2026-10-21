@@ -30,7 +30,7 @@ Dispatch four read-only `general-purpose` agents in one message. Each reads the 
 | Persona and directives | `plugin/persona/PERSONA.md`, `plugin/hooks/persona.sh`, `docs/directives.md` | Contradictions between directives and with what skills do; drift from `docs/directives.md`; references to hooks, files, or skills that do not exist; size against the `test-15` cap; directives that duplicate Claude Code built-ins or a hook |
 | Skills and agents | `plugin/skills/`, `plugin/agents/`, `docs/skills.md`, `.claude/skills/` | Descriptions that summarise instead of stating triggers, or overlap; triggers that cannot fire (`disable-model-invocation`); broken paths and names; drift from `docs/skills.md`; overlap with built-in Claude Code features |
 | Executable code | `plugin/hooks/`, `plugin/statusline/`, `.claude/*.sh`, `tests/`, `docs/hooks.md`, `docs/structure.md` | Correctness, bash 3.2 and BSD portability, output channel per hook event, output over 10,000 characters, stdin handling, timeouts, per-prompt cost, test gaps, docs drift |
-| Repo health | `README.md`, `install.md`, `CHANGELOG.md`, `.mallet/features/`, `.mallet/discovery-*.md`, git history and branches | Stale plans and discovery items, transitional code against its retirement condition in `docs/structure.md`, changelog gaps for user-visible commits, README accuracy, churn hotspots |
+| Repo health | `README.md`, `install.md`, `CHANGELOG.md`, `.mallet/features/`, `.mallet/discovery-*.md`, git history and branches | Stale plans and discovery items, changelog gaps for user-visible commits, README accuracy, churn hotspots |
 
 ---
 

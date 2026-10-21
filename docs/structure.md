@@ -8,10 +8,7 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` di
 
 ```
 .
-├── .claude/                           # Transition scripts, this repo's rules and maintenance skills (not shipped)
-│   ├── install-payload.sh             # Transition only — see "Transition scripts" below
-│   ├── merge-settings.sh
-│   ├── settings.fragment.json
+├── .claude/                           # This repo's rules, maintenance skills and permissions (not shipped)
 │   ├── settings.local.json            # This repo's own permissions
 │   ├── rules/
 │   │   └── hooks.md                   # Path-scoped rules for hook, statusline and test code
@@ -51,7 +48,7 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` di
 │   ├── hooks/
 │   │   ├── hooks.json                 # Registers the three hooks below via ${CLAUDE_PLUGIN_ROOT}
 │   │   ├── persona.sh                 # SessionStart: injects PERSONA.md
-│   │   ├── session-start.sh           # SessionStart (startup|resume|clear|compact): statusline, legacy detect, leftover .mallet/ files, Git conventions check
+│   │   ├── session-start.sh           # SessionStart (startup|resume|clear|compact): statusline, leftover .mallet/ files, Git conventions check
 │   │   └── post-compact.sh            # SessionStart (compact): git state after compaction
 │   ├── persona/
 │   │   └── PERSONA.md                 # The persona itself — not CLAUDE.md, plugins can't ship one
@@ -61,12 +58,7 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` di
 │   │   ├── adr/                       council/              create-pr/            next-steps/
 │   │   ├── plan-feature/              receiving-code-review/ reviewing-sessions/  systematic-debugging/
 │   │   ├── write-task/
-│   │   ├── setup/                     # manual-only (disable-model-invocation)
-│   │   └── migrate/                   # Legacy per-project cleanup
-│   │       ├── SKILL.md               #   orchestration and user interaction
-│   │       ├── detect.sh              #   find legacy installs, emit TSV
-│   │       ├── migrate-repo.sh        #   migrate one repo (dry-run unless --yes)
-│   │       └── mallet-gitignore       #   optional .mallet/.gitignore template
+│   │   └── setup/                     # manual-only (disable-model-invocation)
 │   └── statusline/
 │       └── statusline.sh              # Model, effort, branch, cost, context tokens, rate limits
 ├── tests/
@@ -80,13 +72,11 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` di
 └── install.md
 ```
 
-## Transition scripts
+## Retired transition code
 
-`.claude/install-payload.sh`, `.claude/merge-settings.sh`, and `.claude/settings.fragment.json` are not payload in the old sense — they exist only so an already-installed pre-plugin `update` skill can transition a user-level `~/.claude/` install to the plugin on its next run. Their paths and CLI flags must stay stable for that reason. `install-payload.sh` now removes manifest-claimed entries, replaces `~/.claude/skills/migrate/` with a stub, and marks `~/.claude/framework.json` as transitioned; `merge-settings.sh` strips Mallet's old hook and `statusLine` registrations since the plugin registers its own. See [`README.md`](../README.md#moving-from-the-user-level-install) for the user-facing flow.
+Until 2026-10-21 `.claude/` also held `install-payload.sh`, `merge-settings.sh` and `settings.fragment.json`, which moved a pre-plugin user-level `~/.claude/` install to the plugin, and the plugin shipped a `migrate` skill that cleaned the even older per-project installs out of repositories. Every known user had moved, so both went in one change (see `CHANGELOG.md`, 2026-10-21), with the legacy check in `session-start.sh`, `setup` steps 3 and 4, and tests `test-01`, `test-05`, `test-07` and `test-17`.
 
-**Retirement.** The transition code goes once every known user has moved to the plugin: each confirms that `~/.claude/framework.json` shows `"transitioned": "plugin"` (or no longer exists) and that `/mallet:migrate` finds no per-project install in their repos. It is then removed in one change: `.claude/install-payload.sh`, `.claude/merge-settings.sh`, `.claude/settings.fragment.json`, the `migrate` skill, the legacy check in `session-start.sh`, `setup` steps 3 and 4, tests `test-01`, `test-05`, `test-07`, and `test-17`, and the requirement below that the root `CLAUDE.md` keep existing.
-
-The root `CLAUDE.md` is this repo's own project instructions (not the persona users receive — that is `plugin/persona/PERSONA.md`, injected by `plugin/hooks/persona.sh`). It must keep existing because the pre-plugin `update` skills abort when the downloaded archive has none.
+The root `CLAUDE.md` is this repo's own project instructions, not the persona users receive (that is `plugin/persona/PERSONA.md`, injected by `plugin/hooks/persona.sh`).
 
 `.claude/settings.local.json` holds this repo's own permissions and is never part of what ships.
 
@@ -106,11 +96,11 @@ Installing the plugin writes nothing into any repository. The one file Mallet of
     └── features/<slug>/               # Feature plans
 ```
 
-Leftovers from earlier Mallet versions may also sit in `.mallet/`; since 2026-10-20 nothing reads or writes them: `conventions.md` (move its content to `CLAUDE.md` or `.claude/rules/`), `overrides/` (a skill amendment is now `.claude/rules/<skill>.md`), `skills/` (move to `.claude/skills/`), `missions/` (`reviewing-sessions` offers to fold `active.md` into auto memory and archive or delete it), `skill-backlog.md` (`reviewing-sessions` drains and deletes it), and the `typecheck.enabled` and `command-guard.enabled` markers (inert; delete them). `session-start.sh` names whichever of these it finds at startup and has Claude offer the moves once; `.mallet/.leftovers-declined` stops that notice.
+Leftovers from earlier Mallet versions may also sit in `.mallet/`; since 2026-10-20 nothing reads or writes them: `conventions.md` (move its content to `CLAUDE.md` or `.claude/rules/`), `overrides/` (a skill amendment is now `.claude/rules/<skill>.md`), `skills/` (move to `.claude/skills/`), `missions/` (`reviewing-sessions` offers to fold `active.md` into auto memory and archive or delete it), `skill-backlog.md` (`reviewing-sessions` drains and deletes it), `memory.md` and `lessons.md` (fold into auto memory), and the `typecheck.enabled`, `command-guard.enabled` and `.migration-declined` markers (inert; delete them). `session-start.sh` names whichever of these it finds at startup and has Claude offer the moves once; `.mallet/.leftovers-declined` stops that notice.
 
-Project-specific facts, corrections, and preferences that used to live in `.mallet/memory.md` and `.mallet/lessons.md` are now Claude Code's own auto memory — there is no Mallet-owned memory file to inject or maintain. `/mallet:setup` offers to fold any leftover legacy files into auto memory the first time it runs in a project that still has them.
+Project-specific facts, corrections, and preferences that used to live in `.mallet/memory.md` and `.mallet/lessons.md` are now Claude Code's own auto memory — there is no Mallet-owned memory file to inject or maintain. `session-start.sh` names them with the other leftovers above and has Claude offer to fold them into auto memory.
 
-Whether `.mallet/` is tracked by git is the user's own choice. Mallet ships no `.gitignore` into it and never edits a repo's own `.gitignore` or excludes file without an explicit answer during `migrate`.
+Whether `.mallet/` is tracked by git is the user's own choice. Mallet ships no `.gitignore` into it and never edits a repo's own `.gitignore` or excludes file.
 
 ## Key paths
 
@@ -129,7 +119,6 @@ Whether `.mallet/` is tracked by git is the user's own choice. Mallet ships no `
 | `<project>/.mallet/` | That project's Mallet state |
 | `<project>/.claude/rules/` | The project's own rules, loaded by Claude Code; where Mallet's Git conventions land if accepted, and where amendments to a Mallet skill go |
 | `<project>/.claude/skills/` | The project's own skills, loaded by Claude Code |
-| `.claude/install-payload.sh`, `.claude/merge-settings.sh` | *(this repo)* transition-only, see above |
 | `.claude/rules/hooks.md`, `.claude/skills/` | *(this repo)* conventions for hook and test code, and the maintenance skills `harvest` and `self-assessment` |
 | `.mallet/features/` | *(this repo)* feature plans, committed directly to master |
 | `tests/run.sh` | *(this repo)* runs every suite in `tests/`, exits non-zero on failure |

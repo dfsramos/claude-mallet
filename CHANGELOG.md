@@ -7,6 +7,9 @@ What changed for people using the `mallet` plugin: behaviour, cost, defaults, an
 **Added**
 - Session start names leftover `.mallet/` files that earlier versions read and nothing has read since 2026-10-20: `conventions.md` (with its line count; Claude reads it and applies it for the session), `overrides/`, `skills/`, `missions/active.md`, and the inert `typecheck.enabled` / `command-guard.enabled` markers. Each line says where the content belongs now (`CLAUDE.md` or `.claude/rules/`, `.claude/rules/<skill>.md`, `.claude/skills/`, auto memory). Claude offers the moves once after your first request; if you decline it creates `.mallet/.leftovers-declined` and the notice stops. Runs on startup and `/clear`, not on resume or compaction. Costs nothing in a project without leftovers; with three of them the notice measured 988 characters, about 250 tokens, once per conversation. Why: `/mallet:migrate` wrote `conventions.md` into every repo it cleaned, and since the 2026-10-20 prune nothing read it, so those project conventions had silently stopped applying. After updating: open each project once and accept the moves, or decline.
 
+**Removed**
+- The `migrate` skill and the transition from the pre-plugin install: `install-payload.sh`, `merge-settings.sh`, the session-start check for a per-project payload, and `/mallet:setup` steps 3 and 4. Every known user has moved to the plugin, so none of it had anyone left to serve. `.mallet/.migration-declined` is inert now; the leftover-files notice above names it for deletion, and it also took over the offer to fold `.mallet/memory.md` and `.mallet/lessons.md` into auto memory. Nothing to do after updating.
+
 ## 2026-10-20
 
 **Changed (cost)**

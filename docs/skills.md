@@ -13,33 +13,7 @@ One-time setup for what a plugin cannot configure by itself. Each step is indepe
 
 1. **Statusline** — plugins cannot set the main `statusLine` (only `agent`/`subagentStatusLine` settings take effect), so this copies `${CLAUDE_PLUGIN_ROOT}/statusline/statusline.sh` to `${CLAUDE_PLUGIN_DATA}/statusline.sh` and points `~/.claude/settings.json`'s `statusLine` at that copy, backing the settings file up first and asking before replacing an existing non-Mallet `statusLine`
 2. **Auto-update** — offers to turn on background auto-update, which is off by default for third-party marketplaces, by setting `extraKnownMarketplaces["claude-mallet"].autoUpdate` to `true` in `~/.claude/settings.json`. It keeps the marketplace's existing `source`, taken from that entry or from `~/.claude/plugins/known_marketplaces.json`, so a fork or local path is not overwritten. It backs up the file first and checks the result with `jq`. If no source can be found or the user declines, it gives the manual routes (`/plugin` → Marketplaces → claude-mallet → Enable auto-update, or `/plugin marketplace update claude-mallet` on demand)
-3. **Legacy Mallet memory files** — if `.mallet/memory.md` or `.mallet/lessons.md` exist in the current project, offers to fold them into Claude Code's auto memory (facts become `project`/`reference` memories, lessons become `feedback` memories); never deletes or edits the source files
-4. **Transition leftovers** — if `~/.claude/skills/migrate/` contains only the stub `detect.sh` and a `MALLET-TRANSITION-STUB` marker left by a prior user-level-install transition, offers to remove the directory
-5. **Report** — one line per step: done, skipped, or not applicable
-
-## Migrate
-
-**Directory:** `plugin/skills/migrate/`
-**Triggered by:** `/mallet:migrate`, "clean up the old Mallet installs", "remove the per-project Mallet", or a session-start notice reporting a legacy per-project payload in the current repo
-
-Removes the per-project payload that Mallet versions older than the user-level install left inside each repo. Mechanics live in two scripts beside `SKILL.md`, referenced via `${CLAUDE_SKILL_DIR}` so they resolve inside the installed plugin — `detect.sh` and `migrate-repo.sh` — so the file-deleting logic is testable rather than prose.
-
-Non-negotiables, enforced by the scripts:
-
-| Guarantee | Why |
-|---|---|
-| Tracked files never modified | A git-tracked `CLAUDE.md` or `settings.json` is reported, never touched |
-| No ignore file written by default | Whether `.mallet/` is tracked is the user's decision |
-| `.claude/settings.local.json` never touched | User permissions |
-| No backup, no deletion | A repo whose backup fails is skipped whole |
-
-Flow:
-1. **Discover** — `${CLAUDE_SKILL_DIR}/detect.sh`, with candidates from the `cwd` recorded in session transcripts under `~/.claude/projects/`, optionally extended with `--roots <dir>...`; emits TSV (`repo`, `sha`, `recorded-repo`, `claude-md-state`)
-2. **Present** — what moves (`.claude/project/`, `.claude/features/`, `.claude/pipeline-state/` into `.mallet/`), what is deleted (untracked payload only), what is skipped (every tracked file, named), and the per-repo backup path
-3. **Confirm** — destructive-operation rules apply; confirming the list once covers all repos, then reports per repo as it goes
-4. **Ask the VCS question, once** — ignore machine-wide (`core.excludesFile`), ignore per-repo (`.git/info/exclude`), commit it (mentions `${CLAUDE_SKILL_DIR}/mallet-gitignore` as an opt-in template), or decide later
-5. **Migrate** — resolves the historical payload from `raw.githubusercontent.com/<recorded-repo>/<sha>/CLAUDE.md` so the `CLAUDE.md` strip is exact rather than heuristic (cached per SHA), then runs `${CLAUDE_SKILL_DIR}/migrate-repo.sh <repo> --payload ... --yes`; verifies `git status --porcelain` after each repo
-6. **Report** — per repo: moved, deleted, pruned, stripped, skipped, backup path; a reminder that Mallet itself now comes from the plugin, so nothing Mallet-related should remain in the repo besides `.mallet/`
+3. **Report** — one line per step: done, skipped, or not applicable
 
 ## Feature Planning
 
@@ -237,6 +211,7 @@ Removed 2026-10-20, each because native Claude Code or an official plugin does t
 | `preflight` | Nothing; its checks (stale worktrees, Git LFS hooks) were never invoked in 30 days of sessions and `systematic-debugging` covers an actual failure |
 | `hooks-setup` | Nothing to toggle: the opt-in hooks it managed are gone (see [`hooks.md`](hooks.md#removed-hooks)) |
 | `implement-feature`, with the `feature-pipeline` workflow and the agents `feature-analyst`, `code-analyst`, `plan-critic`, `implementer`, `test-runner` | Unused in 30 days of sessions. `code-reviewer` and `scope-validator` stay as standalone agents for Claude or the user to dispatch on a change set |
+| `migrate` (removed 2026-10-21) | Nothing: every known user has moved to the plugin, so the per-project cleanup it did, and the user-level transition scripts this repo carried for it, had no one left to serve. `.mallet/.migration-declined` is inert; the session-start leftover-files notice names it for deletion |
 
 ## Adding New Skills
 

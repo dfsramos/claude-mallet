@@ -58,15 +58,14 @@ ck "agents well-formed" "$BAD" "0"
 ck "no nested SKILL.md beyond one level" "$(find "$P/skills" -mindepth 3 -name SKILL.md | wc -l | tr -d ' ')" "0"
 
 echo "== no references to the removed user-level payload paths =="
-REFS=$(grep -rnE '(~|\$HOME)/\.claude/(hooks|templates)/|agents/_contract' "$P" | grep -v '/skills/migrate/' | grep -v 'CLAUDE_PROJECT_DIR')
+REFS=$(grep -rnE '(~|\$HOME)/\.claude/(hooks|templates)/|agents/_contract' "$P" | grep -v 'CLAUDE_PROJECT_DIR')
 [ -n "$REFS" ] && echo "$REFS" | sed 's/^/    /'
 ck "clean" "$(printf '%s' "$REFS" | grep -c . )" "0"
 
 # Mallet skills are no longer copied to ~/.claude/skills/, so a skill that calls
-# a sibling by that path breaks (after the transition it reaches only a stub).
+# a sibling by that path breaks.
 NAMES=$(ls "$P/skills" | paste -sd'|')
 SREFS=$(grep -rnE "(~|\$HOME)/\.claude/skills/($NAMES)/" "$P" --include='*.md')
-SREFS=$(printf '%s' "$SREFS" | grep -v 'MALLET-TRANSITION-STUB')
 [ -n "$SREFS" ] && echo "$SREFS" | sed 's/^/    /'
 ck "no skill calls a Mallet skill by its old user-level path" "$(printf '%s' "$SREFS" | grep -c . )" "0"
 
