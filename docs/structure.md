@@ -26,7 +26,7 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` di
 │   │   ├── hooks-layer/
 │   │   ├── plugin-slim-down/
 │   │   └── user-level-install/
-│   ├── missions/                      # Leftover of the mission mechanism retired 2026-10-20; no longer read
+│   ├── missions/archive/              # Closed mission files of the mission mechanism retired 2026-10-20; nothing reads them
 │   ├── discovery-2026-03-20.md
 │   ├── discovery-2026-06-04.md
 │   ├── eval-2026-10.md                # Persona eval write-up (full vs trimmed persona vs none)
@@ -51,7 +51,7 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` di
 │   ├── hooks/
 │   │   ├── hooks.json                 # Registers the three hooks below via ${CLAUDE_PLUGIN_ROOT}
 │   │   ├── persona.sh                 # SessionStart: injects PERSONA.md
-│   │   ├── session-start.sh           # SessionStart (startup|resume|clear|compact): statusline, legacy detect, Git conventions check
+│   │   ├── session-start.sh           # SessionStart (startup|resume|clear|compact): statusline, legacy detect, leftover .mallet/ files, Git conventions check
 │   │   └── post-compact.sh            # SessionStart (compact): git state after compaction
 │   ├── persona/
 │   │   └── PERSONA.md                 # The persona itself — not CLAUDE.md, plugins can't ship one
@@ -106,7 +106,7 @@ Installing the plugin writes nothing into any repository. The one file Mallet of
     └── features/<slug>/               # Feature plans
 ```
 
-Leftovers from earlier Mallet versions may also sit in `.mallet/`; since 2026-10-20 nothing reads or writes them: `conventions.md` (move its content to `CLAUDE.md` or `.claude/rules/`), `overrides/` (a skill amendment is now `.claude/rules/<skill>.md`), `skills/` (move to `.claude/skills/`), `missions/` (`reviewing-sessions` offers to fold `active.md` into auto memory and archive or delete it), `skill-backlog.md` (`reviewing-sessions` drains and deletes it), and the `typecheck.enabled` and `command-guard.enabled` markers (inert; delete them).
+Leftovers from earlier Mallet versions may also sit in `.mallet/`; since 2026-10-20 nothing reads or writes them: `conventions.md` (move its content to `CLAUDE.md` or `.claude/rules/`), `overrides/` (a skill amendment is now `.claude/rules/<skill>.md`), `skills/` (move to `.claude/skills/`), `missions/` (`reviewing-sessions` offers to fold `active.md` into auto memory and archive or delete it), `skill-backlog.md` (`reviewing-sessions` drains and deletes it), and the `typecheck.enabled` and `command-guard.enabled` markers (inert; delete them). `session-start.sh` names whichever of these it finds at startup and has Claude offer the moves once; `.mallet/.leftovers-declined` stops that notice.
 
 Project-specific facts, corrections, and preferences that used to live in `.mallet/memory.md` and `.mallet/lessons.md` are now Claude Code's own auto memory — there is no Mallet-owned memory file to inject or maintain. `/mallet:setup` offers to fold any leftover legacy files into auto memory the first time it runs in a project that still has them.
 

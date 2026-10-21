@@ -2,6 +2,11 @@
 
 What changed for people using the `mallet` plugin: behaviour, cost, defaults, and anything to do after updating. Newest first. The plugin has no version field, so entries are dated; update with `/plugin marketplace update claude-mallet`. Changes before 2026-10-07 are in the git history.
 
+## 2026-10-21
+
+**Added**
+- Session start names leftover `.mallet/` files that earlier versions read and nothing has read since 2026-10-20: `conventions.md` (with its line count; Claude reads it and applies it for the session), `overrides/`, `skills/`, `missions/active.md`, and the inert `typecheck.enabled` / `command-guard.enabled` markers. Each line says where the content belongs now (`CLAUDE.md` or `.claude/rules/`, `.claude/rules/<skill>.md`, `.claude/skills/`, auto memory). Claude offers the moves once after your first request; if you decline it creates `.mallet/.leftovers-declined` and the notice stops. Runs on startup and `/clear`, not on resume or compaction. Costs nothing in a project without leftovers; with three of them the notice measured 988 characters, about 250 tokens, once per conversation. Why: `/mallet:migrate` wrote `conventions.md` into every repo it cleaned, and since the 2026-10-20 prune nothing read it, so those project conventions had silently stopped applying. After updating: open each project once and accept the moves, or decline.
+
 ## 2026-10-20
 
 **Changed (cost)**

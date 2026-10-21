@@ -5,8 +5,11 @@
 #   2. Detects a legacy per-project Mallet install and offers the migrate skill.
 #                                                                    (startup)
 #   On resume nothing else runs: the resumed conversation already holds the
-#   notice below from when it started.
-#   3. In a git repository with no Git conventions of its own, prints Mallet's
+#   notices below from when it started.
+#   3. Names leftover .mallet/ files that earlier versions read and nothing
+#      reads since 2026-10-20, and asks Claude to offer the move once.
+#                                                             (startup, clear)
+#   4. In a git repository with no Git conventions of its own, prints Mallet's
 #      default rules (rules/git.md) and asks Claude to offer them.
 #                                                      (startup, clear, compact)
 # Updates arrive through the plugin system, so there is no update check here.
@@ -65,6 +68,56 @@ if [ "$SOURCE" = "startup" ] && [ -n "${CLAUDE_PROJECT_DIR:-}" ] \
     echo "Offer to run the migrate skill to clean it up. If the user declines, create"
     echo "${CLAUDE_PROJECT_DIR}/.mallet/.migration-declined so this notice stops."
     echo "--- End Legacy Mallet Install Detected ---"
+  fi
+fi
+
+# ── Leftover project files ──────────────────────────────────────────────────
+# Earlier versions read .mallet/conventions.md and .mallet/overrides/<skill>.md,
+# listed .mallet/skills/, and flagged .mallet/missions/active.md. Since
+# 2026-10-20 nothing does, so a project that still keeps its context there
+# loses it without a word unless this says so. The migrate skill wrote
+# conventions.md into every repo it cleaned, so most older projects have one.
+# Name what is left, have Claude apply the conventions for this session, and
+# ask it to offer the moves once. Runs on startup and clear, which both begin a
+# conversation without the earlier notice; stops once the files are gone or
+# .mallet/.leftovers-declined exists. No content is printed: a conventions
+# file can be long, and Claude reads it on request.
+
+M="${CLAUDE_PROJECT_DIR:-$(pwd)}/.mallet"
+if { [ "$SOURCE" = "startup" ] || [ "$SOURCE" = "clear" ]; } && [ -d "$M" ] && [ ! -e "$M/.leftovers-declined" ]; then
+  LEFT=""
+  if [ -f "$M/conventions.md" ]; then
+    LEFT="$LEFT- \`.mallet/conventions.md\` ($(wc -l < "$M/conventions.md" | tr -d ' ') lines): read it now and apply it for this session. Its content belongs in \`CLAUDE.md\` or \`.claude/rules/<topic>.md\`, which Claude Code loads itself.
+"
+  fi
+  names=""
+  for f in "$M"/overrides/*.md; do [ -f "$f" ] && names="$names${names:+, }$(basename "$f")"; done
+  if [ -n "$names" ]; then
+    LEFT="$LEFT- \`.mallet/overrides/\` ($names): each becomes \`.claude/rules/<skill>.md\` holding \"When running \`/mallet:<skill>\`, ...\" lines.
+"
+  fi
+  names=""
+  for d in "$M"/skills/*/; do [ -d "$d" ] && names="$names${names:+, }$(basename "$d")"; done
+  if [ -n "$names" ]; then
+    LEFT="$LEFT- \`.mallet/skills/\` ($names): move each directory to \`.claude/skills/\`, which Claude Code loads itself.
+"
+  fi
+  if [ -f "$M/missions/active.md" ]; then
+    LEFT="$LEFT- \`.mallet/missions/active.md\`: an open mission from an earlier version; nothing flags it any more. /mallet:next-steps reads its pending items, and /mallet:reviewing-sessions folds it into an auto memory project entry and archives it.
+"
+  fi
+  names=""
+  for f in typecheck.enabled command-guard.enabled; do [ -e "$M/$f" ] && names="$names${names:+, }\`.mallet/$f\`"; done
+  if [ -n "$names" ]; then
+    LEFT="$LEFT- $names: inert, the hooks they enabled are gone; delete.
+"
+  fi
+  if [ -n "$LEFT" ]; then
+    echo "--- Leftover Mallet Files ---"
+    echo "Earlier Mallet versions read or flagged these files; since 2026-10-20 nothing does, so what they hold no longer applies on its own:"
+    printf '%s' "$LEFT"
+    echo "Once the user's first request is handled, offer once to make the moves above (git mv for tracked files; delete nothing without the user's say). If the user declines, create ${M}/.leftovers-declined so this notice stops."
+    echo "--- End Leftover Mallet Files ---"
   fi
 fi
 

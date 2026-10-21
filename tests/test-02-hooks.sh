@@ -1,7 +1,7 @@
 #!/bin/bash
 # Test: session-start.sh injects no legacy memory file, flags a legacy
-# per-project install on startup only, announces neither project skills nor an
-# open mission any more, and offers Git conventions where a repo states none.
+# per-project install on startup only, names leftover .mallet/ files that
+# nothing reads any more, and offers Git conventions where a repo states none.
 # Portable: resolves the repo from this script's location and uses a temp dir.
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SCRATCH=$(mktemp -d)
@@ -38,18 +38,40 @@ for b in bash sed tr grep head cut ls dirname basename cat cmp cp mv mkdir pwd; 
 hasnt "no jq: clear still skips the legacy notice" "$(echo '{"source":"clear"}' | PATH="$NOJQ" bash "$H/session-start.sh" 2>&1)" "Legacy Mallet Install"
 rm -rf "$CLAUDE_PROJECT_DIR/.claude"
 
-echo "== session-start.sh: retired notices =="
-# Project skills live in .claude/skills/, which Claude Code loads itself, and
-# open work in auto memory; leftovers from earlier versions get no notice.
-mkdir -p "$CLAUDE_PROJECT_DIR/.mallet/missions" "$CLAUDE_PROJECT_DIR/.mallet/skills/deploy-app"
+echo "== session-start.sh: leftover files notice =="
+# Earlier versions read conventions.md and overrides/, listed skills/, and
+# flagged missions/active.md. Nothing does now, so startup names what is left
+# and asks Claude to offer the move; content is never printed.
+mkdir -p "$CLAUDE_PROJECT_DIR/.mallet/missions" "$CLAUDE_PROJECT_DIR/.mallet/skills/deploy-app" "$CLAUDE_PROJECT_DIR/.mallet/overrides"
 printf '# Mission: Ship the widget\n\n## Pending\n- [ ] one\n' > "$CLAUDE_PROJECT_DIR/.mallet/missions/active.md"
 printf -- '---\nname: deploy-app\ndescription: Invoke when the user says "deploy".\n---\n' > "$CLAUDE_PROJECT_DIR/.mallet/skills/deploy-app/SKILL.md"
-for s in startup clear compact; do
-  OUT=$(ss "$s")
-  hasnt "$s: no open-mission notice" "$OUT" "Open Mission"
-  hasnt "$s: no project-skills listing" "$OUT" "deploy-app"
-done
-rm -rf "$CLAUDE_PROJECT_DIR/.mallet/missions" "$CLAUDE_PROJECT_DIR/.mallet/skills"
+printf '# Conventions\n- rule one\n- rule two\n' > "$CLAUDE_PROJECT_DIR/.mallet/conventions.md"
+printf 'When running /mallet:adr, use docs/decisions/.\n' > "$CLAUDE_PROJECT_DIR/.mallet/overrides/adr.md"
+touch "$CLAUDE_PROJECT_DIR/.mallet/typecheck.enabled"
+OUT=$(ss startup)
+has   "startup: notice" "$OUT" "Leftover Mallet Files"
+has   "names conventions.md with its size" "$OUT" 'conventions.md` (3 lines)'
+has   "names each override" "$OUT" "overrides/\` (adr.md)"
+has   "names each skill directory" "$OUT" "skills/\` (deploy-app)"
+has   "names the open mission" "$OUT" "missions/active.md"
+has   "names the inert marker" "$OUT" "typecheck.enabled"
+has   "names the declined marker" "$OUT" "$CLAUDE_PROJECT_DIR/.mallet/.leftovers-declined"
+hasnt "no mission content" "$OUT" "Ship the widget"
+hasnt "no conventions content" "$OUT" "rule one"
+hasnt "no skill listing (Claude Code loads .claude/skills itself)" "$OUT" "Invoke when the user says"
+hasnt "no old-form mission notice" "$OUT" "Open Mission"
+has   "clear: notice (a new conversation)" "$(ss clear)" "Leftover Mallet Files"
+hasnt "compact: no notice" "$(ss compact)" "Leftover Mallet Files"
+hasnt "resume: no notice" "$(ss resume)" "Leftover Mallet Files"
+touch "$CLAUDE_PROJECT_DIR/.mallet/.leftovers-declined"
+hasnt "declined marker silences it" "$(ss startup)" "Leftover Mallet Files"
+rm "$CLAUDE_PROJECT_DIR/.mallet/.leftovers-declined"
+rm -rf "$CLAUDE_PROJECT_DIR/.mallet/missions" "$CLAUDE_PROJECT_DIR/.mallet/skills" "$CLAUDE_PROJECT_DIR/.mallet/overrides"
+rm "$CLAUDE_PROJECT_DIR/.mallet/conventions.md" "$CLAUDE_PROJECT_DIR/.mallet/typecheck.enabled"
+hasnt "files moved: notice gone" "$(ss startup)" "Leftover Mallet Files"
+mkdir -p "$CLAUDE_PROJECT_DIR/.mallet/skills" "$CLAUDE_PROJECT_DIR/.mallet/overrides"
+hasnt "empty skills/ and overrides/: no notice" "$(ss startup)" "Leftover Mallet Files"
+rm -rf "$CLAUDE_PROJECT_DIR/.mallet/skills" "$CLAUDE_PROJECT_DIR/.mallet/overrides"
 
 echo "== session-start.sh with .mallet absent =="
 rm -rf "$CLAUDE_PROJECT_DIR/.mallet"

@@ -121,7 +121,7 @@ Every agent is restricted to `disallowedTools: Edit, Write, NotebookEdit`.
 | Hook | Event | What it does |
 |---|---|---|
 | `persona.sh` | SessionStart (`startup\|resume\|clear\|compact`) | Injects `PERSONA.md` — the only way a plugin can deliver directives |
-| `session-start.sh` | SessionStart (`startup\|resume\|clear\|compact`) | On startup and resume, refreshes the statusline copy in `${CLAUDE_PLUGIN_DATA}` and flags a leftover per-project install; in a git repository with no Git conventions of its own, prints Mallet's defaults and has Claude offer them as `.claude/rules/git.md` |
+| `session-start.sh` | SessionStart (`startup\|resume\|clear\|compact`) | On startup and resume, refreshes the statusline copy in `${CLAUDE_PLUGIN_DATA}` and flags a leftover per-project install; names leftover `.mallet/` files that nothing reads since 2026-10-20, with where their content belongs now; in a git repository with no Git conventions of its own, prints Mallet's defaults and has Claude offer them as `.claude/rules/git.md` |
 | `post-compact.sh` | SessionStart (`compact`) | Prints branch, uncommitted changes, and recent commits right after compaction |
 
 Every Mallet hook is a `SessionStart` hook, the one event where plain stdout reaches the model without a JSON envelope. What earlier hooks did — compaction reminders, blocking `Write` on existing files, guarding destructive commands, type checking after edits — is now a Claude Code setting or an official plugin; [`docs/hooks.md`](docs/hooks.md#removed-hooks) lists each replacement.

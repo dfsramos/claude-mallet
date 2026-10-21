@@ -7,7 +7,7 @@ This repository is both a Claude Code plugin marketplace (`.claude-plugin/market
 - `plugin/` is the payload, the source of truth for what ships: `agents/`, `evals/`, `hooks/`, `persona/`, `rules/`, `skills/`, `statusline/`, plus `plugin/.claude-plugin/plugin.json`. The marketplace manifest points at it as `./plugin`.
 - The persona users receive is `plugin/persona/PERSONA.md`, injected by `plugin/hooks/persona.sh`. It is not loaded from this file.
 - `.claude/skills/` holds this repo's own maintenance skills (`harvest`, `self-assessment`), which ship nowhere; `.claude/rules/` holds this repo's own rules; `.claude/settings.local.json` is this repo's permissions.
-- `.mallet/` is this repo's own state and ships nowhere: `features/`, `discovery-*.md`, the relevance and eval write-ups, and `missions/` until its last file is archived.
+- `.mallet/` is this repo's own state and ships nowhere: `features/`, `discovery-*.md`, the relevance and eval write-ups, and `missions/archive/`, the closed mission files of the mission mechanism retired 2026-10-20.
 - Here the Mallet skills are source, not an installed plugin: edit `plugin/skills/` directly. The `reviewing-sessions` rule against editing Mallet skills, and its routing of amendments to `.claude/rules/`, applies to installed copies only.
 - A new plugin skill goes to `plugin/skills/<name>/`; a skill for this repo only goes to `.claude/skills/<name>/`.
 
@@ -46,3 +46,7 @@ Session wrap-ups are conversational: no session summary or retrospective file is
 - Commit message: a one-line subject with no body, imperative verb, capital first letter, ending with a period, e.g. `Add password reset email template.` Trailer lines such as `Co-Authored-By` go below it.
 - Run `bash tests/run.sh` before committing a change to hooks, the statusline, or the transition scripts.
 - Ask before pushing: colleagues auto-update from `master`, so a push changes what they get.
+
+## Quarterly prune
+
+Native Claude Code absorbs what this plugin does, piece by piece (`.mallet/relevance-2026-10-19.md` records the first round). Every three months, read the Claude Code changelog since the last prune and ask of each remaining hook, skill, agent and persona rule whether a native feature or an official plugin now covers it. Drop what is covered rather than keep a Mallet copy, and adopt an official plugin over re-implementing one. Record each prune here. Last prune: 2026-10-20. Next due: 2027-01-19; it also decides `council` and `adr`, on probation since 2026-10-20 because they are unique but were unused.
