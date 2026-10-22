@@ -6,6 +6,19 @@ description: Invoke when the user agrees to a session wrap-up, or says "wrap up"
 
 ---
 
+## 0. Recover the Full Session
+
+If the session was compacted, or its start is no longer in context, read the transcript so the review covers the whole session and not only what survived compaction. Pull only user prompts, assistant text, and tool-call names, and keep the output bounded:
+
+```bash
+T=$(ls ~/.claude/projects/*/${CLAUDE_SESSION_ID}.jsonl | head -1)
+jq -rc 'select(.type=="user" or .type=="assistant") | .message.content | if type=="string" then . else (.[] | select(.type=="text" or .type=="tool_use") | (.text // ("tool: " + .name))) end' "$T" | cut -c1-300 | tail -400
+```
+
+If the session is longer than that, sample the start, the densest stretch of corrections, and the most recent turns, and say which parts were sampled. Cite what you find in sections 2 and 3. Skip this step when the whole session is still in context.
+
+---
+
 ## 1. Session Summary
 
 Present a concise summary of what was accomplished this session: the starting problem or goal, the approach taken, and the outcome. Output to the conversation only — do not write to a file.
@@ -56,6 +69,8 @@ Based on what went poorly and what was learned:
   - A Mallet skill (`/mallet:<name>`): never edit its files. They live in the plugin cache and the next update overwrites them. Propose the amendment to the user as a project rule and, on agreement, write it to `.claude/rules/<name>.md` as "When running `/mallet:<name>`, ..." lines; Claude Code loads that file in every session. If the fix would help every project, also describe it to the user as a proposed change to Mallet itself.
 - **Create new skills**: if a knowledge gap came up repeatedly or a new reusable pattern emerged, create the skill file now. Project-specific skills go to `.claude/skills/<skill-name>/SKILL.md`, which Claude Code discovers itself; skills useful across every project go to `~/.claude/skills/<skill-name>/SKILL.md`. When unsure, prefer project-specific — promoting later is cheap, and a half-general personal skill applies everywhere.
 - **Fix missing or unclear rules**: a rule for this project belongs in `.claude/rules/<topic>.md` or `CLAUDE.md`. Both are usually tracked and shared with a team, so propose the exact text to the user and write it only on agreement. A rule for every project is a `feedback` memory.
+
+Each rule has one home. Before writing one, check whether it already lives in `CLAUDE.md`, `.claude/rules/`, a skill, or a memory. If it does, amend it there; never write a second copy elsewhere, since two copies drift apart. Another surface that needs the rule gets a pointer to its home, not the text.
 
 Apply the changes — do not just list them.
 

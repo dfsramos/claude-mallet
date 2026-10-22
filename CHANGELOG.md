@@ -2,6 +2,19 @@
 
 What changed for people using the `mallet` plugin: behaviour, cost, defaults, and anything to do after updating. Newest first. The plugin has no version field, so entries are dated; update with `/plugin marketplace update claude-mallet`. Changes before 2026-10-07 are in the git history.
 
+## 2026-10-22
+
+**Changed**
+- The `code-reviewer` agent (Clifford) checks five more things:
+  - It blocks errors that are caught and dropped.
+  - It blocks loops where one failing item aborts the rest.
+  - It blocks structural changes that leave an architecture document or an accepted ADR out of date.
+  - It flags tests that assert a status field instead of the effect itself.
+  - It reports each new pattern with its `git grep` count, as a non-blocking note.
+
+  Reviews may run slightly longer from the extra `git grep` calls. Nothing to do after updating.
+- `/mallet:reviewing-sessions` reads the session's own transcript when the session was compacted, so the wrap-up covers what compaction dropped. The read is filtered and capped at 400 lines. It costs a few thousand tokens on a compacted session and nothing otherwise. When it fixes a rule, it now amends the rule where it already lives instead of writing a second copy. Nothing to do after updating.
+
 ## 2026-10-21
 
 **Added**
