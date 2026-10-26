@@ -57,7 +57,7 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` di
 │   ├── skills/
 │   │   ├── adr/                       council/              create-pr/            next-steps/
 │   │   ├── plan-feature/              receiving-code-review/ reviewing-sessions/  systematic-debugging/
-│   │   ├── write-task/
+│   │   ├── write-task/                create-foreman-task/
 │   │   └── setup/                     # manual-only (disable-model-invocation)
 │   └── statusline/
 │       └── statusline.sh              # Model, effort, branch, cost, context tokens, rate limits

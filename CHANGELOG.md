@@ -2,6 +2,11 @@
 
 What changed for people using the `mallet` plugin: behaviour, cost, defaults, and anything to do after updating. Newest first. The plugin has no version field, so entries are dated; update with `/plugin marketplace update claude-mallet`. Changes before 2026-10-07 are in the git history.
 
+## 2026-10-26
+
+**Added**
+- `/mallet:create-foreman-task` writes a task with `/mallet:write-task` and saves it to a foreman project that keeps its tasks on a git branch. It uses foreman's console API, so foreman must be running; when it is not, you get the task text in chat and nothing is written. The skill asks for confirmation before it creates anything, and creating a task pushes one commit to the project's task branch. Nothing to do after updating.
+
 ## 2026-10-22
 
 **Changed**
