@@ -31,7 +31,8 @@ Generated from the filesystem (excluding `.git`); `.mallet/features/*/tasks/` di
 │   ├── eval-2026-10-19-fable-trimmed.json
 │   └── relevance-2026-10-19.md        # The assessment behind the 2026-10-20 prune
 ├── assets/
-│   └── claude-mallet.jpg
+│   ├── mallet-banner.png
+│   └── mallet-icon.png
 ├── docs/
 │   ├── directives.md                  # Behavioral rules defined in the persona
 │   ├── hooks.md                       # Automatic actions triggered by Claude Code events

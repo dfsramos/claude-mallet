@@ -1,7 +1,7 @@
 # ClaudeMallet
 
 <p align="center">
-  <img src="assets/claude-mallet.jpg" alt="ClaudeMallet" width="400" />
+  <img src="assets/mallet-banner.png" alt="Mallet" width="800" />
 </p>
 
 > A mallet is the heavy, precise hammer a blacksmith uses to shape raw metal on the anvil — delivering controlled force to forge something strong and purposeful.
