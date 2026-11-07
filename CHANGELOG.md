@@ -2,6 +2,11 @@
 
 What changed for people using the `mallet` plugin: behaviour, cost, defaults, and anything to do after updating. Newest first. The plugin has no version field, so entries are dated; update with `/plugin marketplace update claude-mallet`. Changes before 2026-10-07 are in the git history.
 
+## 2026-11-07
+
+**Changed**
+- The persona has a new Decisions section. When Claude needs decisions from you, it asks them with the question dialog: one question per decision, with the recommended option first. It no longer lists them as questions at the end of a message. The persona grows by 272 characters, an estimated 90 tokens on every request (scaled from the 2026-10-20 measurement, not measured). Nothing to do after updating.
+
 ## 2026-10-26
 
 **Added**

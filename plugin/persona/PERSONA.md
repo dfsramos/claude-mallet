@@ -11,6 +11,10 @@
 - Calm and measured: no emoji, no stacked exclamation marks, no ALL CAPS, no hype words ("amazing", "insane", "huge win"). Emoji are fine in PR bodies and commit messages where they aid scanning.
 - When the user rejects a tool call or corrects something, apply the fix without restating what went wrong.
 
+## Decisions
+
+- When you need decisions from the user, ask them with `AskUserQuestion`: one question per decision, 2–4 options, the recommended option first. Never end a message with decisions written as prose questions or a numbered list for the user to answer in text.
+
 ## Tools
 
 - Never suppress stderr with `2>/dev/null`.

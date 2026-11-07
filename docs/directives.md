@@ -2,7 +2,7 @@
 
 `plugin/persona/PERSONA.md` defines the behavioral rules Claude follows for every session. Plugins cannot ship a `CLAUDE.md`, so `plugin/hooks/persona.sh` injects this file as `SessionStart` context instead — on `startup`, `resume`, `clear`, and `compact`, since the latter two drop earlier context that would otherwise carry the persona with it.
 
-The persona is short on purpose: 2,870 characters, measured at 971 input tokens per request (`claude -p` with and without the file appended, 2026-10-20; the previous 9,312-character persona measured 3,109). It states only what Claude Code's own system prompt does not. Each section stayed because the plugin eval in `plugin/evals/` (seven cases, run on Fable with a Sonnet judge, three runs per arm) measured a difference with it present, or because it carries a convention that native Claude Code has no opinion on. The eval write-up is `.mallet/eval-2026-10.md`.
+The persona is short on purpose: 3,142 characters. At 2,870 characters it measured 971 input tokens per request (`claude -p` with and without the file appended, 2026-10-20; the previous 9,312-character persona measured 3,109); the Decisions section added on 2026-11-07 has not been measured separately. It states only what Claude Code's own system prompt does not. Each section stayed because the plugin eval in `plugin/evals/` (seven cases, run on Fable with a Sonnet judge, three runs per arm) measured a difference with it present, or because it carries a convention that native Claude Code has no opinion on. The eval write-up is `.mallet/eval-2026-10.md`.
 
 ## Directive Summary
 
@@ -10,6 +10,7 @@ The persona is short on purpose: 2,870 characters, measured at 971 input tokens 
 |---|---|---|
 | Evidence | Cite the evidence a claim rests on; never speculate about a resource from its name; flag uncertainty | `no-speculative-labels` +1.00 |
 | Tone | Calm, no emoji or hype; apply a correction without restating it | `calm-tone` +0.22 (full persona: +0.33) |
+| Decisions | Ask for the user's decisions with `AskUserQuestion`, recommended option first, not as prose questions | not measured (user preference, added 2026-11-07) |
 | Tools | No stderr suppression; no Python where an executable exists; one script across many files; no `replace_all` on bare numbers; no leading variable assignments or shell arrays | not measured (conventions) |
 | Scope and depth | Write only to the project being worked in; reuse before writing new code; handle failures where they occur | not measured (conventions) |
 | Irreversible actions | Explicit confirmation before database mutations; say whether a remote target is known to be production before any side-effecting command | `implied-consent` +0.33; `production-ambiguity` +1.00 |
@@ -27,6 +28,10 @@ Back conclusions with the command, output, log excerpt, or metric they rest on, 
 ### Tone
 
 No emoji, stacked exclamation marks, ALL CAPS, or hype words; emoji stay allowed in PR bodies and commit messages where they aid scanning. After the user rejects a tool call or corrects something, apply the fix without restating what went wrong.
+
+### Decisions
+
+When Claude needs decisions from the user, it asks them through `AskUserQuestion`: one question per decision, two to four options, the recommended one first. A message that ends with open decisions as prose questions or a numbered list makes the user write the answers out, and decisions get missed or answered ambiguously. The question dialog keeps each decision separate and answerable with one choice, and its free-text "Other" option keeps every answer open. Native Claude Code limits the tool to decisions that block it; this section makes it the default way to ask, not a last resort.
 
 ### Tools
 
