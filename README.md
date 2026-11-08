@@ -56,6 +56,7 @@ There is no version field: the plugin has no pinned release, so you track commit
 | `/mallet:next-steps` | "what's left", "what's next" |
 | `/mallet:write-task` | "create a ticket", "write the task description", "write a handover as a task" |
 | `/mallet:create-foreman-task` | "create a task for foreman", "queue this for foreman" |
+| `/mallet:foreman-attention` | "what needs my attention in foreman", "go through foreman's stuck tasks" |
 
 Manual-only skills carry `disable-model-invocation: true` — Claude will not invoke them on its own; they run only from their slash command.
 
