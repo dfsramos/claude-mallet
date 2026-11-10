@@ -24,6 +24,7 @@
 - When an issue spans several projects, write only to the one being worked in unless asked, and propose the fix for the others.
 - Before writing new code, take the first option that holds: what the codebase already has, then the standard library or a native platform feature, then an installed dependency. Write new code or add a dependency only when none fits.
 - Handle failures where they can realistically occur (I/O, network, user input, external APIs), not where they cannot.
+- When a follow-up step can be done with the tools at hand (cleanup, a config edit, stopping a container), do it instead of listing it as manual work for the user.
 
 ## Irreversible actions
 

@@ -152,13 +152,13 @@ The single home of Mallet's task format. Writes a task body a later session can 
 
 **Directory:** `plugin/skills/create-foreman-task/`
 **Triggered by:** creating, queuing, adding or handing off a task for foreman
-**Tools:** `allowed-tools` grants `git rev-parse`, `git worktree list`, `foreman status` and the read-only `curl` to the console's address; the `POST` that creates the task is an ordinary `Bash` call, made after the confirmation in step 1
+**Tools:** `allowed-tools` grants `git rev-parse`, `git worktree list`, `foreman status`, the read-only `curl` to the console's address and foreman's read-only MCP `list_projects`; the call that creates the task (foreman's MCP `create_task`, or a `POST` through `Bash` without it) is made after the confirmation in step 1
 
 Saves a task to a [foreman](https://github.com/dfsramos/foreman) project that keeps its tasks on a git branch (source **Git branch**). It owns where the task goes; `/mallet:write-task` owns what it says, so the skeleton and the writing rules are never restated here.
 
 1. **Write** — runs `/mallet:write-task` through its confirm step and skips that skill's create step. Takes a one-line title of at most 200 characters and uses the body unchanged as the description; the body may not contain a line that is exactly `## Log`. Priority is a whole number from 0 to 4 (0 none, 1 urgent, 4 low), 0 unless the user stated an urgency
-2. **Find** — the console at `http://127.0.0.1:4310`; when it does not answer, `foreman status` says whether foreman is running. If it is not, the skill gives the body in chat and stops; it neither starts foreman nor writes the file itself. The project is the git-source project whose `repoPath` is the current repository (a linked worktree resolves to its main checkout); otherwise the skill asks
-3. **Create** — `POST /api/projects/<id>/tasks` with the request built by `jq` so the body is escaped correctly. Foreman picks the next free number, commits and pushes one file in the task directory, and retries a push another machine beat. A 400 is fixed field by field; a 502 is shown and not retried, since a retry may add a second task
+2. **Find** — the console at `http://127.0.0.1:4310`; when it does not answer, `foreman status` says whether foreman is running. If it is not, the skill gives the body in chat and stops; it neither starts foreman nor writes the file itself. The project list comes from foreman's MCP `list_projects` when the session has it and it gives `repo_path` (foreman 0.15.0 or later), otherwise from the console API. The project is the git-source project whose repository path is the current repository (a linked worktree resolves to its main checkout); otherwise the skill asks
+3. **Create** — foreman's MCP `create_task` when the session has it; otherwise `POST /api/projects/<id>/tasks` with the request built by `jq` so the body is escaped correctly. Foreman picks the next free number, commits and pushes one file in the task directory, and retries a push another machine beat. A rejected field is fixed field by field; a failed read or push is shown and not retried, since a retry may add a second task
 4. **Report** — the identifier (for example `FM-13`), the file name and the project, and whether the project is polling: a stopped project does not take the task until it is started
 
 ## Foreman Attention
