@@ -2,6 +2,17 @@
 
 What changed for people using the `mallet` plugin: behaviour, cost, defaults, and anything to do after updating. Newest first. The plugin has no version field, so entries are dated; update with `/plugin marketplace update claude-mallet`. Changes before 2026-10-07 are in the git history.
 
+## 2026-11-10
+
+**Changed**
+- `/mallet:create-foreman-task` finds the project and creates the task through foreman's MCP tools when the session has foreman's MCP server connected, and falls back to the console API otherwise. Finding the project through MCP needs foreman 0.15.0 or later; with an older foreman the skill lists projects through the console API. Foreman must still be running either way. Nothing to do after updating.
+- The persona tells Claude to do a follow-up step itself when its tools allow, such as cleanup or a config edit, instead of listing it as manual work for you. Nothing to do after updating.
+
+## 2026-11-08
+
+**Added**
+- `/mallet:foreman-attention` goes through what foreman is waiting on you for, one task at a time: blocked agents' questions, failed or aborted runs still claimed, tasks nobody is working on, and pull requests handed to you or waiting to be merged. For each it shows the reason, the agent's last message and the kept worktree, offers the ways forward, and carries out the one you pick after your OK. It needs a foreman version with the `list_attention` tool, and foreman running. Nothing to do after updating.
+
 ## 2026-11-07
 
 **Changed**

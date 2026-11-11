@@ -152,14 +152,28 @@ The single home of Mallet's task format. Writes a task body a later session can 
 
 **Directory:** `plugin/skills/create-foreman-task/`
 **Triggered by:** creating, queuing, adding or handing off a task for foreman
-**Tools:** `allowed-tools` grants `git rev-parse`, `git worktree list`, `foreman status` and the read-only `curl` to the console's address; the `POST` that creates the task is an ordinary `Bash` call, made after the confirmation in step 1
+**Tools:** `allowed-tools` grants `git rev-parse`, `git worktree list`, `foreman status`, the read-only `curl` to the console's address and foreman's read-only MCP `list_projects`; the call that creates the task (foreman's MCP `create_task`, or a `POST` through `Bash` without it) is made after the confirmation in step 1
 
 Saves a task to a [foreman](https://github.com/dfsramos/foreman) project that keeps its tasks on a git branch (source **Git branch**). It owns where the task goes; `/mallet:write-task` owns what it says, so the skeleton and the writing rules are never restated here.
 
 1. **Write** — runs `/mallet:write-task` through its confirm step and skips that skill's create step. Takes a one-line title of at most 200 characters and uses the body unchanged as the description; the body may not contain a line that is exactly `## Log`. Priority is a whole number from 0 to 4 (0 none, 1 urgent, 4 low), 0 unless the user stated an urgency
-2. **Find** — the console at `http://127.0.0.1:4310`; when it does not answer, `foreman status` says whether foreman is running. If it is not, the skill gives the body in chat and stops; it neither starts foreman nor writes the file itself. The project is the git-source project whose `repoPath` is the current repository (a linked worktree resolves to its main checkout); otherwise the skill asks
-3. **Create** — `POST /api/projects/<id>/tasks` with the request built by `jq` so the body is escaped correctly. Foreman picks the next free number, commits and pushes one file in the task directory, and retries a push another machine beat. A 400 is fixed field by field; a 502 is shown and not retried, since a retry may add a second task
+2. **Find** — the console at `http://127.0.0.1:4310`; when it does not answer, `foreman status` says whether foreman is running. If it is not, the skill gives the body in chat and stops; it neither starts foreman nor writes the file itself. The project list comes from foreman's MCP `list_projects` when the session has it and it gives `repo_path` (foreman 0.15.0 or later), otherwise from the console API. The project is the git-source project whose repository path is the current repository (a linked worktree resolves to its main checkout); otherwise the skill asks
+3. **Create** — foreman's MCP `create_task` when the session has it; otherwise `POST /api/projects/<id>/tasks` with the request built by `jq` so the body is escaped correctly. Foreman picks the next free number, commits and pushes one file in the task directory, and retries a push another machine beat. A rejected field is fixed field by field; a failed read or push is shown and not retried, since a retry may add a second task
 4. **Report** — the identifier (for example `FM-13`), the file name and the project, and whether the project is polling: a stopped project does not take the task until it is started
+
+## Foreman Attention
+
+**Directory:** `plugin/skills/foreman-attention/`
+**Triggered by:** asking what needs attention in foreman, which foreman tasks wait on the user, are stuck, blocked or failed, or to go through them
+**Tools:** `allowed-tools` grants `foreman status`, `gh pr view` and `gh pr diff`; foreman's tools are used as `mcp__foreman__*` when the session has them, otherwise over HTTP to the console's `/mcp`; every write (push, pull request, worktree removal, branch deletion, task comment, edit or move) is an ordinary call made after the user's OK for that item
+
+Walks the user through what [foreman](https://github.com/dfsramos/foreman) is waiting on them for. Foreman's `list_attention` tool decides what needs a person; the skill explains each item and carries out the user's choice. Needs a foreman version with `list_attention`.
+
+1. **Reach foreman** — MCP tools or the HTTP form of the same call; when foreman is not running it says so and stops, and when `list_attention` is unknown it says foreman needs updating
+2. **List** — one line per item (identifier, kind, reason) and foreman's notes; asks which to start with, recommending blocked and failed items first
+3. **One item** — the task, the reason, the agent's last message (a blocked agent's question in full), the kept worktree with its uncommitted files and unpushed commits, and the pull request's state; then two to four options by kind: answer and retry, or open a pull request from the kept work, for `blocked`; fix and open the pull request, or retry from scratch, for `failed` and `aborted`; move to todo or elsewhere for `unclaimed`; another round or a review for `handed_over` and `awaiting_approval`. A Linear or Kaneo item gets what to change in that tracker
+4. **Act** — only the chosen option, after an explicit OK for that item. Clearing a worktree shows what would be lost first; `--force` and `branch -D` each need their own confirmation naming the files or commits. Pull requests go through `/mallet:create-pr`
+5. **Next** — lists again, since one fix can change others, and goes on until the list is empty or the user stops; ends with what was done and what is still waiting
 
 ---
 

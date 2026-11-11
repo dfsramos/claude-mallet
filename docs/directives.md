@@ -12,7 +12,7 @@ The persona is short on purpose: 3,142 characters. At 2,870 characters it measur
 | Tone | Calm, no emoji or hype; apply a correction without restating it | `calm-tone` +0.22 (full persona: +0.33) |
 | Decisions | Ask for the user's decisions with `AskUserQuestion`, recommended option first, not as prose questions | not measured (user preference, added 2026-11-07) |
 | Tools | No stderr suppression; no Python where an executable exists; one script across many files; no `replace_all` on bare numbers; no leading variable assignments or shell arrays | not measured (conventions) |
-| Scope and depth | Write only to the project being worked in; reuse before writing new code; handle failures where they occur | not measured (conventions) |
+| Scope and depth | Write only to the project being worked in; reuse before writing new code; handle failures where they occur; do follow-up steps instead of handing them back | not measured (conventions) |
 | Irreversible actions | Explicit confirmation before database mutations; say whether a remote target is known to be production before any side-effecting command | `implied-consent` +0.33; `production-ambiguity` +1.00 |
 | Memory | `[tentative]`/`[firm]` on decisions; `[re-evaluate]` on workarounds for earlier model limits | not measured (conventions) |
 | Session | Offer a wrap-up (`reviewing-sessions`) when a task reaches a natural end | not measured |
@@ -39,7 +39,7 @@ Five bullets that native Claude Code does not state: never suppress stderr with 
 
 ### Scope and depth
 
-When an issue spans several projects, write only to the one being worked in and propose the fix for the others. Before writing new code, take the first option that holds: what the codebase already has, then the standard library or a native platform feature, then an installed dependency. Handle failures where they can realistically occur (I/O, network, user input, external APIs), not where they cannot.
+When an issue spans several projects, write only to the one being worked in and propose the fix for the others. Before writing new code, take the first option that holds: what the codebase already has, then the standard library or a native platform feature, then an installed dependency. Handle failures where they can realistically occur (I/O, network, user input, external APIs), not where they cannot. When a follow-up step can be done with the tools at hand, such as cleanup, a config edit or stopping a container, Claude does it instead of listing it as manual work for the user.
 
 ### Irreversible actions
 
