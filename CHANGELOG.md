@@ -13,6 +13,11 @@ What changed for people using the `mallet` plugin: behaviour, cost, defaults, an
 **Added**
 - `/mallet:foreman-attention` goes through what foreman is waiting on you for, one task at a time: blocked agents' questions, failed or aborted runs still claimed, tasks nobody is working on, and pull requests handed to you or waiting to be merged. For each it shows the reason, the agent's last message and the kept worktree, offers the ways forward, and carries out the one you pick after your OK. It needs a foreman version with the `list_attention` tool, and foreman running. Nothing to do after updating.
 
+## 2026-11-07
+
+**Changed**
+- The persona has a new Decisions section. When Claude needs decisions from you, it asks them with the question dialog: one question per decision, with the recommended option first. It no longer lists them as questions at the end of a message. The persona grows by 272 characters, an estimated 90 tokens on every request (scaled from the 2026-10-20 measurement, not measured). Nothing to do after updating.
+
 ## 2026-10-26
 
 **Added**
