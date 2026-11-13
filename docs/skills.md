@@ -53,17 +53,19 @@ Tests a decision against four independent advisors before it is made. Each start
 
 | Agent | Persona | Lens | Model / Effort |
 |---|---|---|---|
-| `council-contrarian` | Cassandra | What would make the decision fail | opus / high |
-| `council-first-principles` | Felix | Whether it addresses the right problem, framed the right way | opus / high |
-| `council-expansionist` | Esme | The upside and the options being missed, each with its cost | sonnet / high |
-| `council-executor` | Ezra | The first concrete steps and what blocks them | sonnet / high |
+| `council-contrarian` | Cassandra | What would make the decision fail | fable, else opus / high |
+| `council-first-principles` | Felix | Whether it addresses the right problem, framed the right way | fable, else opus / high |
+| `council-expansionist` | Esme | The upside and the options being missed, each with its cost | fable, else sonnet / high |
+| `council-executor` | Ezra | The first concrete steps and what blocks them | fable, else sonnet / high |
+
+The skill dispatches each advisor with `model: fable`. The agent definitions keep `opus` and `sonnet`, which apply when an advisor fails because Fable is unavailable and is re-dispatched without the override. When an organization's `availableModels` blocks Fable, Claude Code does not fail the advisor but runs it on the main conversation's model, so that fallback does not reach the definition's model.
 
 1. **Brief** — question, context, every option including doing nothing, hard constraints, and what is settled; the chair's own leaning is kept out so it cannot anchor the advisors. The user confirms or corrects the brief before convening, since a wrong brief misleads all four advisors alike
-2. **Convene** — all four in parallel with identical inputs; a failed advisor is re-dispatched once, and a lens still missing is named in the verdict
+2. **Convene** — all four in parallel on `fable` with identical inputs; an advisor that fails because Fable is unavailable is re-dispatched on its definition's model; one that failed otherwise is re-dispatched once, and a lens still missing is named in the verdict
 3. **Chair** — the main session verifies the claims that decide the outcome and weighs the answers rather than averaging them: the verdict follows the objections that hold, from any advisor, rather than the vote count; an objection that holds moves the verdict or is named as an accepted risk; shared-model agreement counts for less than it looks; a `reframe` is settled first; and the chair's own leaning is tested last. Output: verdict, strongest objection and whether it holds, upside worth its cost, first action, a per-advisor table, and what would change the verdict
 4. **Record** — feeds an ADR when called from `adr`; otherwise offers one for an architectural decision, or leaves the summary in the conversation
 
-Modelled on Karpathy's LLM Council, which polls different model vendors. Here the independence comes from separate contexts and lenses, with a mix of `opus` and `sonnet`; the anonymous peer-ranking round is left out, since it adds a second round of calls within one model family. Four subagent runs per council, so it is for decisions that are expensive to reverse.
+Modelled on Karpathy's LLM Council, which polls different model vendors. Here the independence comes from separate contexts and lenses, on `fable`, or a mix of `opus` and `sonnet` without it; the anonymous peer-ranking round is left out, since it adds a second round of calls within one model family. Four subagent runs per council, so it is for decisions that are expensive to reverse.
 
 ## Session Wrap-Up
 

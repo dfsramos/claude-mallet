@@ -2,6 +2,11 @@
 
 What changed for people using the `mallet` plugin: behaviour, cost, defaults, and anything to do after updating. Newest first. The plugin has no version field, so entries are dated; update with `/plugin marketplace update claude-mallet`. Changes before 2026-10-07 are in the git history.
 
+## 2026-11-13
+
+**Changed**
+- `/mallet:council` runs all four advisors on Fable when your account can use it. A council costs more than before: four Fable runs instead of two on Opus and two on Sonnet. Without Fable, an advisor that fails on it is re-run on its previous model (Opus for Cassandra and Felix, Sonnet for Esme and Ezra). If your organization blocks Fable through `availableModels`, Claude Code runs the advisors on your session's model instead. Nothing to do after updating.
+
 ## 2026-11-10
 
 **Changed**
