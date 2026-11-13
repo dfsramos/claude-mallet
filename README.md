@@ -73,10 +73,10 @@ The `council` skill convenes four advisors, each starting from the same written 
 
 | Agent | Persona | Lens | Model / Effort |
 |---|---|---|---|
-| `council-contrarian` | Cassandra | What would make the decision fail | opus / high |
-| `council-first-principles` | Felix | Whether it addresses the right problem | opus / high |
-| `council-expansionist` | Esme | The upside and the options being missed | sonnet / high |
-| `council-executor` | Ezra | The first concrete steps and what blocks them | sonnet / high |
+| `council-contrarian` | Cassandra | What would make the decision fail | fable, else opus / high |
+| `council-first-principles` | Felix | Whether it addresses the right problem | fable, else opus / high |
+| `council-expansionist` | Esme | The upside and the options being missed | fable, else sonnet / high |
+| `council-executor` | Ezra | The first concrete steps and what blocks them | fable, else sonnet / high |
 
 Every agent is restricted to `disallowedTools: Edit, Write, NotebookEdit`.
 

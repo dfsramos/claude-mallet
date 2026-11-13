@@ -13,7 +13,7 @@ Test a decision against four independent advisors before it is made. Each adviso
 | `mallet:council-expansionist` | Esme | The upside and the options being missed |
 | `mallet:council-executor` | Ezra | The first concrete steps and what blocks them |
 
-A council costs four subagent runs, two of them on `opus`. Use it for decisions that are expensive to reverse — architecture, data models, vendor or framework choices, removing a capability, a direction for the next months of work — not for routine choices.
+A council costs four subagent runs, all on `fable` when the account can use it, otherwise two on `opus` and two on `sonnet`. Use it for decisions that are expensive to reverse — architecture, data models, vendor or framework choices, removing a capability, a direction for the next months of work — not for routine choices.
 
 ---
 
@@ -35,9 +35,11 @@ Write facts as facts and give file paths for claims about the code, so advisors 
 
 ## 2. Convene
 
-Dispatch all four advisors in parallel, in one message, and send each exactly the same `BRIEF` and, when the decision concerns a codebase, `WORKING_DIR`. Identical inputs keep the advisors independent: each brings only its own lens.
+Dispatch all four advisors in parallel, in one message, each with the Agent tool's `model` set to `fable`, and send each exactly the same `BRIEF` and, when the decision concerns a codebase, `WORKING_DIR`. Identical inputs keep the advisors independent: each brings only its own lens.
 
-If an advisor fails or returns nothing, dispatch it once more. If it fails again, chair with the three answers and name the missing lens in the verdict.
+If an advisor fails because Fable is unavailable to the account, dispatch it again without `model`, so it runs on the model its definition sets (`opus` for Cassandra and Felix, `sonnet` for Esme and Ezra). If an advisor's report opens with "This agent switched to <model>", Claude Code moved it to the user's fallback model; keep the answer and name that model in the verdict.
+
+If an advisor fails for any other reason or returns nothing, dispatch it once more with the same `model`. If it fails again, chair with the three answers and name the missing lens in the verdict.
 
 ---
 
@@ -46,7 +48,7 @@ If an advisor fails or returns nothing, dispatch it once more. If it fails again
 Read all four answers, then weigh them — do not average them:
 
 - **Check the claims that decide the outcome.** Where an advisor's point rests on a fact about the code or the situation, verify it before giving it weight.
-- **Agreement is weaker evidence than it looks.** The advisors share a model family; four of them agreeing means the point survived four framings, not four independent experts.
+- **Agreement is weaker evidence than it looks.** The advisors share a model family, and on `fable` the same model; four of them agreeing means the point survived four framings, not four independent experts.
 - **The verdict follows the objections that hold, not the vote count.** Any advisor can raise a deciding objection — Ezra's blocker as much as Cassandra's risk. Cassandra is built to find one, so the existence of her objection is not evidence; whether it holds once checked is.
 - **An objection that holds shapes the verdict.** It moves the verdict to `go with changes` or further, or the summary names it as a risk the user would be accepting.
 - **A `reframe` verdict comes first.** If Felix shows the options solve the wrong problem, settle that before choosing between them.
